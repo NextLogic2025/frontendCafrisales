@@ -1,6 +1,5 @@
 import React from 'react'
 import { ProfileScreen } from '@/features/shared'
-import type { UserRole } from '@/components/domain/auth'
 
 interface VendedorPerfilScreenProps {
   user: {
@@ -9,15 +8,24 @@ interface VendedorPerfilScreenProps {
     email: string
     telefono?: string
     avatar?: string
+    rol?: string
   }
   onLogout: () => void
   onNavigate: (screen: string, params?: any) => void
+  onUpdateProfile?: (data: { nombres?: string; apellidos?: string; telefono?: string }) => Promise<boolean>
+  isLoading?: boolean
 }
 
-export function VendedorPerfilScreen({ user, onLogout, onNavigate }: VendedorPerfilScreenProps) {
+export function VendedorPerfilScreen({
+  user,
+  onLogout,
+  onNavigate,
+  onUpdateProfile,
+  isLoading,
+}: VendedorPerfilScreenProps) {
   const userWithRole = {
     ...user,
-    rol: 'VENDEDOR' as UserRole,
+    rol: user.rol || 'vendedor',
   }
 
   return (
@@ -25,6 +33,8 @@ export function VendedorPerfilScreen({ user, onLogout, onNavigate }: VendedorPer
       user={userWithRole}
       onLogout={onLogout}
       onNavigate={onNavigate}
+      onUpdateProfile={onUpdateProfile}
+      isLoading={isLoading}
     />
   )
 }

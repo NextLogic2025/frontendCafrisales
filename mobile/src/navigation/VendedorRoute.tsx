@@ -11,12 +11,16 @@ interface VendedorRouteProps {
     email: string
     telefono?: string
     avatar?: string
+    rol?: string
   }
   onLogout: () => void
+  onUpdateProfile?: (data: { nombres?: string; apellidos?: string; telefono?: string }) => Promise<boolean>
+  isProfileLoading?: boolean
 }
 
-export function VendedorRoute({ user, onLogout }: VendedorRouteProps) {
+export function VendedorRoute({ user, onLogout, onUpdateProfile, isProfileLoading }: VendedorRouteProps) {
   const [activeTab, setActiveTab] = useState('inicio')
+  const roleLabel = (user.rol || 'vendedor').toUpperCase()
 
   const handleNavigate = (screen: string) => {
     if (screen === 'Back') {
@@ -24,11 +28,16 @@ export function VendedorRoute({ user, onLogout }: VendedorRouteProps) {
     }
   }
 
+  const isHome = activeTab === 'inicio'
+
   return (
     <View className="flex-1 bg-white">
       <Header
-        title={activeTab === 'inicio' ? 'Panel Vendedor' : 'Mi Perfil'}
-        subtitle={activeTab === 'inicio' ? 'Vendedor' : undefined}
+        title={isHome ? 'Panel Vendedor' : 'Mi Perfil'}
+        variant={isHome ? 'welcome' : 'default'}
+        greetingName={isHome ? user.nombre : undefined}
+        roleLabel={roleLabel}
+        avatarUri={user.avatar}
       />
 
       <View className="flex-1">
@@ -40,6 +49,8 @@ export function VendedorRoute({ user, onLogout }: VendedorRouteProps) {
             user={user}
             onLogout={onLogout}
             onNavigate={handleNavigate}
+            onUpdateProfile={onUpdateProfile}
+            isLoading={isProfileLoading}
           />
         )}
       </View>

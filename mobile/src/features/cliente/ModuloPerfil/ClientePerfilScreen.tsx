@@ -1,7 +1,5 @@
 import React from 'react'
 import { ProfileScreen } from '@/features/shared'
-import type { UserRole } from '@/components/domain/auth'
-
 interface ClientePerfilScreenProps {
   user: {
     id: string
@@ -9,15 +7,24 @@ interface ClientePerfilScreenProps {
     email: string
     telefono?: string
     avatar?: string
+    rol?: string
   }
   onLogout: () => void
   onNavigate: (screen: string, params?: any) => void
+  onUpdateProfile?: (data: { nombres?: string; apellidos?: string; telefono?: string }) => Promise<boolean>
+  isLoading?: boolean
 }
 
-export function ClientePerfilScreen({ user, onLogout, onNavigate }: ClientePerfilScreenProps) {
+export function ClientePerfilScreen({
+  user,
+  onLogout,
+  onNavigate,
+  onUpdateProfile,
+  isLoading,
+}: ClientePerfilScreenProps) {
   const userWithRole = {
     ...user,
-    rol: 'CLIENTE' as UserRole,
+    rol: user.rol || 'cliente',
   }
 
   return (
@@ -25,6 +32,8 @@ export function ClientePerfilScreen({ user, onLogout, onNavigate }: ClientePerfi
       user={userWithRole}
       onLogout={onLogout}
       onNavigate={onNavigate}
+      onUpdateProfile={onUpdateProfile}
+      isLoading={isLoading}
     />
   )
 }

@@ -11,12 +11,16 @@ interface BodegueroRouteProps {
     email: string
     telefono?: string
     avatar?: string
+    rol?: string
   }
   onLogout: () => void
+  onUpdateProfile?: (data: { nombres?: string; apellidos?: string; telefono?: string }) => Promise<boolean>
+  isProfileLoading?: boolean
 }
 
-export function BodegueroRoute({ user, onLogout }: BodegueroRouteProps) {
+export function BodegueroRoute({ user, onLogout, onUpdateProfile, isProfileLoading }: BodegueroRouteProps) {
   const [activeTab, setActiveTab] = useState('inicio')
+  const roleLabel = (user.rol || 'bodeguero').toUpperCase()
 
   const handleNavigate = (screen: string) => {
     if (screen === 'Back') {
@@ -24,11 +28,16 @@ export function BodegueroRoute({ user, onLogout }: BodegueroRouteProps) {
     }
   }
 
+  const isHome = activeTab === 'inicio'
+
   return (
     <View className="flex-1 bg-white">
       <Header
-        title={activeTab === 'inicio' ? 'Panel Bodeguero' : 'Mi Perfil'}
-        subtitle={activeTab === 'inicio' ? 'Bodeguero' : undefined}
+        title={isHome ? 'Panel Bodeguero' : 'Mi Perfil'}
+        variant={isHome ? 'welcome' : 'default'}
+        greetingName={isHome ? user.nombre : undefined}
+        roleLabel={roleLabel}
+        avatarUri={user.avatar}
       />
 
       <View className="flex-1">
@@ -40,6 +49,8 @@ export function BodegueroRoute({ user, onLogout }: BodegueroRouteProps) {
             user={user}
             onLogout={onLogout}
             onNavigate={handleNavigate}
+            onUpdateProfile={onUpdateProfile}
+            isLoading={isProfileLoading}
           />
         )}
       </View>

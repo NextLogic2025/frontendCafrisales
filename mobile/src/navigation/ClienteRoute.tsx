@@ -11,12 +11,16 @@ interface ClienteRouteProps {
     email: string
     telefono?: string
     avatar?: string
+    rol?: string
   }
   onLogout: () => void
+  onUpdateProfile?: (data: { nombres?: string; apellidos?: string; telefono?: string }) => Promise<boolean>
+  isProfileLoading?: boolean
 }
 
-export function ClienteRoute({ user, onLogout }: ClienteRouteProps) {
+export function ClienteRoute({ user, onLogout, onUpdateProfile, isProfileLoading }: ClienteRouteProps) {
   const [activeTab, setActiveTab] = useState('inicio')
+  const roleLabel = (user.rol || 'cliente').toUpperCase()
 
   const handleNavigate = (screen: string) => {
     if (screen === 'Back') {
@@ -24,11 +28,16 @@ export function ClienteRoute({ user, onLogout }: ClienteRouteProps) {
     }
   }
 
+  const isHome = activeTab === 'inicio'
+
   return (
     <View className="flex-1 bg-white">
       <Header
-        title={activeTab === 'inicio' ? 'Panel Cliente' : 'Mi Perfil'}
-        subtitle={activeTab === 'inicio' ? 'Cliente' : undefined}
+        title={isHome ? 'Panel Cliente' : 'Mi Perfil'}
+        variant={isHome ? 'welcome' : 'default'}
+        greetingName={isHome ? user.nombre : undefined}
+        roleLabel={roleLabel}
+        avatarUri={user.avatar}
       />
 
       <View className="flex-1">
@@ -40,6 +49,8 @@ export function ClienteRoute({ user, onLogout }: ClienteRouteProps) {
             user={user}
             onLogout={onLogout}
             onNavigate={handleNavigate}
+            onUpdateProfile={onUpdateProfile}
+            isLoading={isProfileLoading}
           />
         )}
       </View>

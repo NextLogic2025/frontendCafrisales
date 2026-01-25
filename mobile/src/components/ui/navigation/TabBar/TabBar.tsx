@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, Pressable, Platform } from 'react-native'
+import { View, Pressable } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '../../atoms/Text'
@@ -74,7 +74,7 @@ function TabBarItem({
 
 export function TabBar({ tabs, activeTab, onTabPress }: TabBarProps) {
   const insets = useSafeAreaInsets()
-  const bottomPadding = Platform.OS === 'ios' ? insets.bottom : 8
+  const bottomPadding = Math.max(insets.bottom, 12)
 
   return (
     <View

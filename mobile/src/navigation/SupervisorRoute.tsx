@@ -11,12 +11,16 @@ interface SupervisorRouteProps {
     email: string
     telefono?: string
     avatar?: string
+    rol?: string
   }
   onLogout: () => void
+  onUpdateProfile?: (data: { nombres?: string; apellidos?: string; telefono?: string }) => Promise<boolean>
+  isProfileLoading?: boolean
 }
 
-export function SupervisorRoute({ user, onLogout }: SupervisorRouteProps) {
+export function SupervisorRoute({ user, onLogout, onUpdateProfile, isProfileLoading }: SupervisorRouteProps) {
   const [activeTab, setActiveTab] = useState('inicio')
+  const roleLabel = (user.rol || 'supervisor').toUpperCase()
 
   const handleNavigate = (screen: string) => {
     if (screen === 'Back') {
@@ -24,11 +28,16 @@ export function SupervisorRoute({ user, onLogout }: SupervisorRouteProps) {
     }
   }
 
+  const isHome = activeTab === 'inicio'
+
   return (
     <View className="flex-1 bg-white">
       <Header
-        title={activeTab === 'inicio' ? 'Panel Supervisor' : 'Mi Perfil'}
-        subtitle={activeTab === 'inicio' ? 'Supervisor' : undefined}
+        title={isHome ? 'Panel Supervisor' : 'Mi Perfil'}
+        variant={isHome ? 'welcome' : 'default'}
+        greetingName={isHome ? user.nombre : undefined}
+        roleLabel={roleLabel}
+        avatarUri={user.avatar}
       />
 
       <View className="flex-1">
@@ -40,6 +49,8 @@ export function SupervisorRoute({ user, onLogout }: SupervisorRouteProps) {
             user={user}
             onLogout={onLogout}
             onNavigate={handleNavigate}
+            onUpdateProfile={onUpdateProfile}
+            isLoading={isProfileLoading}
           />
         )}
       </View>

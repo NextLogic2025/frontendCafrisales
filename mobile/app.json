@@ -25,6 +25,17 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.denis1921.mobile"
     },
+    "plugins": [
+      [
+        "expo-navigation-bar",
+        {
+          "position": "relative",
+          "backgroundColor": "#f8fafc",
+          "buttonStyle": "dark",
+          "behavior": "inset-swipe"
+        }
+      ]
+    ],
     "web": {
       "favicon": "./assets/logo.png"
     },

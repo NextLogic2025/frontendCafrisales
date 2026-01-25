@@ -11,12 +11,16 @@ interface TransportistaRouteProps {
     email: string
     telefono?: string
     avatar?: string
+    rol?: string
   }
   onLogout: () => void
+  onUpdateProfile?: (data: { nombres?: string; apellidos?: string; telefono?: string }) => Promise<boolean>
+  isProfileLoading?: boolean
 }
 
-export function TransportistaRoute({ user, onLogout }: TransportistaRouteProps) {
+export function TransportistaRoute({ user, onLogout, onUpdateProfile, isProfileLoading }: TransportistaRouteProps) {
   const [activeTab, setActiveTab] = useState('inicio')
+  const roleLabel = (user.rol || 'transportista').toUpperCase()
 
   const handleNavigate = (screen: string) => {
     if (screen === 'Back') {
@@ -24,11 +28,16 @@ export function TransportistaRoute({ user, onLogout }: TransportistaRouteProps) 
     }
   }
 
+  const isHome = activeTab === 'inicio'
+
   return (
     <View className="flex-1 bg-white">
       <Header
-        title={activeTab === 'inicio' ? 'Panel Transportista' : 'Mi Perfil'}
-        subtitle={activeTab === 'inicio' ? 'Transportista' : undefined}
+        title={isHome ? 'Panel Transportista' : 'Mi Perfil'}
+        variant={isHome ? 'welcome' : 'default'}
+        greetingName={isHome ? user.nombre : undefined}
+        roleLabel={roleLabel}
+        avatarUri={user.avatar}
       />
 
       <View className="flex-1">
@@ -40,6 +49,8 @@ export function TransportistaRoute({ user, onLogout }: TransportistaRouteProps) 
             user={user}
             onLogout={onLogout}
             onNavigate={handleNavigate}
+            onUpdateProfile={onUpdateProfile}
+            isLoading={isProfileLoading}
           />
         )}
       </View>
