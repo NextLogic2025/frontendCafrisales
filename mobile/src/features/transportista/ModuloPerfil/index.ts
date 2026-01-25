@@ -1,0 +1,1 @@
+export { TransportistaPerfilScreen } from './TransportistaPerfilScreen'

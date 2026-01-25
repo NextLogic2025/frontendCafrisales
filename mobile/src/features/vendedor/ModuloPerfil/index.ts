@@ -1,0 +1,1 @@
+export { VendedorPerfilScreen } from './VendedorPerfilScreen'

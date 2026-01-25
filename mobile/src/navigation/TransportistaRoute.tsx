@@ -1,10 +1,54 @@
-import { TransportistaView } from '../features/transportista/TransportistaView'
-import type { RoleRoute } from './types'
+import React, { useState } from 'react'
+import { View } from 'react-native'
+import { Header, TabBar, DEFAULT_TABS } from '@/components/ui'
+import { TransportistaInicioScreen } from '@/features/transportista/ModuloInicio'
+import { TransportistaPerfilScreen } from '@/features/transportista/ModuloPerfil'
 
-export const TRANSPORTISTA_ROUTE: RoleRoute = {
-  key: 'transportista',
-  name: 'Transportista',
-  description: 'Rutas inteligentes, estados de carga y notificaciones automáticas para entregas.',
-  component: <TransportistaView />,
-  endpointPath: '/transportista',
+interface TransportistaRouteProps {
+  user: {
+    id: string
+    nombre: string
+    email: string
+    telefono?: string
+    avatar?: string
+  }
+  onLogout: () => void
+}
+
+export function TransportistaRoute({ user, onLogout }: TransportistaRouteProps) {
+  const [activeTab, setActiveTab] = useState('inicio')
+
+  const handleNavigate = (screen: string) => {
+    if (screen === 'Back') {
+      setActiveTab('inicio')
+    }
+  }
+
+  return (
+    <View className="flex-1 bg-white">
+      <Header
+        title={activeTab === 'inicio' ? 'Panel Transportista' : 'Mi Perfil'}
+        subtitle={activeTab === 'inicio' ? 'Transportista' : undefined}
+      />
+
+      <View className="flex-1">
+        {activeTab === 'inicio' && (
+          <TransportistaInicioScreen userName={user.nombre} />
+        )}
+        {activeTab === 'perfil' && (
+          <TransportistaPerfilScreen
+            user={user}
+            onLogout={onLogout}
+            onNavigate={handleNavigate}
+          />
+        )}
+      </View>
+
+      <TabBar
+        tabs={DEFAULT_TABS}
+        activeTab={activeTab}
+        onTabPress={setActiveTab}
+      />
+    </View>
+  )
 }

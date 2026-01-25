@@ -1,0 +1,61 @@
+{
+  "cli": {
+    "version": ">= 3.53.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleDebug"
+      },
+      "channel": "development",
+      "env": {
+        "APP_ENV": "development",
+        "EXPO_PUBLIC_AUTH_API_URL": "http://192.168.80.6:3001/v1",
+        "EXPO_PUBLIC_AUTH_LOGIN_URL": "http://192.168.80.6:3001/v1/auth/login",
+        "EXPO_PUBLIC_AUTH_FORGOT_PASSWORD_URL": "http://192.168.80.6:3001/v1/auth/forgot-password",
+        "EXPO_PUBLIC_API_BASE_URL": "http://192.168.80.6:3001",
+        "EXPO_PUBLIC_USERS_API_URL": "http://192.168.80.6:3002",
+        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyDoftE8Lg_aqWrrJKQDprE5EkEuN5ChvEE"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "channel": "preview",
+      "env": {
+        "APP_ENV": "staging",
+        "EXPO_PUBLIC_AUTH_API_URL": "http://192.168.80.6:3001/v1",
+        "EXPO_PUBLIC_AUTH_LOGIN_URL": "http://192.168.80.6:3001/v1/auth/login",
+        "EXPO_PUBLIC_AUTH_FORGOT_PASSWORD_URL": "http://192.168.80.6:3001/v1/auth/forgot-password",
+        "EXPO_PUBLIC_API_BASE_URL": "http://192.168.80.6:3001",
+        "EXPO_PUBLIC_USERS_API_URL": "http://192.168.80.6:3002",
+        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyDoftE8Lg_aqWrrJKQDprE5EkEuN5ChvEE"
+      }
+    },
+    "production": {
+      "distribution": "store",
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "channel": "production",
+      "env": {
+        "APP_ENV": "production",
+        "EXPO_PUBLIC_AUTH_API_URL": "https://TU_DOMINIO_PRODUCCION/v1",
+        "EXPO_PUBLIC_AUTH_LOGIN_URL": "https://TU_DOMINIO_PRODUCCION/v1/auth/login",
+        "EXPO_PUBLIC_AUTH_FORGOT_PASSWORD_URL": "https://TU_DOMINIO_PRODUCCION/v1/auth/forgot-password",
+        "EXPO_PUBLIC_API_BASE_URL": "https://TU_DOMINIO_PRODUCCION",
+        "EXPO_PUBLIC_USERS_API_URL": "https://TU_DOMINIO_PRODUCCION",
+        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyDoftE8Lg_aqWrrJKQDprE5EkEuN5ChvEE"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

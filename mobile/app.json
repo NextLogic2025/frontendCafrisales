@@ -13,7 +13,8 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.denis1921.mobile"
     },
     "android": {
       "adaptiveIcon": {
@@ -21,10 +22,22 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.denis1921.mobile"
     },
     "web": {
       "favicon": "./assets/logo.png"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/bc0bd8ee-a7b7-446b-81a9-4fdd2e69255b"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "bc0bd8ee-a7b7-446b-81a9-4fdd2e69255b"
+      }
     }
   }
 }

@@ -1,0 +1,1 @@
+export { SupervisorPerfilScreen } from './SupervisorPerfilScreen'

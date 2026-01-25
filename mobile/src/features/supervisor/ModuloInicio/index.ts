@@ -1,0 +1,1 @@
+export { SupervisorInicioScreen } from './SupervisorInicioScreen'

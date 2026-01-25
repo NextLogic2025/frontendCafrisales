@@ -29,6 +29,7 @@ export interface ProfileScreenProps {
   user: User
   onLogout: () => void
   onNavigate: (screen: string, params?: any) => void
+  showHeader?: boolean // Por defecto false cuando se usa dentro del TabNavigator
 }
 
 interface MenuOption {
@@ -39,7 +40,7 @@ interface MenuOption {
   danger?: boolean
 }
 
-export function ProfileScreen({ user, onLogout, onNavigate }: ProfileScreenProps) {
+export function ProfileScreen({ user, onLogout, onNavigate, showHeader = false }: ProfileScreenProps) {
   const [showLogoutAlert, setShowLogoutAlert] = useState(false)
 
   // Opciones comunes para TODOS los roles
@@ -225,7 +226,9 @@ export function ProfileScreen({ user, onLogout, onNavigate }: ProfileScreenProps
 
   return (
     <>
-      <Header title="Mi Perfil" showBackButton onBackPress={() => onNavigate('Back')} />
+      {showHeader && (
+        <Header title="Mi Perfil" showBackButton onBackPress={() => onNavigate('Back')} />
+      )}
 
       <ScrollScreen variant="withTabs">
         {/* Información del Usuario */}

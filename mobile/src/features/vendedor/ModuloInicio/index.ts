@@ -1,0 +1,1 @@
+export { VendedorInicioScreen } from './VendedorInicioScreen'
