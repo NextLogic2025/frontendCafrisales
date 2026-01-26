@@ -27,6 +27,7 @@ const envSchema = z.object({
   EXPO_PUBLIC_AUTH_FORGOT_PASSWORD_URL: z.string().url().optional(),
   EXPO_PUBLIC_API_BASE_URL: z.string().url(),
   EXPO_PUBLIC_USERS_API_URL: z.string().url(),
+  EXPO_PUBLIC_CATALOG_API_URL: z.string().url(),
   EXPO_PUBLIC_GOOGLE_MAPS_API_KEY: z.string().optional(),
 })
 
@@ -36,6 +37,7 @@ const parsedEnv = envSchema.safeParse({
   EXPO_PUBLIC_AUTH_FORGOT_PASSWORD_URL: getRawEnv('EXPO_PUBLIC_AUTH_FORGOT_PASSWORD_URL'),
   EXPO_PUBLIC_API_BASE_URL: getRawEnv('EXPO_PUBLIC_API_BASE_URL'),
   EXPO_PUBLIC_USERS_API_URL: getRawEnv('EXPO_PUBLIC_USERS_API_URL'),
+  EXPO_PUBLIC_CATALOG_API_URL: getRawEnv('EXPO_PUBLIC_CATALOG_API_URL'),
   EXPO_PUBLIC_GOOGLE_MAPS_API_KEY: getRawEnv('EXPO_PUBLIC_GOOGLE_MAPS_API_KEY'),
 })
 
@@ -53,6 +55,7 @@ const {
   EXPO_PUBLIC_AUTH_FORGOT_PASSWORD_URL,
   EXPO_PUBLIC_API_BASE_URL,
   EXPO_PUBLIC_USERS_API_URL,
+  EXPO_PUBLIC_CATALOG_API_URL,
   EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,
 } = parsedEnv.data
 
@@ -64,6 +67,7 @@ export const env = {
   },
   api: {
     baseUrl: normalizeBaseUrl(EXPO_PUBLIC_API_BASE_URL),
+    catalogUrl: normalizeBaseUrl(EXPO_PUBLIC_API_BASE_URL),
     usersUrl: normalizeBaseUrl(EXPO_PUBLIC_USERS_API_URL),
   },
   googleMapsKey: EXPO_PUBLIC_GOOGLE_MAPS_API_KEY ?? '',

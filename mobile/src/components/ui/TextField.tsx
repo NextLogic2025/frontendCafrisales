@@ -1,54 +1,42 @@
-import React, { forwardRef } from 'react'
-import { TextInput, Text, View } from 'react-native'
-import type { TextInputProps } from 'react-native'
-import { BRAND_COLORS } from '../../features/shared/types'
+import * as React from 'react'
+import { Text, TextInput, View } from 'react-native'
 
-type TextFieldProps = {
-  label?: string
+type Props = {
+  label: string
+  placeholder?: string
+  value?: string
+  onChangeText?: (v: string) => void
+  onBlur?: () => void
+  secureTextEntry?: boolean
   error?: string
   left?: React.ReactNode
   right?: React.ReactNode
-  disabled?: boolean
-  variant?: 'default' | 'filled'
-} & TextInputProps
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters'
+  keyboardType?: 'default' | 'email-address'
+  textContentType?: 'emailAddress' | 'password' | 'none'
+}
 
-export const TextField = forwardRef<TextInput, TextFieldProps>(
-  ({ label, error, left, right, disabled, variant = 'default', style, ...props }, ref) => {
-    const isFilled = variant === 'filled'
-
-    return (
-      <View className="flex-col gap-1.5">
-        {label && (
-          <Text className="text-xs font-semibold uppercase tracking-widest text-neutral-500">
-            {label}
-          </Text>
-        )}
-        <View
-          className={`flex-row items-center rounded-xl px-4 py-3 ${
-            isFilled ? 'bg-neutral-100' : 'border-2'
-          } ${error ? 'border-red700 bg-red/5' : 'border-neutral-200'} ${
-            disabled ? 'opacity-50' : ''
-          }`}
-        >
-          {left && <View className="mr-3">{left}</View>}
-          <TextInput
-            ref={ref}
-            className="flex-1 text-sm text-neutral-800"
-            placeholderTextColor="#9CA3AF"
-            editable={!disabled}
-            style={[{ padding: 0 }, style]}
-            {...props}
-          />
-          {right && <View className="ml-3">{right}</View>}
-        </View>
-        {error && (
-          <Text style={{ color: BRAND_COLORS.red700 }} className="text-xs font-medium">
-            {error}
-          </Text>
-        )}
+export const TextField = React.memo(function TextField({ label, error, left, right, ...inputProps }: Props) {
+  return (
+    <View className="gap-2">
+      <Text className="text-xs text-neutral-600">{label}</Text>
+      <View
+        className={[
+          'flex-row items-center gap-2 rounded-2xl border px-4 py-3',
+          'bg-neutral-50 border-neutral-200',
+          error ? 'border-red-400/60' : '',
+        ].join(' ')}
+      >
+        {left ? <View className="opacity-70">{left}</View> : null}
+        <TextInput
+          className="flex-1 text-neutral-900"
+          placeholderTextColor="rgba(17,24,39,0.45)"
+          {...inputProps}
+          placeholder={inputProps.placeholder}
+        />
+        {right ? <View>{right}</View> : null}
       </View>
-    )
-  }
-)
-
-TextField.displayName = 'TextField'
+      {error ? <Text className="text-xs text-red-700">{error}</Text> : null}
+    </View>
+  )
+})

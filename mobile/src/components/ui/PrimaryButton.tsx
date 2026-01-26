@@ -1,83 +1,45 @@
-import { ActivityIndicator, Pressable, Text, View } from 'react-native'
-import type { PressableProps, StyleProp, ViewStyle } from 'react-native'
+import { BRAND_COLORS } from '../../shared/types'
+import { LinearGradient } from 'expo-linear-gradient'
+import * as React from 'react'
+import { ActivityIndicator, Pressable, Text, ViewStyle } from 'react-native'
 
-type PrimaryButtonProps = {
+type Props = {
   title: string
+  onPress: () => void
   loading?: boolean
-  loadingText?: string
   disabled?: boolean
-  variant?: 'primary' | 'secondary' | 'ghost'
-  size?: 'sm' | 'md' | 'lg'
-  icon?: React.ReactNode
-  iconPosition?: 'left' | 'right'
-  style?: StyleProp<ViewStyle>
-  className?: string
-} & Omit<PressableProps, 'style' | 'disabled'>
+  style?: ViewStyle
+}
 
-export function PrimaryButton({
+export const PrimaryButton = React.memo(function PrimaryButton({
   title,
-  loading,
-  loadingText = 'Cargando...',
-  disabled,
-  variant = 'primary',
-  size = 'md',
-  icon,
-  iconPosition = 'left',
-  style,
-  className,
   onPress,
-  ...props
-}: PrimaryButtonProps) {
-  const isDisabled = loading || disabled
-
-  // Tamaños
-  const sizeClasses = {
-    sm: 'px-4 py-2.5',
-    md: 'px-5 py-3.5',
-    lg: 'px-6 py-4',
-  }
-
-  const textSizeClasses = {
-    sm: 'text-sm',
-    md: 'text-base',
-    lg: 'text-lg',
-  }
+  loading,
+  disabled,
+  style,
+}: Props) {
+  const isDisabled = disabled || loading
 
   return (
     <Pressable
+      accessibilityRole="button"
       onPress={onPress}
       disabled={isDisabled}
-      style={[{ opacity: isDisabled ? 0.6 : 1 }, style]}
-      className={`
-        flex-row items-center justify-center rounded-xl
-        ${sizeClasses[size]}
-        ${variant === 'primary' ? 'bg-red' : ''}
-        ${variant === 'secondary' ? 'bg-neutral-100' : ''}
-        ${variant === 'ghost' ? 'bg-white border-2 border-red' : ''}
-        ${className ?? ''}
-      `}
-      {...props}
+      className={['overflow-hidden rounded-2xl', isDisabled ? 'opacity-60' : 'active:opacity-90'].join(' ')}
+      style={({ pressed }) => [pressed && !isDisabled ? { transform: [{ translateY: 1 }] } : null, style]}
     >
-      {loading ? (
-        <View className="flex-row items-center gap-2">
-          <ActivityIndicator size="small" color={variant === 'primary' ? '#fff' : '#F0412D'} />
-          <Text
-            className={`font-semibold ${textSizeClasses[size]} ${variant === 'primary' ? 'text-white' : 'text-red'}`}
-          >
-            {loadingText}
-          </Text>
-        </View>
-      ) : (
-        <View className="flex-row items-center gap-2">
-          {icon && iconPosition === 'left' && icon}
-          <Text
-            className={`font-bold ${textSizeClasses[size]} ${variant === 'primary' ? 'text-white' : 'text-red'}`}
-          >
-            {title}
-          </Text>
-          {icon && iconPosition === 'right' && icon}
-        </View>
-      )}
+      <LinearGradient
+        colors={[BRAND_COLORS.red, BRAND_COLORS.red700]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={{ paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center' }}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text className="font-extrabold text-white">{title}</Text>
+        )}
+      </LinearGradient>
     </Pressable>
   )
-}
+})

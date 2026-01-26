@@ -1,22 +1,39 @@
-export function getUserFriendlyMessage(error: unknown, fallback: string) {
-  const message = (error as Error)?.message
-  if (message === 'INVALID_CREDENTIALS') {
-    return 'Credenciales incorrectas, revisa tu correo y contraseña.'
-  }
-  if (message === 'ACCOUNT_DISABLED') {
-    return 'Tu cuenta está desactivada o bloqueada. Contacta al equipo de soporte.'
-  }
-  if (message === 'NETWORK_ERROR') {
-    return 'No hay conexión a internet. Revisa tu red e inténtalo de nuevo.'
-  }
-  if (message === 'AUTH_URL_MISSING') {
-    return 'La configuración del servidor de autenticación no está completa.'
-  }
-  if (message === 'AUTH_SERVICE_ERROR') {
-    return 'El servidor de autenticación no respondió correctamente. Intenta más tarde.'
-  }
-  if (typeof message === 'string' && message.length > 0) {
-    return message
-  }
-  return fallback
+﻿export const ERROR_MESSAGES = {
+    NETWORK_ERROR: 'Error de red. Verifica tu conexion.',
+    SERVER_UNAVAILABLE: 'Servidor no disponible.',
+    INVALID_CREDENTIALS: 'Credenciales invalidas.',
+    ACCOUNT_DISABLED: 'Cuenta desactivada.',
+    SESSION_EXPIRED: 'Sesion expirada. Inicia sesion nuevamente.',
+    FORBIDDEN: 'No tienes permisos.',
+    NOT_FOUND: 'Recurso no encontrado.',
+    DUPLICATE_ENTRY: 'El registro ya existe.',
+    VALIDATION_ERROR: 'Datos invalidos.',
+    TIMEOUT_ERROR: 'Tiempo de espera agotado.',
+    GENERIC_ERROR: 'Ocurrio un error. Intenta de nuevo.',
+    PASSWORD_RESET_ERROR: 'No se pudo enviar el correo de recuperacion.',
+    CREATE_ERROR: 'No se pudo crear el registro.',
+    UPDATE_ERROR: 'No se pudo actualizar el registro.',
+    DELETE_ERROR: 'No se pudo eliminar el registro.'
+} as const
+
+type ErrorMessageKey = keyof typeof ERROR_MESSAGES
+
+export function getUserFriendlyMessage(error: unknown, fallbackKey?: ErrorMessageKey | string) {
+    if (error instanceof Error && error.message) {
+        const key = error.message as ErrorMessageKey
+        if (ERROR_MESSAGES[key]) return ERROR_MESSAGES[key]
+        return error.message
+    }
+
+    if (fallbackKey && ERROR_MESSAGES[fallbackKey as ErrorMessageKey]) {
+        return ERROR_MESSAGES[fallbackKey as ErrorMessageKey]
+    }
+
+    return ERROR_MESSAGES.GENERIC_ERROR
+}
+
+export function logErrorForDebugging(error: unknown, scope: string, meta?: Record<string, unknown>) {
+    if (typeof __DEV__ !== 'undefined' && __DEV__) {
+        console.error(`[${scope}]`, error, meta ?? {})
+    }
 }

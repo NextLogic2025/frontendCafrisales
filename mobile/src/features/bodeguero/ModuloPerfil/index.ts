@@ -1,1 +1,0 @@
-export { BodegueroPerfilScreen } from './BodegueroPerfilScreen'

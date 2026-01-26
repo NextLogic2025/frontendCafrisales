@@ -1,1 +1,0 @@
-export { TransportistaInicioScreen } from './TransportistaInicioScreen'

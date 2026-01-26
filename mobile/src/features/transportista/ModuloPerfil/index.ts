@@ -1,1 +1,0 @@
-export { TransportistaPerfilScreen } from './TransportistaPerfilScreen'

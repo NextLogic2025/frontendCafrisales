@@ -1,25 +1,26 @@
 {
   "cli": {
-    "version": ">= 3.53.0",
-    "appVersionSource": "remote"
+    "version": ">= 3.0.0"
   },
   "build": {
-    "development": {
+    "dev": {
       "developmentClient": true,
       "distribution": "internal",
       "android": {
-        "buildType": "apk",
-        "gradleCommand": ":app:assembleDebug"
+        "buildType": "apk"
       },
-      "channel": "development",
       "env": {
-        "APP_ENV": "development",
-        "EXPO_PUBLIC_AUTH_API_URL": "http://192.168.80.6:3001/v1",
-        "EXPO_PUBLIC_AUTH_LOGIN_URL": "http://192.168.80.6:3001/v1/auth/login",
-        "EXPO_PUBLIC_AUTH_FORGOT_PASSWORD_URL": "http://192.168.80.6:3001/v1/auth/forgot-password",
-        "EXPO_PUBLIC_API_BASE_URL": "http://192.168.80.6:3001",
-        "EXPO_PUBLIC_USERS_API_URL": "http://192.168.80.6:3002",
-        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyDoftE8Lg_aqWrrJKQDprE5EkEuN5ChvEE"
+        "EXPO_PUBLIC_AUTH_API_URL": "http://192.168.80.4:3001",
+        "EXPO_PUBLIC_AUTH_LOGIN_URL": "http://192.168.80.4:3001/auth/login",
+        "EXPO_PUBLIC_AUTH_FORGOT_PASSWORD_URL": "http://192.168.80.4:3001/auth/forgot-password",
+        "EXPO_PUBLIC_API_BASE_URL": "http://192.168.80.4:3001",
+        "EXPO_PUBLIC_USERS_API_URL": "http://192.168.80.4:3002",
+        "EXPO_PUBLIC_CATALOG_API_URL": "http://192.168.80.4:3003",
+        "EXPO_PUBLIC_ORDERS_API_URL": "http://192.168.80.4:3004",
+        "EXPO_PUBLIC_WAREHOUSE_API_URL": "http://192.168.80.4:3005",
+        "EXPO_PUBLIC_LOGISTICS_API_URL": "http://192.168.80.4:3006",
+        "EXPO_PUBLIC_FINANCE_API_URL": "http://192.168.80.4:3007",
+        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "LOCAL_GOOGLE_MAPS_KEY"
       }
     },
     "preview": {
@@ -27,15 +28,18 @@
       "android": {
         "buildType": "apk"
       },
-      "channel": "preview",
       "env": {
-        "APP_ENV": "staging",
-        "EXPO_PUBLIC_AUTH_API_URL": "http://192.168.80.6:3001/v1",
-        "EXPO_PUBLIC_AUTH_LOGIN_URL": "http://192.168.80.6:3001/v1/auth/login",
-        "EXPO_PUBLIC_AUTH_FORGOT_PASSWORD_URL": "http://192.168.80.6:3001/v1/auth/forgot-password",
-        "EXPO_PUBLIC_API_BASE_URL": "http://192.168.80.6:3001",
-        "EXPO_PUBLIC_USERS_API_URL": "http://192.168.80.6:3002",
-        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyDoftE8Lg_aqWrrJKQDprE5EkEuN5ChvEE"
+        "EXPO_PUBLIC_AUTH_API_URL": "https://staging-auth.cafrilosa.com",
+        "EXPO_PUBLIC_AUTH_LOGIN_URL": "https://staging-auth.cafrilosa.com/auth/login",
+        "EXPO_PUBLIC_AUTH_FORGOT_PASSWORD_URL": "https://staging-auth.cafrilosa.com/auth/forgot-password",
+        "EXPO_PUBLIC_API_BASE_URL": "https://staging-api.cafrilosa.com",
+        "EXPO_PUBLIC_USERS_API_URL": "https://staging-users.cafrilosa.com",
+        "EXPO_PUBLIC_CATALOG_API_URL": "https://staging-catalog.cafrilosa.com",
+        "EXPO_PUBLIC_ORDERS_API_URL": "https://staging-orders.cafrilosa.com",
+        "EXPO_PUBLIC_WAREHOUSE_API_URL": "https://staging-warehouse.cafrilosa.com",
+        "EXPO_PUBLIC_LOGISTICS_API_URL": "https://staging-logistics.cafrilosa.com",
+        "EXPO_PUBLIC_FINANCE_API_URL": "https://staging-finance.cafrilosa.com",
+        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "STAGING_GOOGLE_MAPS_KEY"
       }
     },
     "production": {
@@ -43,19 +47,19 @@
       "android": {
         "buildType": "app-bundle"
       },
-      "channel": "production",
       "env": {
-        "APP_ENV": "production",
-        "EXPO_PUBLIC_AUTH_API_URL": "https://TU_DOMINIO_PRODUCCION/v1",
-        "EXPO_PUBLIC_AUTH_LOGIN_URL": "https://TU_DOMINIO_PRODUCCION/v1/auth/login",
-        "EXPO_PUBLIC_AUTH_FORGOT_PASSWORD_URL": "https://TU_DOMINIO_PRODUCCION/v1/auth/forgot-password",
-        "EXPO_PUBLIC_API_BASE_URL": "https://TU_DOMINIO_PRODUCCION",
-        "EXPO_PUBLIC_USERS_API_URL": "https://TU_DOMINIO_PRODUCCION",
-        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyDoftE8Lg_aqWrrJKQDprE5EkEuN5ChvEE"
+        "EXPO_PUBLIC_AUTH_API_URL": "https://auth.cafrilosa.com",
+        "EXPO_PUBLIC_AUTH_LOGIN_URL": "https://auth.cafrilosa.com/auth/login",
+        "EXPO_PUBLIC_AUTH_FORGOT_PASSWORD_URL": "https://auth.cafrilosa.com/auth/forgot-password",
+        "EXPO_PUBLIC_API_BASE_URL": "https://api.cafrilosa.com",
+        "EXPO_PUBLIC_USERS_API_URL": "https://users.cafrilosa.com",
+        "EXPO_PUBLIC_CATALOG_API_URL": "https://catalog.cafrilosa.com",
+        "EXPO_PUBLIC_ORDERS_API_URL": "https://orders.cafrilosa.com",
+        "EXPO_PUBLIC_WAREHOUSE_API_URL": "https://warehouse.cafrilosa.com",
+        "EXPO_PUBLIC_LOGISTICS_API_URL": "https://logistics.cafrilosa.com",
+        "EXPO_PUBLIC_FINANCE_API_URL": "https://finance.cafrilosa.com",
+        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "PRODUCTION_GOOGLE_MAPS_KEY"
       }
     }
-  },
-  "submit": {
-    "production": {}
   }
 }

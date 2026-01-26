@@ -1,88 +1,91 @@
-import { Animated, Text, View, Pressable } from 'react-native'
-import { useEffect, useRef } from 'react'
-import { Ionicons } from '@expo/vector-icons'
-import { BRAND_COLORS } from '../../features/shared/types'
+import React, { useEffect, useRef } from 'react';
+import { View, Text, Dimensions, Platform, Animated } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
-type ToastType = 'error' | 'success' | 'warning' | 'info'
+export type ToastType = 'success' | 'error' | 'info' | 'warning';
 
-type ToastNotificationProps = {
-  message: string
-  title?: string
-  type?: ToastType
-  duration?: number
-  position?: 'top' | 'bottom'
-  showClose?: boolean
-  onHide: () => void
+interface ToastProps {
+    message: string;
+    type?: ToastType;
+    duration?: number;
+    onHide?: () => void;
 }
 
-const toastConfig: Record<ToastType, { bg: string; text: string; icon: keyof typeof Ionicons.glyphMap }> = {
-  error: { bg: '#FEE2E2', text: BRAND_COLORS.red700, icon: 'alert-circle' },
-  success: { bg: '#D1FAE5', text: '#059669', icon: 'checkmark-circle' },
-  warning: { bg: '#FEF3C7', text: '#D97706', icon: 'warning' },
-  info: { bg: '#DBEAFE', text: '#2563EB', icon: 'information-circle' },
-}
+const { width } = Dimensions.get('window');
 
-export function ToastNotification({
-  message,
-  title,
-  type = 'error',
-  duration = 3500,
-  position = 'top',
-  showClose = false,
-  onHide,
-}: ToastNotificationProps) {
-  const translateY = useRef(new Animated.Value(position === 'top' ? -100 : 100)).current
-  const config = toastConfig[type]
+export const ToastNotification = ({ message, type = 'success', duration = 2000, onHide }: ToastProps) => {
+    const translateY = useRef(new Animated.Value(-100)).current;
+    const opacity = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    const slideIn = Animated.spring(translateY, {
-      toValue: 0,
-      useNativeDriver: true,
-      friction: 8,
-    })
+    useEffect(() => {
+        Animated.parallel([
+            Animated.timing(translateY, {
+                toValue: Platform.OS === 'ios' ? 50 : 40,
+                duration: 400,
+                useNativeDriver: true,
+            }),
+            Animated.timing(opacity, {
+                toValue: 1,
+                duration: 400,
+                useNativeDriver: true,
+            }),
+        ]).start();
 
-    const slideOut = Animated.spring(translateY, {
-      toValue: position === 'top' ? -100 : 100,
-      useNativeDriver: true,
-    })
+        const timer = setTimeout(() => {
+            hideToast();
+        }, duration);
 
-    Animated.sequence([
-      slideIn,
-      Animated.delay(duration),
-      slideOut,
-    ]).start(() => onHide())
+        return () => clearTimeout(timer);
+    }, [duration]);
 
-    return () => {
-      slideIn.stop()
-      slideOut.stop()
-    }
-  }, [duration, onHide, position, translateY])
+    const hideToast = () => {
+        Animated.parallel([
+            Animated.timing(translateY, {
+                toValue: -100,
+                duration: 300,
+                useNativeDriver: true,
+            }),
+            Animated.timing(opacity, {
+                toValue: 0,
+                duration: 300,
+                useNativeDriver: true,
+            })
+        ]).start(() => {
+            onHide?.();
+        });
+    };
 
-  const positionStyle = position === 'top' ? 'top-12' : 'bottom-12'
+    const getColors = () => {
+        switch (type) {
+            case 'success': return { bg: '#F0FDF4', border: '#22C55E', icon: 'checkmark-circle', text: '#15803D' };
+            case 'error': return { bg: '#FEF2F2', border: '#EF4444', icon: 'alert-circle', text: '#B91C1C' };
+            case 'warning': return { bg: '#FFFBEB', border: '#F59E0B', icon: 'warning', text: '#B45309' };
+            case 'info':
+            default: return { bg: '#EFF6FF', border: '#3B82F6', icon: 'information-circle', text: '#1D4ED8' };
+        }
+    };
 
-  return (
-    <Animated.View
-      style={[
-        { transform: [{ translateY }], backgroundColor: config.bg },
-      ]}
-      className={`absolute inset-x-4 ${positionStyle} z-50 flex-row items-center rounded-2xl px-4 py-3 shadow-lg`}
-    >
-      <Ionicons name={config.icon} size={24} color={config.text} />
-      <View className="ml-3 flex-1">
-        {title && (
-          <Text style={{ color: config.text }} className="text-sm font-bold">
-            {title}
-          </Text>
-        )}
-        <Text style={{ color: config.text }} className="text-sm">
-          {message}
-        </Text>
-      </View>
-      {showClose && (
-        <Pressable onPress={onHide} hitSlop={10} className="ml-2 p-1">
-          <Ionicons name="close" size={20} color={config.text} />
-        </Pressable>
-      )}
-    </Animated.View>
-  )
-}
+    const colors = getColors();
+
+    return (
+        <Animated.View
+            className="absolute top-0 self-center flex-row items-center p-4 rounded-xl border shadow-lg z-[9999]"
+            style={{
+                width: width * 0.9,
+                backgroundColor: colors.bg,
+                borderColor: colors.border,
+                opacity: opacity,
+                transform: [{ translateY: translateY }],
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.1,
+                shadowRadius: 6,
+                elevation: 8,
+            }}
+        >
+            <Ionicons name={colors.icon as any} size={24} color={colors.text} className="mr-2.5" />
+            <Text className="text-sm font-semibold flex-1" style={{ color: colors.text }}>{message}</Text>
+        </Animated.View>
+    );
+};
+

@@ -1,10 +1,3 @@
-import { SafeAreaProvider } from 'react-native-safe-area-context'
-import { AppRoot } from './src/AppRoot'
+import App from './src/App';
 
-export default function App() {
-  return (
-    <SafeAreaProvider>
-      <AppRoot />
-    </SafeAreaProvider>
-  )
-}
+export default App;
