@@ -12,6 +12,8 @@ export function SupervisorHeaderMenu({ extraActions = [] }: Props) {
   const actions: HeaderMenuAction[] = [
     { label: 'Zonas', icon: 'map-outline', onPress: () => navigation.navigate('SupervisorZones') },
     { label: 'Canales', icon: 'pricetag-outline', onPress: () => navigation.navigate('SupervisorChannels') },
+    { label: 'Catalogo', icon: 'cube-outline', onPress: () => navigation.navigate('SupervisorProducts') },
+    { label: 'Precios', icon: 'cash-outline', onPress: () => navigation.navigate('SupervisorPrices') },
   ]
 
   return <HeaderMenu actions={[...actions, ...extraActions]} />
