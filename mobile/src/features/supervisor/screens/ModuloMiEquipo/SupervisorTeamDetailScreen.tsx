@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platfor
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
 import { Header } from '../../../../components/ui/Header'
+import { SupervisorHeaderMenu } from '../../../../components/ui/SupervisorHeaderMenu'
 import { UserProfile, UserService } from '../../../../services/api/UserService'
 import { CategoryFilter } from '../../../../components/ui/CategoryFilter'
 import { TextField } from '../../../../components/ui/TextField'
@@ -172,6 +173,7 @@ export function SupervisorTeamDetailScreen() {
         title={isEditing ? 'Detalle del Empleado' : 'Nuevo Empleado'}
         variant="standard"
         onBackPress={() => navigation.goBack()}
+        rightElement={<SupervisorHeaderMenu />}
       />
 
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">

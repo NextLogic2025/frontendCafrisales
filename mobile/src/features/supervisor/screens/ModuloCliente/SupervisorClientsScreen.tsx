@@ -2,17 +2,19 @@
 import { View, Text, TouchableOpacity, FlatList, ActivityIndicator, RefreshControl, StyleSheet } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { Header } from '../../../../components/ui/Header'
+import { SupervisorHeaderMenu } from '../../../../components/ui/SupervisorHeaderMenu'
 import { SearchBar } from '../../../../components/ui/SearchBar'
 import { BRAND_COLORS } from '../../../../shared/types'
-import { ClientService, Client } from '../../../../services/api/ClientService'
+import { UserClientService, UserClient, ClientStatusFilter } from '../../../../services/api/UserClientService'
+import { UserService } from '../../../../services/api/UserService'
 import { CategoryFilter } from '../../../../components/ui/CategoryFilter'
 import { FeedbackModal, FeedbackType } from '../../../../components/ui/FeedbackModal'
 
 export function SupervisorClientsScreen({ navigation }: any) {
-    const [clients, setClients] = useState<Client[]>([])
+    const [clients, setClients] = useState<UserClient[]>([])
     const [loading, setLoading] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
-    const [filterMode, setFilterMode] = useState<string>('active')
+    const [filterMode, setFilterMode] = useState<ClientStatusFilter>('activo')
 
     const [feedbackVisible, setFeedbackVisible] = useState(false)
     const [feedbackConfig, setFeedbackConfig] = useState<{
@@ -27,13 +29,8 @@ export function SupervisorClientsScreen({ navigation }: any) {
     const fetchData = async () => {
         setLoading(true)
         try {
-            const [activeClients, blockedClients] = await Promise.all([
-                ClientService.getClients(),
-                ClientService.getBlockedClients()
-            ])
-
-            const allClientsRaw = [...activeClients, ...blockedClients]
-            setClients(allClientsRaw)
+            const data = await UserClientService.getClients(filterMode)
+            setClients(data)
         } catch (error) {
             console.error('Error fetching data:', error)
         } finally {
@@ -47,33 +44,37 @@ export function SupervisorClientsScreen({ navigation }: any) {
             fetchData()
         })
         return unsubscribe
-    }, [navigation])
+    }, [navigation, filterMode])
 
     const filteredClients = clients.filter(c => {
-        const matchesSearch = c.razon_social.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            c.identificacion.includes(searchQuery)
+        const fullName = [c.nombres, c.apellidos].filter(Boolean).join(' ')
+        const matchesSearch =
+            c.nombre_comercial.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (c.ruc || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (c.email || '').toLowerCase().includes(searchQuery.toLowerCase())
 
         if (!matchesSearch) return false
 
-        if (filterMode === 'active') {
-            return !c.bloqueado
+        if (filterMode === 'activo') {
+            return c.estado !== 'inactivo'
         }
 
-        if (filterMode === 'blocked') {
-            return c.bloqueado
+        if (filterMode === 'inactivo') {
+            return c.estado === 'inactivo'
         }
 
         return true
     })
 
-    const confirmToggleStatus = (client: Client) => {
-        const isBlocked = client.bloqueado
-        const actionVerb = isBlocked ? 'Activar' : 'Suspender'
+    const confirmToggleStatus = (client: UserClient) => {
+        const isInactive = client.estado === 'inactivo'
+        const actionVerb = isInactive ? 'Activar' : 'Desactivar'
 
         setFeedbackConfig({
             type: 'warning',
             title: `${actionVerb} Cliente?`,
-            message: `Estas seguro de que deseas ${actionVerb.toLowerCase()} al cliente ${client.razon_social}?`,
+            message: `Estas seguro de que deseas ${actionVerb.toLowerCase()} al cliente ${client.nombre_comercial}?`,
             showCancel: true,
             confirmText: 'Si, continuar',
             onConfirm: () => executeToggleStatus(client)
@@ -81,13 +82,16 @@ export function SupervisorClientsScreen({ navigation }: any) {
         setFeedbackVisible(true)
     }
 
-    const executeToggleStatus = async (client: Client) => {
+    const executeToggleStatus = async (client: UserClient) => {
         setFeedbackVisible(false)
         setLoading(true)
 
         try {
-            if (client.bloqueado) {
-                await ClientService.unblockClient(client.id)
+            if (client.estado === 'inactivo') {
+                const result = await UserService.updateUser(client.usuario_id, { activo: true })
+                if (!result.success) {
+                    throw new Error(result.message || 'No se pudo activar el cliente')
+                }
                 setTimeout(() => {
                     setFeedbackConfig({
                         type: 'success',
@@ -100,12 +104,15 @@ export function SupervisorClientsScreen({ navigation }: any) {
                     setFeedbackVisible(true)
                 }, 300)
             } else {
-                await ClientService.deleteClient(client.id)
+                const result = await UserService.updateUser(client.usuario_id, { activo: false })
+                if (!result.success) {
+                    throw new Error(result.message || 'No se pudo desactivar el cliente')
+                }
                 setTimeout(() => {
                     setFeedbackConfig({
                         type: 'success',
-                        title: 'Cliente Suspendido',
-                        message: 'El cliente ha sido suspendido correctamente.',
+                        title: 'Cliente Desactivado',
+                        message: 'El cliente ha sido desactivado correctamente.',
                         showCancel: false,
                         confirmText: 'Entendido',
                         onConfirm: () => setFeedbackVisible(false)
@@ -133,44 +140,45 @@ export function SupervisorClientsScreen({ navigation }: any) {
     }
 
     const filterCategories = [
-        { id: 'active', name: 'Activos' },
-        { id: 'blocked', name: 'Suspendidos' }
+        { id: 'activo', name: 'Activos' },
+        { id: 'inactivo', name: 'Inactivos' }
     ]
 
-    const renderItem = ({ item }: { item: Client }) => {
-        const displayName = item.usuario_principal_nombre || item.razon_social
-        const commercialName = item.nombre_comercial || item.razon_social
-        const isBlocked = item.bloqueado
+    const renderItem = ({ item }: { item: UserClient }) => {
+        const contactName = [item.nombres, item.apellidos].filter(Boolean).join(' ').trim()
+        const isInactive = item.estado === 'inactivo'
 
         return (
             <TouchableOpacity
                 activeOpacity={0.85}
                 onPress={() => (navigation as any).navigate('SupervisorClientDetail', { client: item })}
                 onLongPress={() => confirmToggleStatus(item)}
-                style={[styles.card, isBlocked && styles.cardDisabled]}
+                style={[styles.card, isInactive && styles.cardDisabled]}
             >
-                <View style={[styles.accent, isBlocked && styles.accentDisabled]} />
+                <View style={[styles.accent, isInactive && styles.accentDisabled]} />
                 <View style={styles.cardContent}>
                     <View style={styles.cardHeader}>
                         <View style={styles.avatarContainer}>
-                            <View style={[styles.avatar, isBlocked && styles.avatarDisabled]}>
-                                <Ionicons name="business" size={22} color={isBlocked ? '#9CA3AF' : BRAND_COLORS.red} />
+                            <View style={[styles.avatar, isInactive && styles.avatarDisabled]}>
+                                <Ionicons name="business" size={22} color={isInactive ? '#9CA3AF' : BRAND_COLORS.red} />
                             </View>
                         </View>
                         <View style={styles.headerInfo}>
-                            <Text style={[styles.clientName, isBlocked && styles.textDisabled]} numberOfLines={1}>
-                                {displayName}
+                            <Text style={[styles.clientName, isInactive && styles.textDisabled]} numberOfLines={1}>
+                                {item.nombre_comercial}
                             </Text>
-                            <Text style={styles.clientMeta} numberOfLines={1}>{commercialName}</Text>
+                            <Text style={styles.clientMeta} numberOfLines={1}>
+                                {contactName || item.email || 'Sin contacto'}
+                            </Text>
                             <View style={styles.idRow}>
                                 <Ionicons name="card-outline" size={12} color="#9CA3AF" />
-                                <Text style={styles.clientId}>{item.identificacion}</Text>
+                                <Text style={styles.clientId}>{item.ruc || 'Sin RUC'}</Text>
                             </View>
                         </View>
-                        <View style={[styles.statusBadge, isBlocked ? styles.statusBadgeBlocked : styles.statusBadgeActive]}>
-                            <View style={[styles.statusDot, isBlocked ? styles.statusDotBlocked : styles.statusDotActive]} />
-                            <Text style={[styles.statusText, isBlocked ? styles.statusTextBlocked : styles.statusTextActive]}>
-                                {isBlocked ? 'Suspendido' : 'Activo'}
+                        <View style={[styles.statusBadge, isInactive ? styles.statusBadgeBlocked : styles.statusBadgeActive]}>
+                            <View style={[styles.statusDot, isInactive ? styles.statusDotBlocked : styles.statusDotActive]} />
+                            <Text style={[styles.statusText, isInactive ? styles.statusTextBlocked : styles.statusTextActive]}>
+                                {isInactive ? 'Inactivo' : 'Activo'}
                             </Text>
                         </View>
                     </View>
@@ -179,7 +187,7 @@ export function SupervisorClientsScreen({ navigation }: any) {
                         <View style={[styles.badge, styles.badgeBlue]}>
                             <Ionicons name="pricetag" size={13} color="#2563EB" />
                             <Text style={[styles.badgeText, styles.badgeTextBlue]}>
-                                Lista #{item.lista_precios_id ?? 'N/A'}
+                                Canal: {item.canal_nombre || item.canal_codigo || 'N/A'}
                             </Text>
                         </View>
                     </View>
@@ -190,7 +198,12 @@ export function SupervisorClientsScreen({ navigation }: any) {
 
     return (
         <View className="flex-1 bg-neutral-50">
-            <Header title="Gestion de Clientes" variant="standard" onBackPress={() => navigation.goBack()} />
+            <Header
+                title="Gestion de Clientes"
+                variant="standard"
+                onBackPress={() => navigation.goBack()}
+                rightElement={<SupervisorHeaderMenu />}
+            />
 
             <View className="px-5 py-4 bg-white shadow-sm z-10">
                 <View className="flex-row items-center mb-3">
@@ -215,7 +228,7 @@ export function SupervisorClientsScreen({ navigation }: any) {
                     <CategoryFilter
                         categories={filterCategories}
                         selectedId={filterMode}
-                        onSelect={(id) => setFilterMode(String(id))}
+                        onSelect={(id) => setFilterMode(id as ClientStatusFilter)}
                     />
                 </View>
             </View>
@@ -228,7 +241,7 @@ export function SupervisorClientsScreen({ navigation }: any) {
                 ) : (
                     <FlatList
                         data={filteredClients}
-                        keyExtractor={(item) => item.id.toString()}
+                        keyExtractor={(item) => item.usuario_id}
                         renderItem={renderItem}
                         contentContainerStyle={{ paddingBottom: 100 }}
                         showsVerticalScrollIndicator={false}

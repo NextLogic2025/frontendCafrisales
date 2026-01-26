@@ -12,8 +12,11 @@ type Props = {
   left?: React.ReactNode
   right?: React.ReactNode
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters'
-  keyboardType?: 'default' | 'email-address'
+  keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad'
   textContentType?: 'emailAddress' | 'password' | 'none'
+  editable?: boolean
+  multiline?: boolean
+  maxLength?: number
 }
 
 export const TextField = React.memo(function TextField({ label, error, left, right, ...inputProps }: Props) {

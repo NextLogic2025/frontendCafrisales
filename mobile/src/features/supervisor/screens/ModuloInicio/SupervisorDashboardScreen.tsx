@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { BRAND_COLORS } from '../../../../shared/types'
 
 import { Header } from '../../../../components/ui/Header'
+import { SupervisorHeaderMenu } from '../../../../components/ui/SupervisorHeaderMenu'
 import { getUserName } from '../../../../storage/authStorage'
 import { DashboardCard } from '../../../../components/ui/DashboardCard'
 import { QuickActionsGrid } from '../../../../components/ui/QuickActionsGrid'
@@ -56,7 +57,7 @@ export function SupervisorDashboardScreen() {
                 userName={userName}
                 role="SUPERVISOR"
                 variant="home"
-                showNotification={false}
+                rightElement={<SupervisorHeaderMenu />}
             />
 
             <ScrollView

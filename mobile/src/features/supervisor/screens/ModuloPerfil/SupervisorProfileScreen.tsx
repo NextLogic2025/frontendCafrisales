@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { Header } from '../../../../components/ui/Header'
+import { SupervisorHeaderMenu } from '../../../../components/ui/SupervisorHeaderMenu'
 import { UserService, type UserProfile } from '../../../../services/api/UserService'
 import { signOut } from '../../../../services/auth/authClient'
 import { useToast } from '../../../../context/ToastContext'
@@ -60,7 +61,7 @@ export function SupervisorProfileScreen() {
 
     return (
         <>
-            <Header title="Mi Perfil" variant="standard" showNotification={false} />
+            <Header title="Mi Perfil" variant="standard" rightElement={<SupervisorHeaderMenu />} />
             <UserProfileTemplate
                 user={profile ? {
                     id: profile.id,

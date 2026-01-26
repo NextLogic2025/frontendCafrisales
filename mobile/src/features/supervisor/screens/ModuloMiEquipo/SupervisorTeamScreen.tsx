@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { View, Text, TouchableOpacity } from 'react-native'
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import { Header } from '../../../../components/ui/Header'
+import { SupervisorHeaderMenu } from '../../../../components/ui/SupervisorHeaderMenu'
 import { GenericList } from '../../../../components/ui/GenericList'
 import { SearchBar } from '../../../../components/ui/SearchBar'
 import { CategoryFilter } from '../../../../components/ui/CategoryFilter'
@@ -55,7 +56,7 @@ export function SupervisorTeamScreen() {
 
     return (
         <View className="flex-1 bg-neutral-50">
-            <Header title="Mi Equipo" variant="standard" showNotification={false} />
+            <Header title="Mi Equipo" variant="standard" rightElement={<SupervisorHeaderMenu />} />
             <View className="px-5 py-4 bg-white shadow-sm z-10">
                 <View className="flex-row items-center mb-3">
                     <View className="flex-1 mr-3">

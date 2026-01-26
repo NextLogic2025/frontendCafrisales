@@ -235,6 +235,23 @@ const rawService = {
                 }
             }
 
+            if (rol === 'cliente') {
+                payload.cliente = {
+                    canal_id: userData.canalId,
+                    nombre_comercial: userData.nombreComercial,
+                    ruc: userData.ruc || undefined,
+                    zona_id: userData.zonaId,
+                    direccion: userData.direccion,
+                    latitud: userData.latitud ?? undefined,
+                    longitud: userData.longitud ?? undefined,
+                    vendedor_asignado_id: userData.vendedorAsignadoId || undefined
+                }
+
+                if (userData.condiciones) {
+                    payload.cliente.condiciones = userData.condiciones
+                }
+            }
+
             const response = await ApiService.post<{ id?: string; userId?: string }>(AUTH_REGISTER_URL, payload)
             return {
                 success: true,
@@ -265,6 +282,7 @@ const rawService = {
         userId: string,
         data: Partial<{
             nombre: string
+            telefono: string
             activo: boolean
             rolId: number
             rol: string
@@ -281,6 +299,21 @@ const rawService = {
             const codigo = data.codigoEmpleado?.trim()
             if (rol) payload.rol = rol
             if (data.activo !== undefined) payload.estado = data.activo ? 'activo' : 'inactivo'
+
+            if (data.nombre || data.telefono !== undefined) {
+                const perfilPayload: Record<string, unknown> = {}
+                if (data.nombre) {
+                    const { nombres, apellidos } = splitName(data.nombre)
+                    perfilPayload.nombres = nombres
+                    perfilPayload.apellidos = apellidos
+                }
+                if (data.telefono !== undefined) {
+                    perfilPayload.telefono = data.telefono || undefined
+                }
+                if (Object.keys(perfilPayload).length > 0) {
+                    payload.perfil = perfilPayload
+                }
+            }
 
             if (rol === 'supervisor' && codigo) {
                 payload.supervisor = { codigo_empleado: codigo }
@@ -339,4 +372,18 @@ export interface CreateUserPayload {
     supervisorId?: string
     numeroLicencia?: string
     licenciaVenceEn?: string
+    canalId?: string
+    nombreComercial?: string
+    ruc?: string
+    zonaId?: string
+    direccion?: string
+    latitud?: number | null
+    longitud?: number | null
+    vendedorAsignadoId?: string | null
+    condiciones?: {
+        permite_negociacion?: boolean
+        porcentaje_descuento_max?: number
+        requiere_aprobacion_supervisor?: boolean
+        observaciones?: string
+    }
 }
