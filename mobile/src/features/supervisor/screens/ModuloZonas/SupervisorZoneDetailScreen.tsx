@@ -138,6 +138,12 @@ export function SupervisorZoneDetailScreen() {
     return ''
   }, [mapPoints.length, overlapZone])
 
+  React.useEffect(() => {
+    if (overlapZone) {
+      showGlobalToast(`No puedes superponer la zona con ${overlapZone.nombre}.`, 'error')
+    }
+  }, [overlapZone])
+
   const requestToggleActive = () => {
     setPendingActive(!activo)
     setConfirmVisible(true)
@@ -166,6 +172,10 @@ export function SupervisorZoneDetailScreen() {
   }
 
   const handleSave = async () => {
+    if (mapPoints.length < 3) {
+      showGlobalToast('Marca al menos 3 puntos para definir la zona.', 'error')
+      return
+    }
     if (!validate()) {
       showGlobalToast('Completa los campos obligatorios.', 'error')
       return
@@ -174,6 +184,10 @@ export function SupervisorZoneDetailScreen() {
     const geometry = toMultiPolygon(mapPoints)
     if (!geometry) {
       showGlobalToast('Define el poligono de la zona en el mapa.', 'error')
+      return
+    }
+    if (overlapZone) {
+      showGlobalToast(`No puedes superponer la zona con ${overlapZone.nombre}.`, 'error')
       return
     }
     const codigo = codigoSuffix.trim()
@@ -195,7 +209,13 @@ export function SupervisorZoneDetailScreen() {
         }
         await ZoneService.updateZoneSchedules(zone.id, schedules)
         showGlobalToast('Zona actualizada.', 'success')
-        navigation.navigate('SupervisorZones', { upsertZone: updated })
+        navigation.reset({
+          index: 1,
+          routes: [
+            { name: 'SupervisorTabs' },
+            { name: 'SupervisorZones', params: { upsertZone: updated } },
+          ],
+        })
         return
       }
 
@@ -213,7 +233,13 @@ export function SupervisorZoneDetailScreen() {
 
       await ZoneService.updateZoneSchedules(created.id, schedules)
       showGlobalToast('Zona creada.', 'success')
-      navigation.navigate('SupervisorZones', { upsertZone: created })
+      navigation.reset({
+        index: 1,
+        routes: [
+          { name: 'SupervisorTabs' },
+          { name: 'SupervisorZones', params: { upsertZone: created } },
+        ],
+      })
     } catch (error) {
       showGlobalToast(getUserFriendlyMessage(error, 'CREATE_ERROR'), 'error')
     } finally {

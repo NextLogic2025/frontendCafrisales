@@ -179,14 +179,23 @@ export function SupervisorClientFormScreen() {
     if (!zonaId) nextErrors.zonaId = 'Selecciona una zona'
     if (!direccion.trim()) nextErrors.direccion = 'Direccion requerida'
     if (ruc.trim() && ruc.trim().length !== 12) nextErrors.ruc = 'El RUC debe tener 12 digitos'
+    if (!mapPoint || !latitud.trim() || !longitud.trim()) nextErrors.ubicacion = 'Marca la ubicacion en el mapa'
 
     setErrors(nextErrors)
-    return Object.keys(nextErrors).length === 0
+    return {
+      isValid: Object.keys(nextErrors).length === 0,
+      hasLocationError: Boolean(nextErrors.ubicacion),
+    }
   }
 
   const handleCreate = async () => {
-    if (!validate()) {
-      showGlobalToast('Completa los campos obligatorios.', 'error')
+    const validation = validate()
+    if (!validation.isValid) {
+      if (validation.hasLocationError) {
+        showGlobalToast('Debes marcar la ubicacion del cliente en el mapa.', 'error')
+      } else {
+        showGlobalToast('Completa los campos obligatorios.', 'error')
+      }
       return
     }
 
@@ -230,8 +239,13 @@ export function SupervisorClientFormScreen() {
 
   const handleUpdate = async () => {
     if (!client?.usuario_id) return
-    if (!validate()) {
-      showGlobalToast('Completa los campos obligatorios.', 'error')
+    const validation = validate()
+    if (!validation.isValid) {
+      if (validation.hasLocationError) {
+        showGlobalToast('Debes marcar la ubicacion del cliente en el mapa.', 'error')
+      } else {
+        showGlobalToast('Completa los campos obligatorios.', 'error')
+      }
       return
     }
 

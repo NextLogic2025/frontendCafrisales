@@ -51,7 +51,7 @@ const rawService = {
   async getZones(status: ZoneStatusFilter = 'activo'): Promise<Zone[]> {
     try {
       const query = status ? `?estado=${encodeURIComponent(status)}` : ''
-      const data = await ApiService.get<Zone[]>(`${ZONES_BASE_URL}/zones${query}`)
+      const data = await ApiService.get<Zone[]>(`${ZONES_BASE_URL}/zonas${query}`)
       return data.map(normalizeZone)
     } catch (error) {
       logErrorForDebugging(error, 'ZoneService.getZones')
@@ -61,7 +61,7 @@ const rawService = {
 
   async getZoneById(id: string): Promise<Zone | null> {
     try {
-      const zone = await ApiService.get<Zone>(`${ZONES_BASE_URL}/zones/${id}`)
+      const zone = await ApiService.get<Zone>(`${ZONES_BASE_URL}/zonas/${id}`)
       return normalizeZone(zone)
     } catch (error) {
       logErrorForDebugging(error, 'ZoneService.getZoneById', { id })
@@ -71,7 +71,7 @@ const rawService = {
 
   async createZone(payload: CreateZonePayload): Promise<Zone | null> {
     try {
-      const zone = await ApiService.post<Zone>(`${ZONES_BASE_URL}/zones`, payload)
+      const zone = await ApiService.post<Zone>(`${ZONES_BASE_URL}/zonas`, payload)
       return normalizeZone(zone)
     } catch (error) {
       logErrorForDebugging(error, 'ZoneService.createZone')
@@ -81,7 +81,7 @@ const rawService = {
 
   async updateZone(id: string, payload: UpdateZonePayload): Promise<Zone | null> {
     try {
-      const zone = await ApiService.patch<Zone>(`${ZONES_BASE_URL}/zones/${id}`, payload)
+      const zone = await ApiService.patch<Zone>(`${ZONES_BASE_URL}/zonas/${id}`, payload)
       return normalizeZone(zone)
     } catch (error) {
       logErrorForDebugging(error, 'ZoneService.updateZone', { id })
@@ -91,7 +91,7 @@ const rawService = {
 
   async getZoneSchedules(zoneId: string): Promise<ZoneSchedule[]> {
     try {
-      return await ApiService.get<ZoneSchedule[]>(`${ZONES_BASE_URL}/zones/${zoneId}/horarios`)
+      return await ApiService.get<ZoneSchedule[]>(`${ZONES_BASE_URL}/zonas/${zoneId}/horarios`)
     } catch (error) {
       logErrorForDebugging(error, 'ZoneService.getZoneSchedules', { zoneId })
       return []
@@ -100,7 +100,7 @@ const rawService = {
 
   async updateZoneSchedules(zoneId: string, schedules: ZoneSchedule[]): Promise<ZoneSchedule[]> {
     try {
-      return await ApiService.put<ZoneSchedule[]>(`${ZONES_BASE_URL}/zones/${zoneId}/horarios`, schedules)
+      return await ApiService.put<ZoneSchedule[]>(`${ZONES_BASE_URL}/zonas/${zoneId}/horarios`, schedules)
     } catch (error) {
       logErrorForDebugging(error, 'ZoneService.updateZoneSchedules', { zoneId })
       return []
@@ -109,7 +109,7 @@ const rawService = {
 
   async resolveZoneByPoint(point: LatLng): Promise<Zone | null> {
     try {
-      const zone = await ApiService.post<Zone>(`${ZONES_BASE_URL}/zones/resolver`, point)
+      const zone = await ApiService.post<Zone>(`${ZONES_BASE_URL}/zonas/resolver`, point)
       return normalizeZone(zone)
     } catch (error) {
       logErrorForDebugging(error, 'ZoneService.resolveZoneByPoint')
