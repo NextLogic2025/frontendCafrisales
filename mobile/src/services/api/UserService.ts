@@ -193,6 +193,31 @@ const rawService = {
             const { nombres, apellidos } = splitName(userData.nombre || '')
             const currentUserId = await getCurrentUserId()
             const codigoEmpleado = userData.codigoEmpleado?.trim()
+            const staffRoles = new Set(['vendedor', 'bodeguero', 'transportista', 'supervisor'])
+
+            if (staffRoles.has(rol)) {
+                const staffPayload: Record<string, any> = {
+                    email: userData.email,
+                    password: userData.password,
+                    nombres,
+                    apellidos,
+                    telefono: userData.telefono || undefined,
+                    codigo_empleado: codigoEmpleado || undefined,
+                    supervisor_id: userData.supervisorId || undefined,
+                    numero_licencia: userData.numeroLicencia || undefined,
+                    licencia_vence_en: userData.licenciaVenceEn || undefined,
+                }
+
+                const response = await ApiService.post<{ id?: string; userId?: string; usuario_id?: string }>(
+                    `${USERS_API_URL}/usuarios/${rol}`,
+                    staffPayload,
+                )
+                return {
+                    success: true,
+                    message: 'Usuario creado exitosamente',
+                    userId: response.id || response.usuario_id || response.userId,
+                }
+            }
 
             const payload: Record<string, any> = {
                 email: userData.email,
