@@ -195,7 +195,7 @@ export function SupervisorZoneDetailScreen() {
         }
         await ZoneService.updateZoneSchedules(zone.id, schedules)
         showGlobalToast('Zona actualizada.', 'success')
-        navigation.goBack()
+        navigation.navigate('SupervisorZones', { upsertZone: updated })
         return
       }
 
@@ -213,7 +213,7 @@ export function SupervisorZoneDetailScreen() {
 
       await ZoneService.updateZoneSchedules(created.id, schedules)
       showGlobalToast('Zona creada.', 'success')
-      navigation.goBack()
+      navigation.navigate('SupervisorZones', { upsertZone: created })
     } catch (error) {
       showGlobalToast(getUserFriendlyMessage(error, 'CREATE_ERROR'), 'error')
     } finally {

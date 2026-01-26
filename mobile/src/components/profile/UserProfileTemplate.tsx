@@ -55,6 +55,13 @@ export function UserProfileTemplate({
     const [editedPhone, setEditedPhone] = useState(user.phone || '')
     const [isSaving, setIsSaving] = useState(false)
 
+    React.useEffect(() => {
+        if (!isEditMode) {
+            setEditedName(user.name || '')
+            setEditedPhone(user.phone || '')
+        }
+    }, [user.name, user.phone, isEditMode])
+
     // Feedback/Modal State
     const [feedbackVisible, setFeedbackVisible] = useState(false)
     const [feedbackConfig, setFeedbackConfig] = useState<{
@@ -161,6 +168,10 @@ export function UserProfileTemplate({
             setIsSaving(false)
         }
     }
+
+    const hasChanges =
+        editedName.trim() !== (user.name || '').trim() ||
+        editedPhone.trim() !== (user.phone || '').trim()
 
     if (isLoading) {
         return (
@@ -302,8 +313,13 @@ export function UserProfileTemplate({
                                 <TouchableOpacity
                                     onPress={handleSaveProfile}
                                     className="flex-1 py-3 rounded-xl items-center flex-row justify-center"
-                                    style={{ backgroundColor: BRAND_COLORS.red, marginLeft: 4, marginRight: 4 }}
-                                    disabled={isSaving}
+                                    style={{
+                                        backgroundColor: BRAND_COLORS.red,
+                                        marginLeft: 4,
+                                        marginRight: 4,
+                                        opacity: isSaving || !hasChanges ? 0.6 : 1
+                                    }}
+                                    disabled={isSaving || !hasChanges}
                                 >
                                     {isSaving ? (
                                         <ActivityIndicator size="small" color="white" />

@@ -1,7 +1,7 @@
 import React from 'react'
 import { View, Text, Pressable, TouchableOpacity } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { useNavigation, useFocusEffect } from '@react-navigation/native'
+import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/native'
 import { Header } from '../../../../components/ui/Header'
 import { SupervisorHeaderMenu } from '../../../../components/ui/SupervisorHeaderMenu'
 import { SearchBar } from '../../../../components/ui/SearchBar'
@@ -13,6 +13,7 @@ import { Zone, ZoneService, ZoneStatusFilter } from '../../../../services/api/Zo
 
 export function SupervisorZonesScreen() {
   const navigation = useNavigation<any>()
+  const route = useRoute<any>()
   const [zones, setZones] = React.useState<Zone[]>([])
   const [filteredZones, setFilteredZones] = React.useState<Zone[]>([])
   const [searchQuery, setSearchQuery] = React.useState('')
@@ -30,6 +31,16 @@ export function SupervisorZonesScreen() {
     }
   }, [statusFilter])
 
+  const upsertZone = React.useCallback((incoming: Zone) => {
+    setZones((prev) => {
+      const exists = prev.find((item) => item.id === incoming.id)
+      if (!exists) {
+        return [incoming, ...prev]
+      }
+      return prev.map((item) => (item.id === incoming.id ? { ...item, ...incoming } : item))
+    })
+  }, [])
+
   useFocusEffect(
     React.useCallback(() => {
       fetchZones()
@@ -39,6 +50,18 @@ export function SupervisorZonesScreen() {
   React.useEffect(() => {
     fetchZones()
   }, [fetchZones])
+
+  React.useEffect(() => {
+    const incoming = route.params?.upsertZone as Zone | undefined
+    if (incoming) {
+      upsertZone(incoming)
+      navigation.setParams({ upsertZone: undefined })
+    }
+    if (route.params?.refresh) {
+      fetchZones()
+      navigation.setParams({ refresh: undefined })
+    }
+  }, [route.params?.upsertZone, route.params?.refresh, fetchZones, navigation, upsertZone])
 
   React.useEffect(() => {
     const query = searchQuery.trim().toLowerCase()

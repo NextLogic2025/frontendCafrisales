@@ -1,6 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react'
 import { View, Text, TouchableOpacity, FlatList, ActivityIndicator, RefreshControl, StyleSheet } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import { useRoute } from '@react-navigation/native'
 import { Header } from '../../../../components/ui/Header'
 import { SupervisorHeaderMenu } from '../../../../components/ui/SupervisorHeaderMenu'
 import { SearchBar } from '../../../../components/ui/SearchBar'
@@ -11,6 +12,7 @@ import { CategoryFilter } from '../../../../components/ui/CategoryFilter'
 import { FeedbackModal, FeedbackType } from '../../../../components/ui/FeedbackModal'
 
 export function SupervisorClientsScreen({ navigation }: any) {
+    const route = useRoute<any>()
     const [clients, setClients] = useState<UserClient[]>([])
     const [loading, setLoading] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
@@ -38,6 +40,18 @@ export function SupervisorClientsScreen({ navigation }: any) {
         }
     }
 
+    const upsertClient = (incoming: UserClient) => {
+        setClients((prev) => {
+            const exists = prev.find((item) => item.usuario_id === incoming.usuario_id)
+            if (!exists) {
+                return [incoming, ...prev]
+            }
+            return prev.map((item) =>
+                item.usuario_id === incoming.usuario_id ? { ...item, ...incoming } : item
+            )
+        })
+    }
+
     useEffect(() => {
         fetchData()
         const unsubscribe = navigation.addListener('focus', () => {
@@ -45,6 +59,18 @@ export function SupervisorClientsScreen({ navigation }: any) {
         })
         return unsubscribe
     }, [navigation, filterMode])
+
+    useEffect(() => {
+        const incoming = route.params?.upsertClient as UserClient | undefined
+        if (incoming) {
+            upsertClient(incoming)
+            navigation.setParams({ upsertClient: undefined })
+        }
+        if (route.params?.refresh) {
+            fetchData()
+            navigation.setParams({ refresh: undefined })
+        }
+    }, [route.params?.upsertClient, route.params?.refresh])
 
     const filteredClients = clients.filter(c => {
         const fullName = [c.nombres, c.apellidos].filter(Boolean).join(' ')

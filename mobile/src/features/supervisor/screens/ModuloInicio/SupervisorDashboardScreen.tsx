@@ -6,6 +6,7 @@ import { BRAND_COLORS } from '../../../../shared/types'
 import { Header } from '../../../../components/ui/Header'
 import { SupervisorHeaderMenu } from '../../../../components/ui/SupervisorHeaderMenu'
 import { getUserName } from '../../../../storage/authStorage'
+import { UserService } from '../../../../services/api/UserService'
 import { DashboardCard } from '../../../../components/ui/DashboardCard'
 import { QuickActionsGrid } from '../../../../components/ui/QuickActionsGrid'
 
@@ -33,13 +34,15 @@ export function SupervisorDashboardScreen() {
     const [kpis, setKpis] = React.useState<KPI[]>(DEFAULT_KPIS)
     const [alerts, setAlerts] = React.useState<AlertItem[]>([])
     const [isLoading, setIsLoading] = React.useState(false)
-    const [userName, setUserName] = React.useState('Supervisor')
+    const [userName, setUserName] = React.useState('')
 
     const loadData = React.useCallback(async () => {
         setIsLoading(true)
         try {
             const storedName = await getUserName()
             if (storedName) setUserName(storedName)
+            const profile = await UserService.getProfile()
+            if (profile?.name) setUserName(profile.name)
         } catch (error) {
             console.error('Error loading dashboard data', error)
         } finally {

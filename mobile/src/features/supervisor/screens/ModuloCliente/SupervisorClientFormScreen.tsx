@@ -25,6 +25,8 @@ const toFixedOrEmpty = (value?: number | null) => {
   return Number(value).toFixed(6)
 }
 
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
 export function SupervisorClientFormScreen() {
   const navigation = useNavigation<any>()
   const route = useRoute<any>()
@@ -58,6 +60,15 @@ export function SupervisorClientFormScreen() {
   const [showVendedorModal, setShowVendedorModal] = React.useState(false)
   const [saving, setSaving] = React.useState(false)
   const [errors, setErrors] = React.useState<Record<string, string>>({})
+
+  const waitForClient = React.useCallback(async (usuarioId: string) => {
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      const clientData = await UserClientService.getClient(usuarioId)
+      if (clientData) return clientData
+      await delay(350)
+    }
+    return null
+  }, [])
 
   const loadSelectors = React.useCallback(async () => {
     const [zonesData, channelsData, vendorData] = await Promise.all([
@@ -152,7 +163,7 @@ export function SupervisorClientFormScreen() {
   }
 
   const handleRucChange = (value: string) => {
-    const digits = value.replace(/\D/g, '').slice(0, 12)
+    const digits = value.replace(/\D/g, '').slice(0, 13)
     setRuc(digits)
   }
 
@@ -203,8 +214,13 @@ export function SupervisorClientFormScreen() {
         return
       }
 
+      const syncedClient = result.userId ? await waitForClient(result.userId) : null
       showGlobalToast('Cliente creado correctamente.', 'success')
-      navigation.goBack()
+      navigation.navigate('SupervisorTabs', {
+        screen: 'Clientes',
+        params: syncedClient ? { upsertClient: syncedClient } : { refresh: true },
+        merge: true,
+      })
     } catch (error) {
       showGlobalToast(getUserFriendlyMessage(error, 'CREATE_ERROR'), 'error')
     } finally {
