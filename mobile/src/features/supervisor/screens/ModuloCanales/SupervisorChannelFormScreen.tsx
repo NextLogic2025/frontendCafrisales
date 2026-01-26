@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, Text, ScrollView, KeyboardAvoidingView, Platform } from 'react-native'
+import { View, Text } from 'react-native'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
 import { Header } from '../../../../components/ui/Header'
@@ -8,6 +8,7 @@ import { TextField } from '../../../../components/ui/TextField'
 import { PrimaryButton } from '../../../../components/ui/PrimaryButton'
 import { ToggleSwitch } from '../../../../components/ui/ToggleSwitch'
 import { FeedbackModal } from '../../../../components/ui/FeedbackModal'
+import { KeyboardFormLayout } from '../../../../components/ui/KeyboardFormLayout'
 import { Channel, ChannelService } from '../../../../services/api/ChannelService'
 import { showGlobalToast } from '../../../../utils/toastService'
 import { getUserFriendlyMessage } from '../../../../utils/errorMessages'
@@ -113,10 +114,9 @@ export function SupervisorChannelFormScreen() {
         rightElement={<SupervisorHeaderMenu />}
       />
 
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
-        <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
-          <View className="px-5 py-4 gap-5">
-            <View className="bg-white rounded-3xl border border-neutral-200 p-5 gap-4">
+      <KeyboardFormLayout>
+        <View className="px-5 py-4 gap-5">
+          <View className="bg-white rounded-3xl border border-neutral-200 p-5 gap-4">
               <View className="flex-row items-center">
                 <View className="w-10 h-10 rounded-xl bg-red-50 items-center justify-center mr-3 border border-red-100">
                   <Ionicons name="pricetag-outline" size={20} color="#D92D20" />
@@ -167,9 +167,8 @@ export function SupervisorChannelFormScreen() {
               onPress={handleSave}
               loading={saving}
             />
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+        </View>
+      </KeyboardFormLayout>
 
       <FeedbackModal
         visible={confirmVisible}

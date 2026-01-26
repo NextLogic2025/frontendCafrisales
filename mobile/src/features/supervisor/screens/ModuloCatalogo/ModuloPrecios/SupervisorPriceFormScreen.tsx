@@ -1,11 +1,12 @@
 import React from 'react'
-import { View, Text, ScrollView, KeyboardAvoidingView, Platform } from 'react-native'
+import { View, Text } from 'react-native'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { Header } from '../../../../../components/ui/Header'
 import { SupervisorHeaderMenu } from '../../../../../components/ui/SupervisorHeaderMenu'
 import { TextField } from '../../../../../components/ui/TextField'
 import { PrimaryButton } from '../../../../../components/ui/PrimaryButton'
 import { ComboBox, ComboBoxOption } from '../../../../../components/ui/ComboBox'
+import { KeyboardFormLayout } from '../../../../../components/ui/KeyboardFormLayout'
 import { CatalogSku, CatalogSkuService } from '../../../../../services/api/CatalogSkuService'
 import { CatalogPriceService } from '../../../../../services/api/CatalogPriceService'
 import { showGlobalToast } from '../../../../../utils/toastService'
@@ -103,10 +104,9 @@ export function SupervisorPriceFormScreen() {
         rightElement={<SupervisorHeaderMenu />}
       />
 
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
-        <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
-          <View className="px-5 py-4 gap-5">
-            <View className="bg-white rounded-3xl border border-neutral-200 p-5 gap-4">
+      <KeyboardFormLayout>
+        <View className="px-5 py-4 gap-5">
+          <View className="bg-white rounded-3xl border border-neutral-200 p-5 gap-4">
               <View>
                 <Text className="text-lg font-bold text-neutral-900">
                   {hasCurrentPrice ? 'Actualizar precio' : 'Registrar precio'}
@@ -146,10 +146,9 @@ export function SupervisorPriceFormScreen() {
                 onPress={handleSave}
                 loading={saving || loading}
               />
-            </View>
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+        </View>
+      </KeyboardFormLayout>
     </View>
   )
 }

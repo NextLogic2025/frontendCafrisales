@@ -1,11 +1,12 @@
 import React from 'react'
-import { View, Text, ScrollView, KeyboardAvoidingView, Platform } from 'react-native'
+import { View, Text, Image } from 'react-native'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { Header } from '../../../../../components/ui/Header'
 import { SupervisorHeaderMenu } from '../../../../../components/ui/SupervisorHeaderMenu'
 import { TextField } from '../../../../../components/ui/TextField'
 import { PrimaryButton } from '../../../../../components/ui/PrimaryButton'
 import { ComboBox, ComboBoxOption } from '../../../../../components/ui/ComboBox'
+import { KeyboardFormLayout } from '../../../../../components/ui/KeyboardFormLayout'
 import { CatalogProduct, CatalogProductService } from '../../../../../services/api/CatalogProductService'
 import { CatalogCategory, CatalogCategoryService } from '../../../../../services/api/CatalogCategoryService'
 import { slugify } from '../../../../../utils/slug'
@@ -24,6 +25,7 @@ export function SupervisorProductFormScreen() {
   const [nombre, setNombre] = React.useState(productParam?.nombre || '')
   const [slug, setSlug] = React.useState(productParam?.slug || '')
   const [descripcion, setDescripcion] = React.useState(productParam?.descripcion || '')
+  const [imgUrl, setImgUrl] = React.useState(productParam?.img_url || '')
   const [saving, setSaving] = React.useState(false)
   const [loading, setLoading] = React.useState(false)
 
@@ -44,6 +46,7 @@ export function SupervisorProductFormScreen() {
         setNombre(data.nombre)
         setSlug(data.slug)
         setDescripcion(data.descripcion ?? '')
+        setImgUrl(data.img_url ?? '')
         setCategoriaId(data.categoria?.id || data.categoria_id || '')
       }
     } finally {
@@ -84,6 +87,7 @@ export function SupervisorProductFormScreen() {
         nombre: nombre.trim(),
         slug: slugValue,
         descripcion: descripcion.trim() || undefined,
+        img_url: imgUrl.trim() || undefined,
       }
 
       const result = isEditing && product?.id
@@ -109,10 +113,9 @@ export function SupervisorProductFormScreen() {
         rightElement={<SupervisorHeaderMenu />}
       />
 
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
-        <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
-          <View className="px-5 py-4 gap-5">
-            <View className="bg-white rounded-3xl border border-neutral-200 p-5 gap-4">
+      <KeyboardFormLayout>
+        <View className="px-5 py-4 gap-5">
+          <View className="bg-white rounded-3xl border border-neutral-200 p-5 gap-4">
               <View>
                 <Text className="text-lg font-bold text-neutral-900">
                   {isEditing ? 'Informacion del producto' : 'Crear producto'}
@@ -150,12 +153,26 @@ export function SupervisorProductFormScreen() {
                 onChangeText={setDescripcion}
                 multiline
               />
+              <TextField
+                label="Imagen (URL)"
+                placeholder="https://..."
+                value={imgUrl}
+                onChangeText={setImgUrl}
+              />
+              {imgUrl.trim() ? (
+                <View className="rounded-2xl overflow-hidden border border-neutral-200">
+                  <Image
+                    source={{ uri: imgUrl.trim() }}
+                    style={{ width: '100%', height: 160 }}
+                    resizeMode="cover"
+                  />
+                </View>
+              ) : null}
 
               <PrimaryButton title={isEditing ? 'Guardar cambios' : 'Crear producto'} onPress={handleSave} loading={saving || loading} />
-            </View>
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+        </View>
+      </KeyboardFormLayout>
     </View>
   )
 }

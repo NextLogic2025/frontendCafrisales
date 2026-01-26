@@ -1,10 +1,11 @@
 import React from 'react'
-import { View, Text, ScrollView, KeyboardAvoidingView, Platform } from 'react-native'
+import { View, Text, Image } from 'react-native'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { Header } from '../../../../../components/ui/Header'
 import { SupervisorHeaderMenu } from '../../../../../components/ui/SupervisorHeaderMenu'
 import { TextField } from '../../../../../components/ui/TextField'
 import { PrimaryButton } from '../../../../../components/ui/PrimaryButton'
+import { KeyboardFormLayout } from '../../../../../components/ui/KeyboardFormLayout'
 import { CatalogCategory, CatalogCategoryService } from '../../../../../services/api/CatalogCategoryService'
 import { slugify } from '../../../../../utils/slug'
 import { showGlobalToast } from '../../../../../utils/toastService'
@@ -20,6 +21,7 @@ export function SupervisorCategoryFormScreen() {
   const [nombre, setNombre] = React.useState(categoryParam?.nombre || '')
   const [slug, setSlug] = React.useState(categoryParam?.slug || '')
   const [descripcion, setDescripcion] = React.useState(categoryParam?.descripcion || '')
+  const [imgUrl, setImgUrl] = React.useState(categoryParam?.img_url || '')
   const [saving, setSaving] = React.useState(false)
   const [loading, setLoading] = React.useState(false)
 
@@ -35,6 +37,7 @@ export function SupervisorCategoryFormScreen() {
         setNombre(data.nombre)
         setSlug(data.slug)
         setDescripcion(data.descripcion ?? '')
+        setImgUrl(data.img_url ?? '')
       }
     } finally {
       setLoading(false)
@@ -62,6 +65,7 @@ export function SupervisorCategoryFormScreen() {
         nombre: nombre.trim(),
         slug: slugValue,
         descripcion: descripcion.trim() || undefined,
+        img_url: imgUrl.trim() || undefined,
       }
       const result = isEditing && category?.id
         ? await CatalogCategoryService.updateCategory(category.id, payload)
@@ -86,10 +90,9 @@ export function SupervisorCategoryFormScreen() {
         rightElement={<SupervisorHeaderMenu />}
       />
 
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
-        <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
-          <View className="px-5 py-4 gap-5">
-            <View className="bg-white rounded-3xl border border-neutral-200 p-5 gap-4">
+      <KeyboardFormLayout>
+        <View className="px-5 py-4 gap-5">
+          <View className="bg-white rounded-3xl border border-neutral-200 p-5 gap-4">
               <View>
                 <Text className="text-lg font-bold text-neutral-900">
                   {isEditing ? 'Informacion de la categoria' : 'Crear categoria'}
@@ -118,12 +121,26 @@ export function SupervisorCategoryFormScreen() {
                 onChangeText={setDescripcion}
                 multiline
               />
+              <TextField
+                label="Imagen (URL)"
+                placeholder="https://..."
+                value={imgUrl}
+                onChangeText={setImgUrl}
+              />
+              {imgUrl.trim() ? (
+                <View className="rounded-2xl overflow-hidden border border-neutral-200">
+                  <Image
+                    source={{ uri: imgUrl.trim() }}
+                    style={{ width: '100%', height: 160 }}
+                    resizeMode="cover"
+                  />
+                </View>
+              ) : null}
 
               <PrimaryButton title={isEditing ? 'Guardar cambios' : 'Crear categoria'} onPress={handleSave} loading={saving || loading} />
-            </View>
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+        </View>
+      </KeyboardFormLayout>
     </View>
   )
 }

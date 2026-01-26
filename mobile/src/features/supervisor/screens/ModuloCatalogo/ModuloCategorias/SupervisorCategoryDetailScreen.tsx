@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, Text, ScrollView, ActivityIndicator, RefreshControl, StyleSheet } from 'react-native'
+import { View, Text, ScrollView, ActivityIndicator, RefreshControl, StyleSheet, Image } from 'react-native'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
 import { Header } from '../../../../../components/ui/Header'
@@ -72,6 +72,16 @@ export function SupervisorCategoryDetailScreen() {
       >
         <View className="px-5 py-4">
           <View className="bg-white p-5 rounded-3xl border border-neutral-200" style={styles.card}>
+            <View className="mb-4 rounded-3xl overflow-hidden border border-neutral-200">
+              {category.img_url ? (
+                <Image source={{ uri: category.img_url }} style={styles.heroImage} resizeMode="cover" />
+              ) : (
+                <View className="h-40 bg-neutral-50 items-center justify-center">
+                  <Ionicons name="image-outline" size={32} color="#9CA3AF" />
+                  <Text className="text-xs text-neutral-400 mt-2">Sin imagen</Text>
+                </View>
+              )}
+            </View>
             <View className="flex-row items-center justify-between mb-4">
               <View className="flex-row items-center flex-1">
                 <View className="w-12 h-12 rounded-2xl bg-red-50 items-center justify-center mr-3 border border-red-100">
@@ -121,5 +131,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 3,
+  },
+  heroImage: {
+    width: '100%',
+    height: 160,
   },
 })

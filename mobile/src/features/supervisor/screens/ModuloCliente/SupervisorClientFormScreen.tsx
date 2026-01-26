@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, Text, ScrollView, KeyboardAvoidingView, Platform, Pressable } from 'react-native'
+import { View, Text, Pressable } from 'react-native'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
 
@@ -9,6 +9,7 @@ import { TextField } from '../../../../components/ui/TextField'
 import { PrimaryButton } from '../../../../components/ui/PrimaryButton'
 import { PickerModal, PickerOption } from '../../../../components/ui/PickerModal'
 import { LocationPickerMap } from '../../../../components/ui/LocationPickerMap'
+import { KeyboardFormLayout } from '../../../../components/ui/KeyboardFormLayout'
 import { BRAND_COLORS } from '../../../../shared/types'
 import { Zone, ZoneService } from '../../../../services/api/ZoneService'
 import { Channel, ChannelService } from '../../../../services/api/ChannelService'
@@ -302,9 +303,8 @@ export function SupervisorClientFormScreen() {
         rightElement={<SupervisorHeaderMenu />}
       />
 
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
-        <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
-          <View className="px-5 py-4 gap-5">
+      <KeyboardFormLayout>
+        <View className="px-5 py-4 gap-5">
             <View className="bg-white rounded-3xl border border-neutral-200 p-5 gap-4">
               <View className="flex-row items-center">
                 <View className="w-10 h-10 rounded-xl bg-red-50 items-center justify-center mr-3 border border-red-100">
@@ -481,9 +481,8 @@ export function SupervisorClientFormScreen() {
               onPress={handleSave}
               loading={saving}
             />
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+        </View>
+      </KeyboardFormLayout>
 
       <PickerModal
         visible={showCanalModal}

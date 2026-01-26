@@ -8,12 +8,14 @@ export type CatalogCategory = {
   nombre: string
   slug: string
   descripcion?: string | null
+  img_url?: string | null
 }
 
 export type CatalogCategoryPayload = {
   nombre: string
   slug?: string
   descripcion?: string
+  img_url?: string
 }
 
 const CATALOG_BASE_URL = env.api.catalogUrl

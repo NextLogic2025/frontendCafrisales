@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, Text, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native'
+import { View, Text, TouchableOpacity } from 'react-native'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
 import { Header } from '../../../../components/ui/Header'
@@ -9,6 +9,8 @@ import { CategoryFilter } from '../../../../components/ui/CategoryFilter'
 import { TextField } from '../../../../components/ui/TextField'
 import { PrimaryButton } from '../../../../components/ui/PrimaryButton'
 import { ToggleSwitch } from '../../../../components/ui/ToggleSwitch'
+import { KeyboardFormLayout } from '../../../../components/ui/KeyboardFormLayout'
+import { DatePickerModal } from '../../../../components/ui/DatePickerModal'
 import { showGlobalToast } from '../../../../utils/toastService'
 import { getUserFriendlyMessage } from '../../../../utils/errorMessages'
 
@@ -67,6 +69,7 @@ export function SupervisorTeamDetailScreen() {
   )
   const [numeroLicencia, setNumeroLicencia] = React.useState(user?.numeroLicencia || '')
   const [licenciaVenceEn, setLicenciaVenceEn] = React.useState(user?.licenciaVenceEn || '')
+  const [showDatePicker, setShowDatePicker] = React.useState(false)
   const [activo, setActivo] = React.useState(user?.active ?? true)
   const [saving, setSaving] = React.useState(false)
   const [errors, setErrors] = React.useState<Record<string, string>>({})
@@ -166,6 +169,7 @@ export function SupervisorTeamDetailScreen() {
   const displayName = nombre.trim() || user?.name || 'Empleado'
   const displayRole = ROLE_LABELS[normalizeRole(role)] || role || 'Sin rol'
   const initials = getInitials(displayName)
+  const licenciaLabel = licenciaVenceEn ? licenciaVenceEn : 'Selecciona fecha'
 
   return (
     <View className="flex-1 bg-neutral-50">
@@ -176,9 +180,8 @@ export function SupervisorTeamDetailScreen() {
         rightElement={<SupervisorHeaderMenu />}
       />
 
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
-        <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
-          <View className="px-5 py-4 gap-5">
+      <KeyboardFormLayout>
+        <View className="px-5 py-4 gap-5">
             {isEditing ? (
               <>
                 <View className="bg-white rounded-3xl border border-neutral-200 p-5">
@@ -233,12 +236,13 @@ export function SupervisorTeamDetailScreen() {
                         onChangeText={setNumeroLicencia}
                         error={errors.numeroLicencia}
                       />
-                      <TextField
-                        label="Licencia vence en"
-                        placeholder="2027-12-31"
-                        value={licenciaVenceEn}
-                        onChangeText={setLicenciaVenceEn}
-                      />
+                      <TouchableOpacity onPress={() => setShowDatePicker(true)} className="gap-2">
+                        <Text className="text-xs text-neutral-600">Licencia vence en</Text>
+                        <View className="flex-row items-center rounded-2xl border px-4 py-3 bg-neutral-50 border-neutral-200">
+                          <Text className="flex-1 text-neutral-900">{licenciaLabel}</Text>
+                          <Ionicons name="calendar-outline" size={18} color="#6B7280" />
+                        </View>
+                      </TouchableOpacity>
                     </>
                   ) : null}
 
@@ -325,12 +329,13 @@ export function SupervisorTeamDetailScreen() {
                       onChangeText={setNumeroLicencia}
                       error={errors.numeroLicencia}
                     />
-                    <TextField
-                      label="Licencia vence en"
-                      placeholder="2027-12-31"
-                      value={licenciaVenceEn}
-                      onChangeText={setLicenciaVenceEn}
-                    />
+                    <TouchableOpacity onPress={() => setShowDatePicker(true)} className="gap-2">
+                      <Text className="text-xs text-neutral-600">Licencia vence en</Text>
+                      <View className="flex-row items-center rounded-2xl border px-4 py-3 bg-neutral-50 border-neutral-200">
+                        <Text className="flex-1 text-neutral-900">{licenciaLabel}</Text>
+                        <Ionicons name="calendar-outline" size={18} color="#6B7280" />
+                      </View>
+                    </TouchableOpacity>
                   </>
                 ) : null}
 
@@ -343,9 +348,18 @@ export function SupervisorTeamDetailScreen() {
                 <Text className="text-neutral-500">Cancelar</Text>
               </TouchableOpacity>
             ) : null}
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+        </View>
+      </KeyboardFormLayout>
+
+      <DatePickerModal
+        visible={showDatePicker}
+        title="Vencimiento de licencia"
+        infoText="Selecciona la fecha de vencimiento."
+        initialDate={licenciaVenceEn || undefined}
+        onSelectDate={(date) => setLicenciaVenceEn(date)}
+        onClear={() => setLicenciaVenceEn('')}
+        onClose={() => setShowDatePicker(false)}
+      />
     </View>
   )
 }

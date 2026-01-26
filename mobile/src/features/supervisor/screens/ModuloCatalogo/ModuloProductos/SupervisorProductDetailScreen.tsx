@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, Text, ScrollView, ActivityIndicator, RefreshControl, StyleSheet } from 'react-native'
+import { View, Text, ScrollView, ActivityIndicator, RefreshControl, StyleSheet, Image } from 'react-native'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
 import { Header } from '../../../../../components/ui/Header'
@@ -77,6 +77,16 @@ export function SupervisorProductDetailScreen() {
       >
         <View className="px-5 py-4">
           <View className="bg-white p-5 rounded-3xl border border-neutral-200" style={styles.card}>
+            <View className="mb-4 rounded-3xl overflow-hidden border border-neutral-200">
+              {product.img_url ? (
+                <Image source={{ uri: product.img_url }} style={styles.heroImage} resizeMode="cover" />
+              ) : (
+                <View className="h-44 bg-neutral-50 items-center justify-center">
+                  <Ionicons name="image-outline" size={32} color="#9CA3AF" />
+                  <Text className="text-xs text-neutral-400 mt-2">Sin imagen</Text>
+                </View>
+              )}
+            </View>
             <View className="flex-row items-center justify-between mb-4">
               <View className="flex-row items-center flex-1">
                 <View className="w-12 h-12 rounded-2xl bg-red-50 items-center justify-center mr-3 border border-red-100">
@@ -123,17 +133,21 @@ export function SupervisorProductDetailScreen() {
                   <View className="flex-row items-start justify-between">
                     <View className="flex-1 mr-3">
                       <Text className="text-base font-bold text-neutral-900">{sku.nombre}</Text>
-                      <Text className="text-xs text-neutral-500 mt-1">
-                        {sku.codigo_sku} • {sku.peso_gramos}g
-                      </Text>
-                      <Text className="text-xs text-neutral-500 mt-1">
-                        Precio vigente: <Text className="text-neutral-900 font-semibold">{getCurrentPrice(sku)}</Text>
-                      </Text>
+                      <Text className="text-xs text-neutral-500 mt-1">{sku.codigo_sku}</Text>
+                      <View className="flex-row items-center gap-2 mt-2">
+                        <View className="px-3 py-1 rounded-full bg-neutral-100 border border-neutral-200">
+                          <Text className="text-xs text-neutral-700">Presentacion {sku.peso_gramos} g</Text>
+                        </View>
+                        <View className="px-3 py-1 rounded-full bg-red-50 border border-red-100">
+                          <Text className="text-xs text-red-700 font-semibold">{getCurrentPrice(sku)}</Text>
+                        </View>
+                      </View>
                     </View>
                     <View className="w-10 h-10 rounded-xl items-center justify-center border border-red-100 bg-red-50">
                       <Ionicons name="barcode-outline" size={20} color={BRAND_COLORS.red} />
                     </View>
                   </View>
+
                 </View>
               ))
             ) : (
@@ -159,5 +173,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 6,
     elevation: 3,
+  },
+  heroImage: {
+    width: '100%',
+    height: 180,
   },
 })

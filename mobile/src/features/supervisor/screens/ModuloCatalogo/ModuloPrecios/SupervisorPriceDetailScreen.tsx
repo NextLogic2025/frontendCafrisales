@@ -1,7 +1,7 @@
 import React from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { useNavigation, useRoute } from '@react-navigation/native'
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native'
 import { Header } from '../../../../../components/ui/Header'
 import { SupervisorHeaderMenu } from '../../../../../components/ui/SupervisorHeaderMenu'
 import { GenericList } from '../../../../../components/ui/GenericList'
@@ -23,7 +23,13 @@ export function SupervisorPriceDetailScreen() {
   const loadSku = React.useCallback(async () => {
     if (!skuId) return
     const data = await CatalogSkuService.getSku(skuId)
-    if (data) setSku(data)
+    if (data) {
+      setSku(data)
+      if (data.precios?.length) {
+        const sorted = [...data.precios].sort((a, b) => (a.vigente_desde < b.vigente_desde ? 1 : -1))
+        setHistory(sorted)
+      }
+    }
   }, [skuId])
 
   const loadHistory = React.useCallback(async () => {
@@ -42,6 +48,13 @@ export function SupervisorPriceDetailScreen() {
     loadHistory()
   }, [loadSku, loadHistory])
 
+  useFocusEffect(
+    React.useCallback(() => {
+      loadSku()
+      loadHistory()
+    }, [loadSku, loadHistory]),
+  )
+
   const currentPrice = history.find((item) => !item.vigente_hasta)
 
   return (
@@ -53,7 +66,7 @@ export function SupervisorPriceDetailScreen() {
         rightElement={<SupervisorHeaderMenu />}
       />
 
-      <View className="px-5 py-4 gap-4">
+      <View className="flex-1 px-5 py-4 gap-4">
         <View className="bg-white rounded-3xl border border-neutral-200 p-5 gap-3" style={styles.card}>
           <View className="flex-row items-center justify-between">
             <View>
@@ -83,7 +96,7 @@ export function SupervisorPriceDetailScreen() {
           onPress={() => navigation.navigate('SupervisorPriceForm', { sku })}
         />
 
-        <View className="bg-white rounded-3xl border border-neutral-200 p-5">
+        <View className="flex-1 bg-white rounded-3xl border border-neutral-200 p-5">
           <Text className="text-base font-bold text-neutral-900 mb-3">Historial de precios</Text>
           <GenericList
             items={history}
