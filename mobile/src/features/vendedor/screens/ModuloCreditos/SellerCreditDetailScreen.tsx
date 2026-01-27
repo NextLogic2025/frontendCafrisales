@@ -49,7 +49,10 @@ export function SellerCreditDetailScreen() {
 
       const credito = data?.credito
       if (credito?.cliente_id) {
-        const clientData = await UserClientService.getClient(credito.cliente_id)
+        let clientData = await UserClientService.getClientForVendedor(credito.cliente_id)
+        if (!clientData) {
+          clientData = await UserClientService.getClient(credito.cliente_id)
+        }
         setClient(clientData)
       } else {
         setClient(null)

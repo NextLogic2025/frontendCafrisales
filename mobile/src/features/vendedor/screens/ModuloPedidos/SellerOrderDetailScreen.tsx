@@ -47,7 +47,10 @@ export function SellerOrderDetailScreen() {
 
       const clienteId = data?.pedido?.cliente_id
       if (clienteId) {
-        const clientData = await UserClientService.getClient(clienteId)
+        let clientData = await UserClientService.getClientForVendedor(clienteId)
+        if (!clientData) {
+          clientData = await UserClientService.getClient(clienteId)
+        }
         setClient(clientData)
       } else {
         setClient(null)

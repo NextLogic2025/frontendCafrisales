@@ -12,6 +12,7 @@ import { useCart } from '../../../../context/CartContext'
 import { showGlobalToast } from '../../../../utils/toastService'
 import { OrderService } from '../../../../services/api/OrderService'
 import { CreditService } from '../../../../services/api/CreditService'
+import { UserClientService } from '../../../../services/api/UserClientService'
 import { useStableInsets } from '../../../../hooks/useStableInsets'
 
 export function SellerOrderReviewScreen() {
@@ -23,8 +24,39 @@ export function SellerOrderReviewScreen() {
   const [creditModalVisible, setCreditModalVisible] = React.useState(false)
   const [creditPlazo, setCreditPlazo] = React.useState('30')
   const [creditNotas, setCreditNotas] = React.useState('')
+  const [discountModalVisible, setDiscountModalVisible] = React.useState(false)
+  const [selectedItemId, setSelectedItemId] = React.useState<string | null>(null)
+  const [discountType, setDiscountType] = React.useState<'porcentaje' | 'monto_fijo'>('porcentaje')
+  const [discountValue, setDiscountValue] = React.useState('')
+  const [discountRequiresApproval, setDiscountRequiresApproval] = React.useState(false)
+  const [clientConditions, setClientConditions] = React.useState<{
+    permite_negociacion?: boolean | null
+    max_descuento_porcentaje?: number | null
+    requiere_aprobacion_supervisor?: boolean | null
+  } | null>(null)
+  const [loadingConditions, setLoadingConditions] = React.useState(false)
 
   const totals = cart.getTotals()
+
+  React.useEffect(() => {
+    const clientId = cart.selectedClient?.usuario_id
+    if (!clientId) {
+      setClientConditions(null)
+      return
+    }
+    let active = true
+    setLoadingConditions(true)
+    UserClientService.getClientConditions(clientId)
+      .then((data) => {
+        if (active) setClientConditions(data)
+      })
+      .finally(() => {
+        if (active) setLoadingConditions(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [cart.selectedClient?.usuario_id])
 
   const submitOrder = async () => {
     if (!cart.selectedClient) {
@@ -36,6 +68,21 @@ export function SellerOrderReviewScreen() {
       showGlobalToast('El carrito esta vacio', 'warning')
       navigation.navigate('SellerTabs', { screen: 'Carrito' })
       return
+    }
+    const hasNegotiatedItems = cart.items.some((item) => item.discountType && item.discountValue)
+    if (clientConditions?.permite_negociacion === false && hasNegotiatedItems) {
+      showGlobalToast('El cliente no permite negociaciones', 'warning')
+      return
+    }
+    const maxDescuento = clientConditions?.max_descuento_porcentaje
+    if (maxDescuento != null) {
+      const exceeds = cart.items.some(
+        (item) => item.discountType === 'porcentaje' && (item.discountValue ?? 0) > maxDescuento,
+      )
+      if (exceeds) {
+        showGlobalToast(`El descuento maximo permitido es ${maxDescuento}%`, 'warning')
+        return
+      }
     }
     if (!checked) {
       showGlobalToast('Confirma que revisaste el pedido', 'warning')
@@ -51,6 +98,10 @@ export function SellerOrderReviewScreen() {
         items: cart.items.map((item) => ({
           sku_id: item.skuId,
           cantidad: item.quantity,
+          descuento_item_tipo: item.discountType,
+          descuento_item_valor: item.discountValue,
+          requiere_aprobacion: item.requiresApproval,
+          origen_precio: item.discountType ? 'negociado' : 'catalogo',
         })),
       }
 
@@ -95,6 +146,58 @@ export function SellerOrderReviewScreen() {
     submitOrder()
   }
 
+  const openDiscountModal = (itemId: string) => {
+    if (loadingConditions) {
+      showGlobalToast('Cargando condiciones del cliente...', 'warning')
+      return
+    }
+    if (clientConditions && clientConditions.permite_negociacion === false) {
+      showGlobalToast('El cliente no permite negociaciones', 'warning')
+      return
+    }
+    const item = cart.items.find((entry) => entry.skuId === itemId)
+    setSelectedItemId(itemId)
+    setDiscountType(item?.discountType ?? 'porcentaje')
+    setDiscountValue(item?.discountValue != null ? String(item.discountValue) : '')
+    setDiscountRequiresApproval(item?.requiresApproval ?? clientConditions?.requiere_aprobacion_supervisor ?? false)
+    setDiscountModalVisible(true)
+  }
+
+  const applyDiscount = () => {
+    if (!selectedItemId) {
+      setDiscountModalVisible(false)
+      return
+    }
+    const value = Number(discountValue)
+    if (!Number.isFinite(value) || value <= 0) {
+      cart.updateItemDiscount(selectedItemId, {
+        discountType: undefined,
+        discountValue: undefined,
+        priceOrigin: 'catalogo',
+        requiresApproval: false,
+      })
+      setDiscountModalVisible(false)
+      return
+    }
+
+    if (
+      discountType === 'porcentaje' &&
+      clientConditions?.max_descuento_porcentaje != null &&
+      value > clientConditions.max_descuento_porcentaje
+    ) {
+      showGlobalToast(`El descuento maximo permitido es ${clientConditions.max_descuento_porcentaje}%`, 'warning')
+      return
+    }
+
+    cart.updateItemDiscount(selectedItemId, {
+      discountType,
+      discountValue: value,
+      priceOrigin: 'negociado',
+      requiresApproval: discountRequiresApproval,
+    })
+    setDiscountModalVisible(false)
+  }
+
   return (
     <View className="flex-1 bg-neutral-50">
       <Header
@@ -130,7 +233,8 @@ export function SellerOrderReviewScreen() {
           <Text className="text-sm font-semibold text-neutral-700 mb-3">Detalle del pedido</Text>
           <View className="bg-white rounded-3xl border border-neutral-100 p-4 shadow-sm">
             {cart.items.map((item, index) => {
-              const lineTotal = item.price * item.quantity
+              const unitPrice = cart.getItemUnitPrice(item.skuId)
+              const lineTotal = unitPrice * item.quantity
               return (
                 <View key={item.skuId} className={`${index > 0 ? 'mt-4 pt-4 border-t border-neutral-100' : ''}`}>
                   <Text className="text-xs text-neutral-500">{item.skuCode}</Text>
@@ -141,6 +245,26 @@ export function SellerOrderReviewScreen() {
                     <Text className="text-sm text-neutral-600">Cantidad: {item.quantity}</Text>
                     <Text className="text-sm font-semibold text-neutral-900">${lineTotal.toFixed(2)}</Text>
                   </View>
+                  <View className="flex-row items-center justify-between mt-2">
+                    <Text className="text-xs text-neutral-500">
+                      Precio unitario: ${unitPrice.toFixed(2)}
+                    </Text>
+                    <Pressable
+                      onPress={() => openDiscountModal(item.skuId)}
+                      className="px-3 py-1 rounded-full bg-red-50"
+                    >
+                      <Text className="text-xs font-semibold text-brand-red">
+                        {item.discountType ? 'Editar descuento' : 'Agregar descuento'}
+                      </Text>
+                    </Pressable>
+                  </View>
+                  {item.discountType && item.discountValue != null ? (
+                    <Text className="text-xs text-amber-600 mt-2">
+                      Descuento aplicado: {item.discountType === 'porcentaje'
+                        ? `${item.discountValue}%`
+                        : `-$${item.discountValue.toFixed(2)}`} {item.requiresApproval ? '- Requiere aprobacion' : ''}
+                    </Text>
+                  ) : null}
                 </View>
               )
             })}
@@ -202,6 +326,61 @@ export function SellerOrderReviewScreen() {
             onPress={submitOrder}
             disabled={submitting}
           />
+        </View>
+      </GenericModal>
+
+      <GenericModal
+        visible={discountModalVisible}
+        title="Descuento por item"
+        onClose={() => setDiscountModalVisible(false)}
+      >
+        <View className="gap-4">
+          <Text className="text-sm text-neutral-600">
+            Selecciona el tipo de descuento y el valor a aplicar.
+          </Text>
+          <View className="flex-row gap-3">
+            <Pressable
+              onPress={() => setDiscountType('porcentaje')}
+              className={`flex-1 rounded-xl px-4 py-2 border ${
+                discountType === 'porcentaje' ? 'bg-red-50 border-red-200' : 'border-neutral-200'
+              }`}
+            >
+              <Text className={`text-center text-sm font-semibold ${
+                discountType === 'porcentaje' ? 'text-brand-red' : 'text-neutral-700'
+              }`}>Porcentaje</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setDiscountType('monto_fijo')}
+              className={`flex-1 rounded-xl px-4 py-2 border ${
+                discountType === 'monto_fijo' ? 'bg-red-50 border-red-200' : 'border-neutral-200'
+              }`}
+            >
+              <Text className={`text-center text-sm font-semibold ${
+                discountType === 'monto_fijo' ? 'text-brand-red' : 'text-neutral-700'
+              }`}>Monto fijo</Text>
+            </Pressable>
+          </View>
+          <TextField
+            label={discountType === 'porcentaje' ? 'Valor (%)' : 'Valor ($)'}
+            keyboardType="numeric"
+            value={discountValue}
+            onChangeText={setDiscountValue}
+            placeholder={discountType === 'porcentaje' ? '10' : '2.50'}
+          />
+          <Pressable
+            onPress={() => setDiscountRequiresApproval((prev) => !prev)}
+            className="flex-row items-center"
+          >
+            <View
+              className={`h-5 w-5 rounded-md border mr-3 items-center justify-center ${
+                discountRequiresApproval ? 'bg-brand-red border-brand-red' : 'border-neutral-300'
+              }`}
+            >
+              {discountRequiresApproval && <Ionicons name="checkmark" size={14} color="white" />}
+            </View>
+            <Text className="text-sm text-neutral-700">Requiere aprobacion</Text>
+          </Pressable>
+          <PrimaryButton title="Guardar descuento" onPress={applyDiscount} />
         </View>
       </GenericModal>
     </View>

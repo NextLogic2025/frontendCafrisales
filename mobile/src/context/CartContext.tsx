@@ -12,6 +12,10 @@ export type CartItem = {
     quantity: number
     image?: string
     categoryName?: string
+    discountType?: 'porcentaje' | 'monto_fijo'
+    discountValue?: number
+    priceOrigin?: 'catalogo' | 'negociado'
+    requiresApproval?: boolean
 }
 
 type CartContextValue = {
@@ -22,10 +26,17 @@ type CartContextValue = {
     setClient: (client: UserClient | null) => void
     addItem: (item: CartItem) => void
     updateQuantity: (skuId: string, quantity: number) => void
+    updateItemDiscount: (skuId: string, discount: {
+        discountType?: 'porcentaje' | 'monto_fijo'
+        discountValue?: number
+        priceOrigin?: 'catalogo' | 'negociado'
+        requiresApproval?: boolean
+    }) => void
     removeItem: (skuId: string) => void
     clear: () => void
     getItemCount: () => number
     getTotals: () => { subtotal: number; tax: number; total: number }
+    getItemUnitPrice: (skuId: string) => number
 }
 
 const CartContext = React.createContext<CartContextValue | null>(null)
@@ -59,6 +70,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         )
     }, [])
 
+    const updateItemDiscount = React.useCallback((skuId: string, discount: {
+        discountType?: 'porcentaje' | 'monto_fijo'
+        discountValue?: number
+        priceOrigin?: 'catalogo' | 'negociado'
+        requiresApproval?: boolean
+    }) => {
+        setItems((prev) =>
+            prev.map((item) =>
+                item.skuId === skuId
+                    ? {
+                        ...item,
+                        discountType: discount.discountType,
+                        discountValue: discount.discountValue,
+                        priceOrigin: discount.priceOrigin,
+                        requiresApproval: discount.requiresApproval ?? false,
+                    }
+                    : item
+            )
+        )
+    }, [])
+
     const removeItem = React.useCallback((skuId: string) => {
         setItems((prev) => prev.filter((item) => item.skuId !== skuId))
     }, [])
@@ -73,12 +105,32 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         return items.reduce((total, item) => total + item.quantity, 0)
     }, [items])
 
+    const getItemUnitPrice = React.useCallback((skuId: string) => {
+        const item = items.find((entry) => entry.skuId === skuId)
+        if (!item) {
+            return 0
+        }
+        const base = item.price
+        const tipo = item.discountType
+        const valor = item.discountValue
+        if (!tipo || !valor || valor <= 0) {
+            return base
+        }
+        if (tipo === 'porcentaje') {
+            return Number((base * (1 - valor / 100)).toFixed(2))
+        }
+        return Number(Math.max(0, base - valor).toFixed(2))
+    }, [items])
+
     const getTotals = React.useCallback(() => {
-        const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+        const subtotal = items.reduce((sum, item) => {
+            const unitPrice = getItemUnitPrice(item.skuId)
+            return sum + unitPrice * item.quantity
+        }, 0)
         const tax = subtotal * TAX_RATE
         const total = subtotal + tax
         return { subtotal, tax, total }
-    }, [items])
+    }, [items, getItemUnitPrice])
 
     const value = React.useMemo<CartContextValue>(() => ({
         items,
@@ -88,11 +140,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         setClient: setSelectedClient,
         addItem,
         updateQuantity,
+        updateItemDiscount,
         removeItem,
         clear,
         getItemCount,
         getTotals,
-    }), [items, selectedClient, paymentMethod, addItem, updateQuantity, removeItem, clear, getItemCount, getTotals])
+        getItemUnitPrice,
+    }), [items, selectedClient, paymentMethod, addItem, updateQuantity, updateItemDiscount, removeItem, clear, getItemCount, getTotals, getItemUnitPrice])
 
     return <CartContext.Provider value={value}>{children}</CartContext.Provider>
 }
