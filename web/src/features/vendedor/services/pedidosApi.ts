@@ -68,6 +68,17 @@ export async function getOrders(): Promise<OrderResponse[]> {
     return await res.json()
 }
 
+export async function getMyOrders(): Promise<OrderResponse[]> {
+    const token = await getValidToken()
+    if (!token) throw new Error('No hay sesión activa')
+
+    const res = await fetch(`${ORDERS_API_URL}/pedidos/my-orders`, {
+        headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!res.ok) return []
+    return await res.json()
+}
+
 export async function cancelOrder(orderId: string, motivo: string): Promise<void> {
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')

@@ -96,8 +96,10 @@ export interface ItemPedido {
   id: string
   productName: string
   quantity: number
+  cantidad?: number
   unit: string
   unitPrice: number
+  precio_unitario_final?: number
   subtotal: number
   cantidad_solicitada?: number | null
   motivo_ajuste?: string | null
@@ -106,9 +108,13 @@ export interface ItemPedido {
 export interface Pedido {
   id: string
   orderNumber: string
+  numero_pedido?: string
   createdAt: string
+  creado_en?: string
   totalAmount: number
+  total?: number
   status: EstadoPedido
+  estado?: EstadoPedido | string
   items: ItemPedido[]
 }
 

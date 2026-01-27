@@ -25,18 +25,37 @@ export function OrdersTable({ pedidos, onViewDetail, onCancelOrder }: OrdersTabl
                 <tbody>
                     {pedidos.map(pedido => (
                         <tr key={pedido.id} className="border-b border-gray-100 hover:bg-gray-50">
-                            <td className="px-4 py-3 text-sm font-medium text-gray-900">{pedido.orderNumber}</td>
-                            <td className="px-4 py-3 text-sm text-gray-600">{new Date(pedido.createdAt).toLocaleDateString('es-ES')}</td>
-                            <td className="px-4 py-3 text-sm font-semibold text-gray-900">${pedido.totalAmount.toFixed(2)}</td>
+                            <td className="px-4 py-3 text-sm font-medium text-gray-900">{pedido.numero_pedido || pedido.orderNumber || 'N/A'}</td>
+                            <td className="px-4 py-3 text-sm text-gray-600">
+                                {new Date(pedido.creado_en || pedido.createdAt || Date.now()).toLocaleDateString('es-ES')}
+                            </td>
+                            <td className="px-4 py-3 text-sm font-semibold text-gray-900">
+                                ${Number(pedido.total || pedido.totalAmount || 0).toFixed(2)}
+                            </td>
                             <td className="px-4 py-3">
                                 <span
                                     className="inline-block rounded-full px-3 py-1 text-xs font-semibold text-white"
-                                    style={{ backgroundColor: getEstadoPedidoColor(pedido.status) }}
+                                    style={{ backgroundColor: getEstadoPedidoColor((pedido.estado || pedido.status) as EstadoPedido) }}
                                 >
-                                    {formatEstadoPedido(pedido.status)}
+                                    {formatEstadoPedido((pedido.estado || pedido.status) as EstadoPedido)}
                                 </span>
                             </td>
                             <td className="px-4 py-3 text-right flex items-center justify-end gap-2">
+                                {(() => {
+                                    const rawStatus = String(pedido.estado || pedido.status || '').toLowerCase()
+                                    // Allow cancellation for 'pending', 'pendiente', and 'pendiente_validacion'
+                                    const canCancel = ['pending', 'pendiente', 'pendiente_validacion', 'pending_validation'].includes(rawStatus)
+
+                                    return canCancel && (
+                                        <button
+                                            onClick={() => onCancelOrder(pedido.id)}
+                                            className="text-red-600 transition-colors hover:text-red-700"
+                                            title="Cancelar pedido"
+                                        >
+                                            <X className="h-5 w-5" />
+                                        </button>
+                                    )
+                                })()}
                                 <button
                                     onClick={() => onViewDetail(pedido)}
                                     className="text-blue-600 transition-colors hover:text-blue-700"
@@ -44,18 +63,6 @@ export function OrdersTable({ pedidos, onViewDetail, onCancelOrder }: OrdersTabl
                                 >
                                     <Eye className="h-5 w-5" />
                                 </button>
-                                {(pedido.status === EstadoPedido.PENDING || String(pedido.status).toUpperCase() === 'PENDIENTE') && (
-                                    <button
-                                        onClick={() => {
-                                            if (!confirm('¿Estás seguro que deseas cancelar este pedido?')) return
-                                            onCancelOrder(pedido.id)
-                                        }}
-                                        className="text-red-600 transition-colors hover:text-red-700"
-                                        title="Cancelar pedido"
-                                    >
-                                        <X className="h-5 w-5" />
-                                    </button>
-                                )}
                             </td>
                         </tr>
                     ))}

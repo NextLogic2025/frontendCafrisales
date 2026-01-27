@@ -55,8 +55,8 @@ export function OrderDetailsModal({
 
     const puedeCancelar = detalle.status === EstadoPedido.PENDING || String(detalle.status).toUpperCase() === 'PENDIENTE'
     const estadoColor = getEstadoPedidoColor(detalle.status)
-    const formattedDate = new Date(detalle.createdAt).toLocaleDateString('es-ES')
-    const totalLineas = detalle.items.reduce((acc: number, item: any) => acc + item.quantity, 0)
+    const formattedDate = new Date(detalle.creado_en || detalle.createdAt || Date.now()).toLocaleDateString('es-ES')
+    const totalLineas = detalle.items.reduce((acc: number, item: any) => acc + (item.cantidad || item.quantity || 0), 0)
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
@@ -64,7 +64,7 @@ export function OrderDetailsModal({
                 <div className="flex items-start justify-between border-b border-neutral-200 px-8 py-6">
                     <div>
                         <p className="text-sm font-semibold text-neutral-500">Detalles del Pedido</p>
-                        <h2 className="text-2xl font-bold text-neutral-900">#{detalle.orderNumber}</h2>
+                        <h2 className="text-2xl font-bold text-neutral-900">#{detalle.numero_pedido || detalle.orderNumber}</h2>
                     </div>
                     <span
                         className="rounded-full px-3 py-1 text-xs font-semibold text-white"
@@ -89,7 +89,7 @@ export function OrderDetailsModal({
                         </div>
                         <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3">
                             <p className="text-xs uppercase tracking-wide text-neutral-500">Monto total</p>
-                            <p className="text-xl font-bold" style={{ color: COLORES_MARCA.red }}>${detalle.totalAmount.toFixed(2)}</p>
+                            <p className="text-xl font-bold" style={{ color: COLORES_MARCA.red }}>${Number(detalle.total || detalle.totalAmount || 0).toFixed(2)}</p>
                         </div>
                     </div>
 
@@ -121,7 +121,7 @@ export function OrderDetailsModal({
                                                                 Solicitado: {requestedQty} {item.unit}
                                                             </p>
                                                             <p className="text-xs font-bold text-orange-600">
-                                                                Enviado: {item.quantity} {item.unit} × ${item.unitPrice.toFixed(2)}
+                                                                Enviado: {item.quantity} {item.unit} × ${Number(item.precio_unitario_final || item.unitPrice || 0).toFixed(2)}
                                                             </p>
                                                             {item.motivo_ajuste && (
                                                                 <p className="text-xs text-red-500 italic">
@@ -131,13 +131,13 @@ export function OrderDetailsModal({
                                                         </>
                                                     ) : (
                                                         <p className="text-xs text-neutral-500">
-                                                            {item.quantity} {item.unit} × ${item.unitPrice.toFixed(2)}
+                                                            {item.quantity} {item.unit} × ${Number(item.precio_unitario_final || item.unitPrice || 0).toFixed(2)}
                                                         </p>
                                                     )}
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <p className="text-sm font-bold text-neutral-900">${item.subtotal.toFixed(2)}</p>
+                                                <p className="text-sm font-bold text-neutral-900">${Number(item.subtotal || 0).toFixed(2)}</p>
                                                 {wasAdjusted && (
                                                     <span className="inline-block mt-1 px-2 py-0.5 bg-orange-100 text-orange-700 text-[10px] font-bold rounded-full">
                                                         MODIFICADO

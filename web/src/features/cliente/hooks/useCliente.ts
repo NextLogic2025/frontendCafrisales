@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { Conversacion, Entrega, EstadoPedido, Factura, Notificacion, Pedido, PerfilCliente, Producto, SucursalCliente, Ticket } from '../types'
+import { getMyOrders, cancelOrder } from '../../vendedor/services/pedidosApi'
 
 
 type CrearPedidoDesdeCarritoOptions = any
@@ -30,10 +31,18 @@ export function useCliente() {
   }, [])
 
   const fetchPedidos = useCallback(async (pagina = 1) => {
-    setCargando(false)
-    setPedidos([])
-    setPedidosPaginaActual(pagina)
-    setPedidosTotalPaginas(1)
+    try {
+      setCargando(true)
+      const data = await getMyOrders()
+      setPedidos(data as any[]) // Casting if types slightly mismatch, usually OrderResponse vs Pedido
+      setPedidosPaginaActual(pagina)
+      setPedidosTotalPaginas(1) // Backend returns array, not paginated object, so specific paging not available yet
+    } catch (e) {
+      console.error('Error fetching orders:', e)
+      setError('Error al cargar pedidos')
+    } finally {
+      setCargando(false)
+    }
   }, [])
 
   const obtenerPedidoPorId = useCallback(async (id: string) => {
@@ -76,8 +85,18 @@ export function useCliente() {
   }, [])
 
   const cancelarPedido = useCallback(async (id: string) => {
-    setPedidos(prev => prev.map(p => (p.id === id ? { ...p, status: EstadoPedido.CANCELLED } : p)))
-  }, [])
+    try {
+      console.log(`Canceling order ${id}...`)
+      await cancelOrder(id, 'Cancelado por el cliente')
+      setPedidos(prev => prev.map(p => (p.id === id ? { ...p, status: EstadoPedido.CANCELLED, estado: 'cancelado' } : p)))
+      // Success handled by UI refresh
+      await fetchPedidos(pedidosPaginaActual) // Check updated data from server
+    } catch (error: any) {
+      console.error('Error canceling order:', error)
+      alert(`Error al cancelar: ${error.message || error}`)
+      setError('No se pudo cancelar el pedido')
+    }
+  }, [fetchPedidos, pedidosPaginaActual])
 
   const crearTicket = useCallback(async (nuevo: Omit<Ticket, 'id' | 'createdAt' | 'updatedAt' | 'messages'>) => {
     // Logic removed

@@ -26,8 +26,8 @@ export const useCarritoPage = () => {
                 items: items.map(item => ({
                     sku_id: item.selectedSkuId || item.id,
                     cantidad: item.quantity,
-                    // Mobile sends only sku_id and quantity, but we keep price for safety
-                    precio_unitario_final: item.unitPrice,
+                    // Mobile sends only sku_id and quantity. We omit price so backend uses catalog price.
+                    // Sending price triggers 'negotiation' check which fails for clients.
                     origen_precio: 'catalogo'
                 })),
                 // zona_id not sent in mobile

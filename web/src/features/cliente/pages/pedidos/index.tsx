@@ -1,4 +1,4 @@
-
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 
@@ -12,6 +12,7 @@ import { usePedidosPage } from './hooks/usePedidosPage'
 import { OrdersHeader } from './components/OrdersHeader'
 import { OrdersTable } from './components/OrdersTable'
 import { OrderDetailsModal } from './components/OrderDetailsModal'
+import { CancelOrderModal } from './components/CancelOrderModal'
 
 export default function PaginaPedidos() {
 	const navigate = useNavigate()
@@ -30,6 +31,24 @@ export default function PaginaPedidos() {
 		cancelarPedido,
 		obtenerPedidoPorId
 	} = usePedidosPage()
+
+	// State to control cancel modal
+	const [pedidoACancelar, setPedidoACancelar] = useState<{ id: string, numero: string } | null>(null)
+
+	const handleRequestCancel = (id: string, numero: string) => {
+		setPedidoACancelar({ id, numero })
+	}
+
+	const handleConfirmCancel = async () => {
+		if (pedidoACancelar) {
+			try {
+				await cancelarPedido(pedidoACancelar.id)
+			} catch (err) {
+				console.error('Error en handleConfirmCancel:', err)
+			}
+			setPedidoACancelar(null)
+		}
+	}
 
 	return (
 		<>
@@ -73,7 +92,12 @@ export default function PaginaPedidos() {
 						<OrdersTable
 							pedidos={pedidos}
 							onViewDetail={setPedidoSeleccionado}
-							onCancelOrder={cancelarPedido}
+							onCancelOrder={(id) => {
+								const pedido = pedidos.find(p => p.id === id)
+								if (pedido) {
+									handleRequestCancel(id, pedido.numero_pedido || pedido.orderNumber)
+								}
+							}}
 						/>
 
 						<Pagination
@@ -90,12 +114,22 @@ export default function PaginaPedidos() {
 						pedido={pedidoSeleccionado}
 						onClose={() => setPedidoSeleccionado(null)}
 						onCancel={() => {
-							cancelarPedido(pedidoSeleccionado.id)
 							setPedidoSeleccionado(null)
+							handleRequestCancel(
+								pedidoSeleccionado.id,
+								pedidoSeleccionado.numero_pedido || pedidoSeleccionado.orderNumber
+							)
 						}}
 						fetchDetallePedido={obtenerPedidoPorId}
 					/>
 				)}
+
+				<CancelOrderModal
+					isOpen={!!pedidoACancelar}
+					onClose={() => setPedidoACancelar(null)}
+					onConfirm={handleConfirmCancel}
+					orderNumber={pedidoACancelar?.numero || ''}
+				/>
 			</div>
 		</>
 	)
