@@ -61,8 +61,28 @@ export interface ZonaComercial {
   } | null
 }
 
+import { jwtDecode } from 'jwt-decode'
 import { env } from '../../../config/env'
 import { getValidToken } from '../../../services/auth/authClient'
+
+// Use users service for vendor-client relationship, matching mobile implementation
+const USERS_BASE_URL = env.api.usuarios
+const USERS_API_URL = USERS_BASE_URL.endsWith('/api') ? USERS_BASE_URL : `${USERS_BASE_URL}/api`
+
+async function getVendedorId(): Promise<string | null> {
+  const token = await getValidToken()
+  if (!token) return null
+  try {
+    const decoded = jwtDecode<{ sub?: string; userId?: string }>(token)
+    return decoded.sub || decoded.userId || null
+  } catch {
+    return null
+  }
+}
+
+// Use catalog service for client data, matching mobile implementation
+const CATALOG_BASE_URL = env.api.catalogo
+const CATALOG_API_URL = CATALOG_BASE_URL.endsWith('/api') ? CATALOG_BASE_URL : `${CATALOG_BASE_URL}/api`
 
 type BackendCliente = {
   usuario_id?: string
@@ -108,8 +128,8 @@ function mapCliente(raw: BackendCliente | Cliente): Cliente {
     zona_comercial_id: (raw as any).zona_id ?? (raw as any).zona_comercial_id ?? null,
     direccion_texto: direccion,
     ubicacion_gps: (raw as any).ubicacion_gps ?? null,
-    latitud: (raw as any).latitud ?? null,
-    longitud: (raw as any).longitud ?? null,
+    latitud: (raw as any).latitud !== null && (raw as any).latitud !== undefined ? Number((raw as any).latitud) : null,
+    longitud: (raw as any).longitud !== null && (raw as any).longitud !== undefined ? Number((raw as any).longitud) : null,
     estado: (raw as any).estado ?? null,
     email: (raw as any).email ?? null,
     created_at: (raw as any).created_at || (raw as any).creado_en || new Date().toISOString(),
@@ -128,16 +148,19 @@ function mapCliente(raw: BackendCliente | Cliente): Cliente {
   }
 }
 
-export async function obtenerClientes(): Promise<Cliente[]> {
+export async function obtenerClientes(estado: 'activo' | 'inactivo' | 'todos' = 'activo'): Promise<Cliente[]> {
   try {
     const token = await getValidToken()
-    const base = env.api.usuarios
-    const url = `${base}/api/clientes?estado=activo`
+    const query = estado !== 'todos' ? `?estado=${estado}` : ''
+    const url = `${USERS_API_URL}/clientes${query}`
     const headers: any = {}
     if (token) headers.Authorization = `Bearer ${token}`
 
     const res = await fetch(url, { headers })
-    if (!res.ok) return []
+    if (!res.ok) {
+      console.error('obtenerClientes error:', res.status, res.statusText)
+      return []
+    }
     const data = await res.json().catch(() => [])
     const list = Array.isArray(data) ? data : []
     return list.map(mapCliente)
@@ -147,11 +170,44 @@ export async function obtenerClientes(): Promise<Cliente[]> {
   }
 }
 
+/**
+ * Obtiene los clientes asignados al vendedor autenticado (Legacy or Mobile-like)
+ */
+export async function obtenerMisClientes(): Promise<Cliente[]> {
+  const vendedorId = await getVendedorId()
+  if (!vendedorId) return []
+  return obtenerClientesPorVendedor(vendedorId)
+}
+
+/**
+ * Obtiene los clientes de un vendedor específico (Matches Mobile UserClientService.ts)
+ */
+export async function obtenerClientesPorVendedor(vendedorId: string): Promise<Cliente[]> {
+  try {
+    const token = await getValidToken()
+    // Matches mobile: `${USERS_API_URL}/vendedores/${vendedorId}/clientes`
+    const url = `${USERS_API_URL}/vendedores/${vendedorId}/clientes`
+    const headers: any = {}
+    if (token) headers.Authorization = `Bearer ${token}`
+
+    const res = await fetch(url, { headers })
+    if (!res.ok) {
+      console.error('obtenerClientesPorVendedor error:', res.status, res.statusText)
+      return []
+    }
+    const data = await res.json().catch(() => [])
+    const list = Array.isArray(data) ? data : []
+    return list.map(mapCliente)
+  } catch (error) {
+    console.error('Error fetching clientes by vendedor:', error)
+    return []
+  }
+}
+
 export async function obtenerClientePorId(id: string): Promise<Cliente | null> {
   try {
     const token = await getValidToken()
-    const base = env.api.usuarios
-    const url = `${base}/api/clientes/${id}`
+    const url = `${USERS_API_URL}/clientes/${id}`
     const headers: any = {}
     if (token) headers.Authorization = `Bearer ${token}`
 
@@ -170,8 +226,7 @@ export async function crearCliente(data: CreateClienteDto): Promise<Cliente> {
   const token = await getValidToken()
   if (!token) throw new Error('No hay sesión activa')
 
-  const base = env.api.usuarios
-  const url = `${base}/api/clientes`
+  const url = `${USERS_API_URL}/clientes`
 
   const payload: any = {
     usuario_id: data.usuario_principal_id ?? null,
@@ -221,8 +276,7 @@ export async function crearCliente(data: CreateClienteDto): Promise<Cliente> {
 export async function actualizarCliente(id: string, data: Partial<CreateClienteDto>): Promise<Cliente> {
   const token = await getValidToken()
   if (!token) throw new Error('No hay sesión activa')
-  const base = env.api.usuarios
-  const url = `${base}/api/clientes/${id}`
+  const url = `${USERS_API_URL}/clientes/${id}`
 
   const payload: any = {}
   if (data.nombre_comercial !== undefined) payload.nombre_comercial = data.nombre_comercial
@@ -234,6 +288,9 @@ export async function actualizarCliente(id: string, data: Partial<CreateClienteD
     payload.longitud = data.ubicacion_gps.coordinates[0]
     payload.latitud = data.ubicacion_gps.coordinates[1]
   }
+  // Fallback for explicit lat/lng update if not using ubicacion_gps object
+  if (data.latitud !== undefined) payload.latitud = data.latitud
+  if (data.longitud !== undefined) payload.longitud = data.longitud
 
   const res = await fetch(url, {
     method: 'PATCH',
@@ -252,8 +309,7 @@ export async function actualizarCliente(id: string, data: Partial<CreateClienteD
 export async function eliminarCliente(id: string): Promise<void> {
   const token = await getValidToken()
   if (!token) throw new Error('No hay sesión activa')
-  const base = env.api.usuarios
-  const url = `${base}/api/clientes/${id}`
+  const url = `${USERS_API_URL}/clientes/${id}`
 
   await fetch(url, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }).catch(() => null)
 }
@@ -262,8 +318,7 @@ export async function eliminarCliente(id: string): Promise<void> {
 export async function obtenerZonas(): Promise<ZonaComercial[]> {
   try {
     const token = await getValidToken()
-    const base = env.api.usuarios
-    const url = `${base}/api/zonas?estado=activo`
+    const url = `${USERS_API_URL}/zonas?estado=activo`
     const headers: any = {}
     if (token) headers.Authorization = `Bearer ${token}`
 

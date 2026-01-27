@@ -9,19 +9,6 @@ export interface CartItem {
     cantidad: number
 }
 
-export interface SucursalCliente {
-    id: string
-    nombre_sucursal: string
-    direccion_entrega?: string
-    contacto_nombre?: string
-    contacto_telefono?: string
-    zona_nombre?: string
-    // Alias para compatibilidad
-    nombre?: string
-    direccion?: string
-    ciudad?: string
-    estado?: string
-}
 
 export interface ClienteDetalle extends Omit<Cliente, 'limite_credito' | 'saldo_actual' | 'deuda_actual' | 'dias_plazo' | 'direccion_texto'> {
     creditLimit?: number

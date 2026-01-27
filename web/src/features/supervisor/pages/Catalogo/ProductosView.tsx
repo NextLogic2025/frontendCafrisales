@@ -9,12 +9,14 @@ import { getAllCategories, type Category } from '../../services/catalogApi'
 import {
   type Product,
   type CreateProductDto,
+  getProductById,
 } from '../../services/productosApi'
 import { getAllCampanias, type Campania, type ProductoPromocion, getProductosByCampania } from '../../services/promocionesApi'
 import { useProductoCrud } from '../../services/useProductoCrud' // New hook
 import { ProductosList } from './productos/ProductosList'
 import { ProductosForm } from './productos/ProductosForm'
 import { ProductosPromocionesView } from './productos/ProductosPromocionesView'
+import { ProductoDetailModal } from './productos/ProductoDetailModal'
 
 export function ProductosView() {
   const [vistaActual, setVistaActual] = useState<'productos' | 'promociones'>('productos')
@@ -31,6 +33,8 @@ export function ProductosView() {
   const [loadingDeleted, setLoadingDeleted] = useState(false)
 
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [detailedProduct, setDetailedProduct] = useState<Product | null>(null)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const modal = useModal<Product>()
   const { notifications, success, error: notifyError, remove: removeNotification } = useNotification()
 
@@ -161,6 +165,16 @@ export function ProductosView() {
     }
   }
 
+  const handleView = async (product: Product) => {
+    try {
+      const fullProduct = await getProductById(product.id)
+      setDetailedProduct(fullProduct || product)
+      setIsDetailModalOpen(true)
+    } catch (err: any) {
+      notifyError(err.message || 'Error al cargar detalle del producto')
+    }
+  }
+
   return (
     <div className="space-y-6">
       <NotificationStack notifications={notifications} onRemove={removeNotification} />
@@ -246,6 +260,7 @@ export function ProductosView() {
           onEdit={!isDeletedView ? modal.openEdit : undefined}
           onDelete={!isDeletedView ? handleDelete : undefined}
           onRestore={isDeletedView ? handleRestore : undefined}
+          onView={handleView}
           isDeletedView={isDeletedView}
         />
       )}
@@ -269,6 +284,13 @@ export function ProductosView() {
         isEditing={modal.isEditing}
         categories={categories}
         isSubmitting={isSubmitting}
+      />
+
+      <ProductoDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        product={detailedProduct}
+        onEdit={modal.openEdit}
       />
     </div>
   )

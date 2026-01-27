@@ -2,9 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Modal } from 'components/ui/Modal'
 import { Alert } from 'components/ui/Alert'
 import { GoogleMap, Marker, Polygon, useJsApiLoader } from '@react-google-maps/api'
-import { type Sucursal } from '../../services/sucursalesApi'
 import { type Cliente, type ZonaComercial, type ListaPrecio } from '../../services/clientesApi'
-import { SucursalFormModal } from './SucursalFormModal'
 import type { ZonaOption } from 'components/ui/ClienteForm'
 
 import { GOOGLE_MAP_LIBRARIES, GOOGLE_MAP_SCRIPT_ID, GOOGLE_MAPS_API_KEY } from '../../../../config/googleMaps'
@@ -21,11 +19,7 @@ interface ClienteDetailModalProps {
 }
 
 export function ClienteDetailModal({ isOpen, onClose, cliente, zonas, listasPrecios }: ClienteDetailModalProps) {
-  const [sucursales, setSucursales] = useState<Sucursal[]>([])
-  const [isLoadingSucursales, setIsLoadingSucursales] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [isSucursalModalOpen, setIsSucursalModalOpen] = useState(false)
-  const [editingSucursal, setEditingSucursal] = useState<Sucursal | null>(null)
 
   const { isLoaded, loadError } = useJsApiLoader({
     id: GOOGLE_MAP_SCRIPT_ID,
@@ -33,27 +27,7 @@ export function ClienteDetailModal({ isOpen, onClose, cliente, zonas, listasPrec
     libraries: GOOGLE_MAP_LIBRARIES
   })
 
-  const reloadSucursales = async () => {
-    if (!cliente) return
-    try {
-      setIsLoadingSucursales(true)
-      setError(null)
-      // Mock data
-      setSucursales([])
-    } catch (e: any) {
-      setError(e?.message || 'No se pudieron cargar las sucursales')
-    } finally {
-      setIsLoadingSucursales(false)
-    }
-  }
-
-  useEffect(() => {
-    if (!isOpen || !cliente) return
-    reloadSucursales()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, cliente?.id])
-
-  const zona = useMemo(() => zonas.find((z) => z.id === cliente?.zona_comercial_id) || cliente?.zona_comercial, [cliente, zonas])
+  const zona = useMemo(() => zonas.find((z) => String(z.id) === String(cliente?.zona_comercial_id || '')) || cliente?.zona_comercial, [cliente, zonas])
 
   const zonaPath = useMemo(() => {
     if (!zona || !(zona as any)?.poligono_geografico) return []
@@ -62,24 +36,25 @@ export function ClienteDetailModal({ isOpen, onClose, cliente, zonas, listasPrec
 
   const mainLocation = useMemo(() => {
     if (!cliente) return null
+    let lat: number | null = null
+    let lng: number | null = null
+
     if (cliente.ubicacion_gps?.coordinates) {
-      return { lat: cliente.ubicacion_gps.coordinates[1], lng: cliente.ubicacion_gps.coordinates[0] }
+      lng = cliente.ubicacion_gps.coordinates[0]
+      lat = cliente.ubicacion_gps.coordinates[1]
+    } else if (cliente.latitud !== null && cliente.longitud !== null &&
+      cliente.latitud !== undefined && cliente.longitud !== undefined) {
+      lat = Number(cliente.latitud)
+      lng = Number(cliente.longitud)
     }
-    if (cliente.latitud && cliente.longitud) return { lat: cliente.latitud, lng: cliente.longitud }
+
+    if (lat !== null && lng !== null && !isNaN(lat) && !isNaN(lng)) {
+      return { lat, lng }
+    }
     return null
   }, [cliente])
 
-  const markersSucursales = useMemo<Array<Sucursal & { _marker: google.maps.LatLngLiteral }>>(() => {
-    return sucursales.reduce((acc, s) => {
-      const coords = (s as any).ubicacion_gps?.coordinates as [number, number] | undefined
-      if (coords && typeof coords[0] === 'number' && typeof coords[1] === 'number') {
-        acc.push({ ...s, _marker: { lat: coords[1], lng: coords[0] } })
-      }
-      return acc
-    }, [] as Array<Sucursal & { _marker: google.maps.LatLngLiteral }>)
-  }, [sucursales])
-
-  const mapCenter = mainLocation || markersSucursales[0]?._marker || zonaPath[0] || defaultCenter
+  const mapCenter = mainLocation || zonaPath[0] || defaultCenter
 
   const listaNombre = cliente?.lista_precios?.nombre || listasPrecios.find(l => l.id === cliente?.lista_precios_id)?.nombre
   const zonaNombre = cliente?.zona_comercial?.nombre || zona?.nombre
@@ -117,33 +92,12 @@ export function ClienteDetailModal({ isOpen, onClose, cliente, zonas, listasPrec
               {listaNombre && <p className="text-sm text-gray-700">Lista de precios: {listaNombre}</p>}
               <p className="text-xs text-gray-500">Creado: {new Date(cliente.created_at).toLocaleDateString('es-ES')}</p>
             </div>
-            <div className="space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
-              <p className="text-xs font-semibold text-gray-700">Crédito</p>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <p className="text-xs text-gray-500">Límite</p>
-                  <p className="font-semibold text-gray-900">${cliente.limite_credito}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Saldo</p>
-                  <p className="font-semibold text-gray-900">${cliente.saldo_actual}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Disponible</p>
-                  <p className="font-semibold text-green-700">${creditoDisponible}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Plazo</p>
-                  <p className="font-semibold text-gray-900">{cliente.dias_plazo} días</p>
-                </div>
-              </div>
-            </div>
           </div>
 
           <div className="space-y-2 rounded-lg border border-gray-200 bg-white p-3">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-gray-800">Mapa general</p>
-              <span className="text-xs text-gray-500">Pin rojo: matriz · Pins azules: sucursales</span>
+              <span className="text-xs text-gray-500">Pin rojo: matriz</span>
             </div>
             {!GOOGLE_MAPS_API_KEY && <p className="text-xs text-yellow-700">Configura VITE_GOOGLE_MAPS_API_KEY para ver el mapa.</p>}
             {loadError && <p className="text-xs text-red-700">No se pudo cargar Google Maps.</p>}
@@ -186,94 +140,11 @@ export function ClienteDetailModal({ isOpen, onClose, cliente, zonas, listasPrec
                       title="Matriz"
                     />
                   )}
-
-                  {markersSucursales.map((s) => (
-                    <Marker
-                      key={s.id}
-                      position={(s as any)._marker}
-                      icon={{ url: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png' }}
-                      title={s.nombre_sucursal}
-                      animation={google.maps.Animation.DROP}
-                    />
-                  ))}
                 </GoogleMap>
               </div>
             )}
           </div>
 
-          <div className="space-y-2 rounded-lg border border-gray-200 bg-white p-3">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-gray-800">Sucursales ({sucursales.length})</p>
-              <div className="flex items-center gap-3">
-                {isLoadingSucursales && <span className="text-xs text-gray-500">Cargando...</span>}
-                <button
-                  type="button"
-                  className="rounded-lg bg-brand-red px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-red/90"
-                  onClick={() => { setEditingSucursal(null); setIsSucursalModalOpen(true) }}
-                >
-                  + Agregar sucursal
-                </button>
-              </div>
-            </div>
-            {sucursales.length === 0 && !isLoadingSucursales && (
-              <p className="text-sm text-gray-600">No hay sucursales registradas.</p>
-            )}
-            <div className="grid gap-3 md:grid-cols-2">
-              {sucursales.map((s) => {
-                const coords = (s as any).ubicacion_gps?.coordinates as [number, number] | undefined
-                return (
-                  <div key={s.id} className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                    <p className="font-semibold text-gray-900">{s.nombre_sucursal}</p>
-                    {s.direccion_entrega && <p className="text-xs text-gray-700">{s.direccion_entrega}</p>}
-                    {s.contacto_nombre && <p className="text-xs text-gray-700">Contacto: {s.contacto_nombre}</p>}
-                    {s.contacto_telefono && <p className="text-xs text-gray-700">Tel: {s.contacto_telefono}</p>}
-                    {coords && (
-                      <p className="text-xs text-green-700 font-medium">Ubicación: {coords[1].toFixed(6)}, {coords[0].toFixed(6)}</p>
-                    )}
-                    <div className="mt-2 flex items-center gap-2">
-                      <button
-                        type="button"
-                        className="rounded-md border border-gray-300 px-2 py-1 text-xs"
-                        onClick={() => { setEditingSucursal(s); setIsSucursalModalOpen(true) }}
-                      >
-                        Editar
-                      </button>
-                      <button
-                        type="button"
-                        className="rounded-md border border-red-300 text-red-700 px-2 py-1 text-xs hover:bg-red-50"
-                        onClick={async () => {
-                          if (!cliente) return
-                          if (!confirm(`¿Eliminar la sucursal "${s.nombre_sucursal}"?`)) return
-                          try {
-                            // no-op
-                            await reloadSucursales()
-                          } catch (e) {
-                            alert('No se pudo eliminar la sucursal')
-                          }
-                        }}
-                      >
-                        Eliminar
-                      </button>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-
-          <SucursalFormModal
-            isOpen={isSucursalModalOpen}
-            onClose={() => { setIsSucursalModalOpen(false); setEditingSucursal(null) }}
-            initialData={editingSucursal ?? undefined}
-            zonas={zonasOptions}
-            zonaId={cliente?.zona_comercial_id ?? null}
-            ubicacionMatriz={mainLocation}
-            onSubmit={async (vals) => {
-              if (!cliente) return;
-              // Mock
-              await reloadSucursales();
-            }}
-          />
         </div>
       )}
     </Modal>
@@ -283,32 +154,61 @@ export function ClienteDetailModal({ isOpen, onClose, cliente, zonas, listasPrec
 function parseGeoPolygon(value: unknown): google.maps.LatLngLiteral[] {
   if (!value) return []
 
+  // Si es un string, intentar parsear JSON
   if (typeof value === 'string') {
-    try {
-      const parsed = JSON.parse(value)
-      return parseGeoPolygon(parsed)
-    } catch (e) {
-      return []
+    if (value.startsWith('{')) {
+      try {
+        return parseGeoPolygon(JSON.parse(value))
+      } catch (e) {
+        return []
+      }
     }
+    return []
   }
 
-  if (Array.isArray(value) && value.every((p: any) => typeof p?.lat === 'number' && typeof p?.lng === 'number')) {
-    return dedupeClosingPoint(value as google.maps.LatLngLiteral[])
+  if (typeof value !== 'object' || value === null) return []
+
+  const obj = value as any
+
+  // Manejar tipo Feature de GeoJSON
+  if (obj.type === 'Feature' && obj.geometry) {
+    return parseGeoPolygon(obj.geometry)
   }
 
-  if (typeof value === 'object' && value !== null && 'coordinates' in (value as any)) {
-    const coordinates = (value as any).coordinates?.[0]
-    if (Array.isArray(coordinates)) {
-      const path = coordinates
-        .map((pair: any) => {
-          if (!Array.isArray(pair) || pair.length < 2) return null
+  // Buscar coordenadas recursivamente si es necesario (MultiPolygon o GeometryCollection)
+  let coords: any = obj.coordinates || obj.zonaGeom?.coordinates || obj.zona_geom?.coordinates || obj.points
+
+  if (Array.isArray(coords)) {
+    // Intentar encontrar el anillo exterior (primer array de puntos)
+    // GeoJSON Polygon: [[[lng, lat], ...]]
+    // GeoJSON MultiPolygon: [[[[lng, lat], ...]]]
+    let ring = coords
+    while (Array.isArray(ring[0]) && ring.length > 0 && Array.isArray(ring[0][0])) {
+      ring = ring[0]
+    }
+
+    const path = ring
+      .map((pair: any) => {
+        // Formato {lat, lng} o {latitude, longitude}
+        if (typeof pair === 'object' && pair !== null) {
+          const lat = pair.lat ?? pair.latitude ?? pair.latitud
+          const lng = pair.lng ?? pair.longitude ?? pair.longitud ?? pair.lon ?? pair.long
+          if (typeof lat === 'number' && typeof lng === 'number') {
+            return { lat, lng }
+          }
+        }
+        // Formato [lng, lat] (GeoJSON estándar)
+        if (Array.isArray(pair) && pair.length >= 2) {
           const [lng, lat] = pair
-          if (typeof lat !== 'number' || typeof lng !== 'number') return null
-          return { lat, lng }
-        })
-        .filter(Boolean) as google.maps.LatLngLiteral[]
-      return dedupeClosingPoint(path)
-    }
+          if (typeof lat === 'number' && typeof lng === 'number') {
+            return { lat, lng }
+          }
+        }
+        return null
+      })
+      .filter(Boolean) as google.maps.LatLngLiteral[]
+
+    return dedupeClosingPoint(path)
   }
 
   return []

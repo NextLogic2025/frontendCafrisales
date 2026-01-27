@@ -5,6 +5,8 @@ import { Alert } from '../../../../components/ui/Alert'
 import { useCrearPedido } from './hooks/useCrearPedido'
 import { CartItemList } from './components/CartItemList'
 import { OrderSummary } from './components/OrderSummary'
+import { ClientSelector } from './components/ClientSelector'
+import { AprobarCreditoModal } from './components/AprobarCreditoModal'
 
 export default function VendedorCrearPedido() {
   const {
@@ -16,29 +18,24 @@ export default function VendedorCrearPedido() {
     removeItem,
     totalItems,
     total,
-    creditoDisponible,
-    superaCredito,
-    condicionComercial,
     condicionPagoManual,
     setCondicionPagoManual,
-    destinoTipo,
-    handleDestinoTipoChange,
-    sucursales,
     clienteDetalle,
-    selectedSucursalId,
-    setSelectedSucursalId,
-    invalidSucursalMessage,
     goBackToProducts,
     handleSubmitOrder,
     isSubmitting,
-    selectedSucursal
+    busquedaCliente,
+    setBusquedaCliente,
+    clientesFiltrados,
+    clienteSeleccionado,
+    setClienteSeleccionado,
+    isLoadingClientes,
+    isCreditoModalOpen,
+    setIsCreditoModalOpen,
+    handleConfirmCredito,
+    plazoDias,
+    notasCredito,
   } = useCrearPedido()
-
-  const destinoDescripcion = destinoTipo === 'cliente'
-    ? 'Cliente principal'
-    : selectedSucursal
-      ? `${selectedSucursal.nombre_sucursal || selectedSucursal.nombre}${selectedSucursal.zona_nombre ? ` · ${selectedSucursal.zona_nombre}` : ''}`
-      : 'Selecciona una sucursal'
 
   return (
     <div className="space-y-6">
@@ -51,14 +48,25 @@ export default function VendedorCrearPedido() {
         ]}
       />
 
-      {error && (
-        <Alert
-          type="error"
-          title="Error"
-          message={error}
-          onClose={() => setError(null)}
+      <div className="space-y-4">
+        {error && (
+          <Alert
+            type="error"
+            title="Error"
+            message={error}
+            onClose={() => setError(null)}
+          />
+        )}
+
+        <ClientSelector
+          busqueda={busquedaCliente}
+          onBusquedaChange={setBusquedaCliente}
+          clientesFiltrados={clientesFiltrados}
+          clienteSeleccionado={clienteSeleccionado}
+          onSelect={setClienteSeleccionado}
+          isLoading={isLoadingClientes}
         />
-      )}
+      </div>
 
       <div className="space-y-4">
         <SectionHeader
@@ -87,19 +95,9 @@ export default function VendedorCrearPedido() {
             <OrderSummary
               totalItems={totalItems}
               total={total}
-              creditoDisponible={creditoDisponible}
-              superaCredito={superaCredito}
-              condicionComercial={condicionComercial}
               condicionPagoManual={condicionPagoManual}
               setCondicionPagoManual={setCondicionPagoManual}
-              destinoTipo={destinoTipo}
-              onDestinoChange={handleDestinoTipoChange}
-              sucursales={sucursales}
               clienteDetalle={clienteDetalle}
-              selectedSucursalId={selectedSucursalId}
-              onSucursalSelect={setSelectedSucursalId}
-              invalidSucursalMessage={invalidSucursalMessage}
-              destinoDescripcion={destinoDescripcion}
               onGoBack={goBackToProducts}
               onSubmit={handleSubmitOrder}
               isSubmitting={isSubmitting}
@@ -108,6 +106,13 @@ export default function VendedorCrearPedido() {
           )}
         </div>
       </div>
+      <AprobarCreditoModal
+        isOpen={isCreditoModalOpen}
+        onClose={() => setIsCreditoModalOpen(false)}
+        onConfirm={handleConfirmCredito}
+        initialPlazo={plazoDias}
+        initialNotas={notasCredito}
+      />
     </div>
   )
 }

@@ -149,6 +149,30 @@ export async function updateUsuario(
   return await res.json().catch(() => null)
 }
 
+export async function updateEstadoUsuario(userId: string, estado: 'activo' | 'inactivo') {
+  const token = await getValidToken()
+  if (!token) throw new Error('No hay sesión activa')
+
+  const url = `${env.api.usuarios}/api/usuarios/${userId}`
+  const body = { estado }
+
+  const res = await fetch(url, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(body),
+  })
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => null)
+    throw new Error(errorData?.message || 'Error al actualizar estado del usuario')
+  }
+
+  return await res.json().catch(() => null)
+}
+
 
 // --- Tipos internos para mapeo (copiados de mobile) ---
 interface StaffEntry {

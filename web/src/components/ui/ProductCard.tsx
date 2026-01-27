@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { ShoppingCart, Star } from 'lucide-react'
+import { ShoppingCart } from 'lucide-react'
 import { Producto } from '../../features/cliente/types'
 import { getAllCampanias, getProductosByCampania } from '../../features/supervisor/services/promocionesApi'
 
@@ -97,23 +97,6 @@ export function ProductCard({ producto, onAddToCart, fetchPromos, onView }: Prod
         <div>
           <h3 className="line-clamp-2 font-semibold text-gray-900">{producto.name}</h3>
 
-          <div className="flex items-center gap-2 mt-2">
-            <div className="flex items-center gap-1">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star
-                  key={i}
-                  size={14}
-                  className={
-                    i < Math.floor(producto.rating || 0)
-                      ? 'fill-yellow-400 text-yellow-400'
-                      : 'text-gray-300'
-                  }
-                />
-              ))}
-            </div>
-            <span className="text-sm text-gray-600">({producto.reviews || 0})</span>
-          </div>
-
           <p className="line-clamp-2 text-sm text-gray-600 mt-2">{producto.description}</p>
         </div>
 
@@ -167,8 +150,8 @@ export function ProductCard({ producto, onAddToCart, fetchPromos, onView }: Prod
               })
             }
             className={`rounded-lg p-2 transition ${producto.inStock
-                ? 'bg-brand-red text-white hover:bg-brand-red700'
-                : 'cursor-not-allowed bg-gray-200 text-gray-400'
+              ? 'bg-brand-red text-white hover:bg-brand-red700'
+              : 'cursor-not-allowed bg-gray-200 text-gray-400'
               }`}
           >
             <ShoppingCart size={18} />

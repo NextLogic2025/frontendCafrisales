@@ -7,6 +7,10 @@ export type CartItem = {
   name: string
   unitPrice: number
   quantity: number
+  // SKU support
+  selectedSkuId?: string
+  skuCode?: string
+  presentacion?: string
 }
 
 type CartActionEvent = {
@@ -15,14 +19,15 @@ type CartActionEvent = {
   name: string
   quantity: number
   timestamp: number
+  skuId?: string
 }
 
 type CartContextValue = {
   items: CartItem[]
   total: number
   addItem: (item: CartItem) => void
-  updateQuantity: (productId: string, quantity: number) => void
-  removeItem: (productId: string) => void
+  updateQuantity: (productId: string, quantity: number, skuId?: string) => void
+  removeItem: (productId: string, skuId?: string) => void
   clearCart: () => void
   warnings: Array<{ issue: string }>
   removedItems: Array<{ producto_id: string; campania_aplicada_id?: number | null }>
@@ -88,10 +93,14 @@ function mapServerItems(cart: BackendCart, previous: CartItem[]): CartItem[] {
         null
       const unitPrice = priceCandidate != null ? Number(priceCandidate) : prevPriceMap.get(id) ?? 0
       const name = (backendItem.producto_nombre ?? prevNameMap.get(id) ?? id).toString()
+      const selectedSkuId = backendItem.selected_sku_id
+      const skuCode = backendItem.sku_code
+      const presentacion = backendItem.presentacion
 
-      return { id, name, unitPrice, quantity }
+      const cartItem: CartItem = { id, name, unitPrice, quantity, selectedSkuId, skuCode, presentacion }
+      return cartItem
     })
-    .filter((item): item is CartItem => Boolean(item))
+    .filter((item): item is CartItem => item !== null)
 }
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
@@ -140,55 +149,66 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const dismissLastAction = React.useCallback(() => setLastAction(null), [])
 
   const syncItemQuantity = React.useCallback(
-    (productId: string, quantity: number) => {
+    (productId: string, quantity: number, skuId?: string) => {
       if (!getToken()) return
 
       // Debounce: Clear existing timer
-      if (syncTimersRef.current.has(productId)) {
-        window.clearTimeout(syncTimersRef.current.get(productId))
+      const timerKey = skuId ? `${productId}:${skuId}` : productId
+      if (syncTimersRef.current.has(timerKey)) {
+        window.clearTimeout(syncTimersRef.current.get(timerKey))
       }
 
       const timerId = window.setTimeout(() => {
-        syncTimersRef.current.delete(productId)
+        syncTimersRef.current.delete(timerKey)
         const operation = (async () => {
           try {
-            const resp = await upsertCartItem({ producto_id: productId, cantidad: quantity })
+            const resp = await upsertCartItem({
+              producto_id: productId,
+              cantidad: quantity,
+              selected_sku_id: skuId
+            })
             if (resp) applyServerSnapshot(resp)
           } catch {
             // ignore server errors, keep optimistic state
           } finally {
-            inflightUpsertsRef.current.delete(productId)
+            inflightUpsertsRef.current.delete(timerKey)
           }
         })()
-        inflightUpsertsRef.current.set(productId, operation)
+        inflightUpsertsRef.current.set(timerKey, operation)
       }, 500) // 500ms debounce
 
-      syncTimersRef.current.set(productId, timerId)
+      syncTimersRef.current.set(timerKey, timerId)
     },
     [applyServerSnapshot],
   )
 
   const removeItem = React.useCallback(
-    (productId: string) => {
+    (productId: string, skuId?: string) => {
       setItems(prev => {
-        const next = prev.filter(i => i.id !== productId)
+        const next = prev.filter(i => {
+          if (i.id !== productId) return true
+          if (skuId && i.selectedSkuId !== skuId) return true
+          return false
+        })
         saveCart(next)
         return next
       })
 
       const executeRemoteRemoval = () => {
         if (!getToken()) return
-        if (pendingRemovalsRef.current.has(productId)) return
-        pendingRemovalsRef.current.add(productId)
-        removeFromCart(productId)
+        const removalKey = skuId ? `${productId}:${skuId}` : productId
+        if (pendingRemovalsRef.current.has(removalKey)) return
+        pendingRemovalsRef.current.add(removalKey)
+        removeFromCart(productId) // TODO: Backend support for removing specific SKU
           .catch(() => null)
           .finally(() => {
-            pendingRemovalsRef.current.delete(productId)
+            pendingRemovalsRef.current.delete(removalKey)
             syncCartFromServer()
           })
       }
 
-      const pendingUpsert = inflightUpsertsRef.current.get(productId)
+      const timerKey = skuId ? `${productId}:${skuId}` : productId
+      const pendingUpsert = inflightUpsertsRef.current.get(timerKey)
       if (pendingUpsert) {
         pendingUpsert.finally(() => executeRemoteRemoval())
         return
@@ -202,39 +222,39 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     (item: CartItem) => {
       let nextQuantity = item.quantity
       setItems(prev => {
-        const existing = prev.find(i => i.id === item.id)
+        const existing = prev.find(i => i.id === item.id && i.selectedSkuId === item.selectedSkuId)
         nextQuantity = (existing?.quantity ?? 0) + item.quantity
         const next = existing
-          ? prev.map(i => (i.id === item.id ? { ...i, quantity: nextQuantity } : i))
+          ? prev.map(i => (i.id === item.id && i.selectedSkuId === item.selectedSkuId ? { ...i, quantity: nextQuantity } : i))
           : [...prev, { ...item, quantity: nextQuantity }]
         saveCart(next)
         return next
       })
-      setLastAction({ type: 'add', itemId: item.id, name: item.name, quantity: nextQuantity, timestamp: Date.now() })
-      syncItemQuantity(item.id, nextQuantity)
+      setLastAction({ type: 'add', itemId: item.id, name: item.name, quantity: nextQuantity, timestamp: Date.now(), skuId: item.selectedSkuId })
+      syncItemQuantity(item.id, nextQuantity, item.selectedSkuId)
     },
     [syncItemQuantity],
   )
 
   const updateQuantity = React.useCallback(
-    (productId: string, quantity: number) => {
+    (productId: string, quantity: number, skuId?: string) => {
       if (quantity <= 0) {
-        removeItem(productId)
+        removeItem(productId, skuId)
         return
       }
 
-      const existing = items.find(i => i.id === productId)
+      const existing = items.find(i => i.id === productId && i.selectedSkuId === skuId)
       setItems(prev => {
-        const hasItem = prev.some(i => i.id === productId)
+        const hasItem = prev.some(i => i.id === productId && i.selectedSkuId === skuId)
         const next = hasItem
-          ? prev.map(i => (i.id === productId ? { ...i, quantity } : i))
-          : [...prev, { id: productId, name: existing?.name ?? 'Producto', unitPrice: existing?.unitPrice ?? 0, quantity }]
+          ? prev.map(i => (i.id === productId && i.selectedSkuId === skuId ? { ...i, quantity } : i))
+          : [...prev, { id: productId, name: existing?.name ?? 'Producto', unitPrice: existing?.unitPrice ?? 0, quantity, selectedSkuId: skuId }]
         saveCart(next)
         return next
       })
 
-      setLastAction({ type: 'update', itemId: productId, name: existing?.name ?? 'Producto', quantity, timestamp: Date.now() })
-      syncItemQuantity(productId, quantity)
+      setLastAction({ type: 'update', itemId: productId, name: existing?.name ?? 'Producto', quantity, timestamp: Date.now(), skuId: skuId })
+      syncItemQuantity(productId, quantity, skuId)
     },
     [items, removeItem, syncItemQuantity],
   )

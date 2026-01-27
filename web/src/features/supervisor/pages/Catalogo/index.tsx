@@ -1,10 +1,11 @@
-import { 
-  ClipboardCheck, 
-  Percent, 
-  ListOrdered, 
-  PlusCircle, 
+import {
+  ClipboardCheck,
+  Percent,
+  ListOrdered,
+  PlusCircle,
   LayoutGrid,
-  ArrowLeft
+  ArrowLeft,
+  Tag
 } from 'lucide-react'
 import { PageHero } from 'components/ui/PageHero'
 import { SectionHeader } from 'components/ui/SectionHeader'
@@ -14,6 +15,7 @@ import { CategoriasView } from './CategoriasView'
 import { ProductosView } from './ProductosView'
 import { PreciosView } from './PreciosView'
 import { PromocionesView } from './PromocionesView'
+import { SkusView } from './SkusView'
 
 type CatalogoOption = {
   id: string
@@ -59,6 +61,13 @@ const CATALOGO_OPTIONS: CatalogoOption[] = [
     icon: LayoutGrid,
     color: 'from-indigo-500 to-indigo-600',
   },
+  {
+    id: 'sku',
+    title: 'SKUs',
+    description: 'Gestión de presentaciones y pesos',
+    icon: Tag,
+    color: 'from-emerald-500 to-emerald-600',
+  },
 ]
 
 export default function CatalogoPage() {
@@ -81,7 +90,7 @@ export default function CatalogoPage() {
           subtitle="Gestión de categorías de productos"
           chips={['Catálogo', 'Categorías', 'Productos']}
         />
-        
+
         <div className="flex justify-start">
           <Button
             onClick={handleBack}
@@ -105,7 +114,7 @@ export default function CatalogoPage() {
           subtitle="Gestión del catálogo de productos"
           chips={['Catálogo', 'Productos', 'SKU']}
         />
-        
+
         <div className="flex justify-start">
           <Button
             onClick={handleBack}
@@ -129,7 +138,7 @@ export default function CatalogoPage() {
           subtitle="Administración de precios por lista (General, Mayorista, Horeca)"
           chips={['Catálogo', 'Precios', 'Listas']}
         />
-        
+
         <div className="flex justify-start">
           <Button
             onClick={handleBack}
@@ -153,7 +162,7 @@ export default function CatalogoPage() {
           subtitle="Gestión de campañas promocionales y ofertas especiales"
           chips={['Catálogo', 'Promociones', 'Descuentos']}
         />
-        
+
         <div className="flex justify-start">
           <Button
             onClick={handleBack}
@@ -165,6 +174,30 @@ export default function CatalogoPage() {
         </div>
 
         <PromocionesView />
+      </div>
+    )
+  }
+
+  if (selectedOption === 'sku') {
+    return (
+      <div className="space-y-6">
+        <PageHero
+          title="Consolidación de SKUs"
+          subtitle="Gestión de presentaciones comerciales y pesos de productos"
+          chips={['Catálogo', 'SKU', 'Presentaciones']}
+        />
+
+        <div className="flex justify-start">
+          <Button
+            onClick={handleBack}
+            className="flex items-center gap-2 bg-brand-red text-white hover:bg-brand-red/90 shadow-sm"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Volver al catálogo
+          </Button>
+        </div>
+
+        <SkusView />
       </div>
     )
   }
@@ -199,7 +232,7 @@ export default function CatalogoPage() {
             >
               {/* Gradient background on hover */}
               <div className={`absolute inset-0 bg-gradient-to-br ${option.color} opacity-0 transition-opacity group-hover:opacity-5`} />
-              
+
               <div className="relative flex items-start gap-4">
                 {/* Icon container */}
                 <div className={`flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${option.color} shadow-lg transition-transform group-hover:scale-110`}>
@@ -241,8 +274,8 @@ export default function CatalogoPage() {
               Gestión centralizada del catálogo
             </h4>
             <p className="mt-1 text-sm text-blue-700">
-              Desde aquí puedes administrar todos los aspectos del catálogo de productos: 
-              auditorías, zonas de distribución, promociones activas, listas de precios 
+              Desde aquí puedes administrar todos los aspectos del catálogo de productos:
+              auditorías, zonas de distribución, promociones activas, listas de precios
               personalizadas, agregar nuevos productos y organizar categorías.
             </p>
           </div>

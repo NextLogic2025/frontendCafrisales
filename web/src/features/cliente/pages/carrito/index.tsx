@@ -17,20 +17,10 @@ export default function PaginaCarrito() {
 		clearCart,
 		warnings,
 		removedItems,
-		sucursales,
-		selectedSucursalId,
-		setSelectedSucursalId,
-		destinoTipo,
-		invalidSucursalMessage,
-		creditoDisponible,
-		superaCredito,
-		condicionComercial,
-		destinoDescripcion,
-		handleDestinoTipoChange,
+		setCondicionPagoManual,
 		confirmarPedido,
 		perfil,
-		condicionPagoManual,
-		setCondicionPagoManual
+		condicionPagoManual
 	} = useCarritoPage()
 
 	return (
@@ -77,19 +67,9 @@ export default function PaginaCarrito() {
 
 						<OrderSummary
 							total={total}
-							creditoDisponible={creditoDisponible}
-							superaCredito={superaCredito}
-							condicionComercial={condicionComercial}
 							itemsCount={items.length}
 							confirmarPedido={confirmarPedido}
 							goToProducts={() => navigate('/cliente/productos')}
-							destinoTipo={destinoTipo}
-							handleDestinoTipoChange={handleDestinoTipoChange}
-							sucursales={sucursales}
-							selectedSucursalId={selectedSucursalId}
-							setSelectedSucursalId={setSelectedSucursalId}
-							destinoDescripcion={destinoDescripcion}
-							invalidSucursalMessage={invalidSucursalMessage}
 							perfil={perfil}
 							condicionPagoManual={condicionPagoManual}
 							setCondicionPagoManual={setCondicionPagoManual}

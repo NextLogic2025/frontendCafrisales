@@ -1,7 +1,6 @@
-import { useState, useEffect, useMemo } from 'react'
-import { Search, Filter } from 'lucide-react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
+import { Search, Filter, Package } from 'lucide-react'
 import { useCart } from '../../cart/CartContext'
-import { useCliente } from '../../hooks/useCliente'
 import { SkeletonCard } from 'components/ui/LoadingSpinner'
 import { Alert } from 'components/ui/Alert'
 import { SectionHeader } from 'components/ui/SectionHeader'
@@ -9,8 +8,11 @@ import { ProductCard } from 'components/ui/ProductCard'
 import ProductDetailModal from '../../components/ProductDetailModal'
 import { CartQuickAction } from '../../components/CartQuickAction'
 import { PageHero } from 'components/ui/PageHero'
-import { Producto } from '../../types'
+import { Producto, SucursalCliente } from '../../types' // Ensure types are correct
+import { getAllProducts } from '../../../supervisor/services/productosApi'
 import { getAllCategories } from '../../../supervisor/services/catalogApi'
+import SkuSelectionModal from '../../components/SkuSelectionModal'
+import { EmptyContent } from 'components/ui/EmptyContent'
 
 interface FiltrosProductos {
     category: string
@@ -20,9 +22,11 @@ interface FiltrosProductos {
 }
 
 export default function PaginaProductos() {
-    const { productos, fetchProductos, error } = useCliente()
     const { addItem } = useCart()
     const [cargando, setCargando] = useState(true)
+    const [productos, setProductos] = useState<Producto[]>([])
+    const [error, setError] = useState<string | null>(null)
+
     const [busqueda, setBusqueda] = useState('')
     const [filtros, setFiltros] = useState<FiltrosProductos>({
         category: 'all',
@@ -33,42 +37,68 @@ export default function PaginaProductos() {
     const [mostrarFiltros, setMostrarFiltros] = useState(false)
     const [categoryId, setCategoryId] = useState('')
     const [categories, setCategories] = useState<{ id: number; nombre: string }[]>([])
+
+    // Modal states
     const [selectedProducto, setSelectedProducto] = useState<Producto | null>(null)
     const [isDetailOpen, setIsDetailOpen] = useState(false)
+    const [productForSkuSelection, setProductForSkuSelection] = useState<Producto | null>(null)
 
-    useEffect(() => {
-        const cargar = async () => {
-            setCargando(true)
-            if (categoryId && /^\d+$/.test(categoryId)) {
-                await fetchProductos({ categoryId: Number(categoryId) })
-            } else if (filtros.category && filtros.category !== 'all') {
-                await fetchProductos({ category: filtros.category })
-            } else {
-                await fetchProductos()
+    // Map Backend Product to Frontend 
+    const mapProductToFrontend = useCallback((items: any[]): Producto[] => {
+        return items.map((p) => {
+            const anyP = p as any
+
+            // Si el producto tiene SKUs, tomamos el precio del primero como referencia
+            const firstSku = p.skus && p.skus.length > 0 ? p.skus[0] : null
+            const firstSkuPrice = firstSku?.precios && firstSku.precios.length > 0 ? firstSku.precios[0].precio : null
+
+            const rawBase = firstSkuPrice ?? anyP.precio_final ?? anyP.precio_unitario ?? anyP.precio_lista ?? anyP.precio_base ?? anyP.precio ?? anyP.price ?? anyP.precioBase ?? null
+            const rawOferta = anyP.precio_oferta ?? null
+            const precioBase = typeof rawBase === 'string' ? Number(rawBase) : rawBase
+            const precioOferta = typeof rawOferta === 'string' ? Number(rawOferta) : rawOferta
+            const price = (precioOferta ?? precioBase ?? 0) as number
+
+            return {
+                id: p.id,
+                name: p.nombre,
+                description: p.descripcion || '',
+                price,
+                precio_original: typeof precioBase === 'number' && precioOferta != null ? precioBase : (typeof anyP.precio_original === 'number' ? anyP.precio_original : undefined),
+                precio_oferta: typeof precioOferta === 'number' ? precioOferta : undefined,
+                promociones: anyP.promociones || undefined,
+                image: p.img_url || p.imagen_url || '',
+                category: p.categoria?.nombre || '',
+                inStock: p.activo !== false,
+                skus: (p.skus || []).map((s: any) => ({
+                    ...s,
+                    sku: s.codigo_sku || s.sku || '',
+                    presentacion: s.nombre || s.presentacion || '',
+                    precios: s.precios || []
+                })),
             }
-            setCargando(false)
-        }
-        cargar()
-    }, [fetchProductos, filtros.category, categoryId])
-
-    useEffect(() => {
-        console.log('[PaginaProductos] Productos cargados:', productos)
-    }, [productos])
-
-    useEffect(() => {
-        let mounted = true
-        getAllCategories()
-            .then(list => {
-                if (!mounted) return
-                setCategories(list.map(c => ({ id: c.id, nombre: c.nombre })))
-            })
-            .catch(() => {
-                // ignore remote catalog hiccups
-            })
-        return () => {
-            mounted = false
-        }
+        })
     }, [])
+
+    useEffect(() => {
+        const cargarDatos = async () => {
+            setCargando(true)
+            setError(null)
+            try {
+                const [prods, cats] = await Promise.all([
+                    getAllProducts(),
+                    getAllCategories()
+                ])
+                setProductos(mapProductToFrontend(prods))
+                setCategories(cats.map(c => ({ id: Number(c.id), nombre: c.nombre })))
+            } catch (err) {
+                console.error("Error cargando productos", err)
+                setError("No se pudieron cargar los productos. Por favor intente más tarde.")
+            } finally {
+                setCargando(false)
+            }
+        }
+        cargarDatos()
+    }, [mapProductToFrontend])
 
     const productosFiltrados = useMemo(() => {
         return productos.filter(producto => {
@@ -93,6 +123,52 @@ export default function PaginaProductos() {
         setSelectedProducto(null)
     }
 
+    // Add to Cart Logic with SKU handling
+    const handleAddToCart = (producto: Producto) => {
+        if (producto.skus && producto.skus.length > 1) {
+            setProductForSkuSelection(producto)
+        } else {
+            const sku = producto.skus && producto.skus.length === 1 ? producto.skus[0] : null
+            confirmSkuSelection(producto, sku)
+        }
+    }
+
+    const confirmSkuSelection = (producto: Producto, sku: any) => {
+        try {
+            const cartProduct = { ...producto }
+            let skuId = undefined
+            let skuCode = undefined
+            let presentacion = undefined
+
+            if (sku) {
+                // Determine price from SKU
+                const skuPrice = sku.precios && sku.precios.length > 0 ? sku.precios[0].precio : producto.price
+                cartProduct.price = Number(skuPrice)
+
+                // Add metadata
+                skuId = sku.id
+                skuCode = sku.sku
+                presentacion = sku.presentacion
+
+                // Update name for display if desired, or let cart list handle it via metadata
+                // cartProduct.name = `${producto.name} (${sku.presentacion})`
+            }
+
+            addItem({
+                id: cartProduct.id,
+                name: cartProduct.name,
+                unitPrice: cartProduct.price,
+                quantity: 1,
+                selectedSkuId: skuId,
+                skuCode: skuCode,
+                presentacion: presentacion
+            })
+            setProductForSkuSelection(null)
+        } catch (error) {
+            console.error('Error adding to cart:', error)
+        }
+    }
+
     return (
         <div className="space-y-6">
             <PageHero
@@ -104,6 +180,7 @@ export default function PaginaProductos() {
 
             <SectionHeader title="Nuestros Productos" subtitle="Explora nuestro catálogo de embutidos premium" />
 
+            {/* Filters UI */}
             <div className="flex flex-col gap-3 sm:flex-row">
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-3 text-gray-400" size={20} />
@@ -204,29 +281,37 @@ export default function PaginaProductos() {
                 <>
                     <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {productosFiltrados.map(producto => (
-                            <ProductCard key={producto.id} producto={producto} onAddToCart={addItem} onView={openDetail} />
+                            <ProductCard
+                                key={producto.id}
+                                producto={producto}
+                                onAddToCart={() => handleAddToCart(producto)}
+                                onView={openDetail}
+                            />
                         ))}
                     </div>
-                    <ProductDetailModal
-                        isOpen={isDetailOpen}
-                        producto={selectedProducto}
-                        onClose={closeDetail}
-                        onAddToCart={addItem}
-                    />
                 </>
             ) : (
-                <div className="py-12 text-center">
-                    <p className="text-lg text-gray-600">No se encontraron productos</p>
-                    <button
-                        onClick={() => {
-                            setBusqueda('')
-                            setFiltros({ category: 'all', minPrice: 0, maxPrice: 10000, inStock: true })
-                        }}
-                        className="mt-4 font-medium text-brand-red transition hover:opacity-80"
-                    >
-                        Limpiar filtros
-                    </button>
-                </div>
+                <EmptyContent
+                    icon={<Package className="h-16 w-16" />}
+                    title="No hay productos"
+                    description="No se encontraron productos con los filtros seleccionados."
+                />
+            )}
+
+            <ProductDetailModal
+                isOpen={isDetailOpen}
+                producto={selectedProducto}
+                onClose={closeDetail}
+                onAddToCart={() => selectedProducto && handleAddToCart(selectedProducto)}
+            />
+
+            {productForSkuSelection && (
+                <SkuSelectionModal
+                    producto={productForSkuSelection}
+                    isOpen={!!productForSkuSelection}
+                    onClose={() => setProductForSkuSelection(null)}
+                    onConfirm={(sku) => confirmSkuSelection(productForSkuSelection, sku)}
+                />
             )}
 
             <CartQuickAction />

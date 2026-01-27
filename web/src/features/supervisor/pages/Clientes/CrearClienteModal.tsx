@@ -97,7 +97,7 @@ export function CrearClienteModal({ isOpen, onClose, onSuccess, initialData, mod
           poligono_geografico: (z as any).poligono_geografico
         } as ZonaOption)))
 
-        setCanales(canalesData)
+        setCanales(canalesData as any)
         setVendedores(vendedoresData)
       } catch (e) {
         console.error("Error loading catalog", e)
@@ -112,7 +112,7 @@ export function CrearClienteModal({ isOpen, onClose, onSuccess, initialData, mod
   useEffect(() => {
     if (!formData.zona_comercial_id) return
 
-    const zone = zonas.find(z => z.id === formData.zona_comercial_id)
+    const zone = zonas.find(z => String(z.id) === String(formData.zona_comercial_id))
     if (zone?.vendedor_asignado?.vendedor_usuario_id) {
       setFormData(prev => ({
         ...prev,
@@ -226,15 +226,19 @@ export function CrearClienteModal({ isOpen, onClose, onSuccess, initialData, mod
         }
       } else {
         if (!initialData?.id) throw new Error('Falta id del cliente')
-        const payload: any = {
-          // For update, use the user-service patchable fields. Keep names compatible with backend partial client.
+        const payload: Partial<any> = {
+          // Send explicit nulls or values, but for Partial<CreateClienteDto> we should use correct keys.
+          razon_social: formData.razon_social,
           nombre_comercial: formData.nombre_comercial || formData.razon_social || undefined,
           canal_id: formData.canal_id ?? undefined,
           vendedor_asignado_id: formData.vendedor_asignado_id ?? undefined,
-          zona_id: formData.zona_comercial_id ?? undefined,
-          direccion: formData.direccion_texto ?? undefined,
+          zona_comercial_id: formData.zona_comercial_id ?? undefined,
+          direccion_texto: formData.direccion_texto ?? undefined,
           latitud: formData.latitud ?? undefined,
           longitud: formData.longitud ?? undefined,
+          // If we have proper gps object structure in form, we should pass it too.
+          // The form updates latitud/longitud and also ubicacion_gps if LocationPicker is used.
+          ubicacion_gps: formData.ubicacion_gps ?? undefined
         }
 
         console.log('actualizarCliente payload', payload)

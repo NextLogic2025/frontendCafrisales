@@ -12,6 +12,8 @@ export interface Field {
   step?: string
   min?: string | number
   required?: boolean
+  prefix?: string
+  disabled?: boolean
 }
 
 interface EntityFormModalProps<T> {
@@ -24,6 +26,7 @@ interface EntityFormModalProps<T> {
   headerGradient?: 'red' | 'blue' | 'green'
   submitLabel?: string
   isEditing?: boolean
+  subtitle?: string
 }
 
 export function EntityFormModal<T extends Record<string, any>>({
@@ -36,6 +39,7 @@ export function EntityFormModal<T extends Record<string, any>>({
   headerGradient = 'red',
   submitLabel,
   isEditing = false,
+  subtitle,
 }: EntityFormModalProps<T>) {
   const [formData, setFormData] = useState<Partial<T>>(initialData)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -115,6 +119,7 @@ export function EntityFormModal<T extends Record<string, any>>({
   return (
     <Modal isOpen={isOpen} title={title} onClose={handleClose} headerGradient={headerGradient} maxWidth="md">
       <form onSubmit={handleSubmit} className="space-y-4">
+        {subtitle && <p className="text-xs text-neutral-500 -mt-2">{subtitle}</p>}
         {submitMessage && (
           <Alert
             type={submitMessage.type}
@@ -150,7 +155,7 @@ export function EntityFormModal<T extends Record<string, any>>({
                   value={value}
                   onChange={(e) => handleChange(field.name, e.target.value)}
                   className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-neutral-900 outline-none transition focus:border-brand-red/60 focus:shadow-[0_0_0_4px_rgba(240,65,45,0.18)] disabled:opacity-50"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || field.disabled}
                 >
                   <option value="">Selecciona una opción</option>
                   {field.options?.map((opt) => (
@@ -173,7 +178,7 @@ export function EntityFormModal<T extends Record<string, any>>({
                   checked={!!value}
                   onChange={(e) => handleChange(field.name, e.target.checked)}
                   className="h-4 w-4 rounded border-gray-300 text-brand-red focus:ring-brand-red"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || field.disabled}
                 />
                 <label htmlFor={field.name} className="text-sm text-neutral-700">
                   {field.label}
@@ -195,9 +200,10 @@ export function EntityFormModal<T extends Record<string, any>>({
                 handleChange(field.name, val)
               }}
               error={errors[field.name]}
-              disabled={isSubmitting}
+              disabled={isSubmitting || field.disabled}
               step={field.step}
               min={field.min}
+              left={field.prefix}
             />
           )
         })}

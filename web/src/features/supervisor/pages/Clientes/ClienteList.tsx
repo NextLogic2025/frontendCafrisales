@@ -1,20 +1,19 @@
 import { Building2 } from 'lucide-react'
 import { EmptyContent } from 'components/ui/EmptyContent'
 import { LoadingSpinner } from 'components/ui/LoadingSpinner'
-import { type Cliente, type ZonaComercial, type ListaPrecio } from '../../services/clientesApi'
+import { type Cliente, type ZonaComercial } from '../../services/clientesApi'
 import { ClienteCard } from './ClienteCard'
 
 interface ClienteListProps {
   clientes: Cliente[]
   isLoading: boolean
   onEdit?: (cliente: Cliente) => void
-  onDelete?: (cliente: Cliente) => void
   onView?: (cliente: Cliente) => void
   zonas: ZonaComercial[]
-  listasPrecios: ListaPrecio[]
+  listasPrecios: any[]
 }
 
-export function ClienteList({ clientes, isLoading, onEdit, onDelete, onView, zonas, listasPrecios }: ClienteListProps) {
+export function ClienteList({ clientes, isLoading, onEdit, onView, zonas }: ClienteListProps) {
   if (isLoading) {
     return (
       <div className="flex justify-center py-12">
@@ -40,10 +39,8 @@ export function ClienteList({ clientes, isLoading, onEdit, onDelete, onView, zon
           key={cliente.id}
           cliente={cliente}
           onEdit={onEdit}
-          onDelete={onDelete}
           onView={onView}
           zonas={zonas}
-          listasPrecios={listasPrecios}
         />
       ))}
     </div>

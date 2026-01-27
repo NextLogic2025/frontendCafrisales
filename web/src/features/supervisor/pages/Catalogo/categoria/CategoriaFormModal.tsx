@@ -10,20 +10,20 @@ interface CategoriaFormModalProps {
 }
 
 const fields: Field[] = [
-  { name: 'nombre', label: 'Nombre de la categoría', required: true, placeholder: 'Ej: Embutidos' },
-  { name: 'descripcion', label: 'Descripción', type: 'textarea', placeholder: 'Describe la categoría...' },
-  { name: 'imagen_url', label: 'URL de imagen', type: 'url', placeholder: 'https://ejemplo.com/imagen.jpg' },
-  { name: 'activo', label: 'Categoría activa', type: 'checkbox' },
+  { name: 'nombre', label: 'Nombre', required: true, placeholder: 'Ej. Bebidas' },
+  { name: 'slug', label: 'Slug', required: true, placeholder: 'bebidas' },
+  { name: 'descripcion', label: 'Descripcion', type: 'textarea', placeholder: 'Describe la categoria' },
+  { name: 'img_url', label: 'Imagen (URL)', type: 'url', placeholder: 'https://...' },
 ]
 
 export function CategoriaFormModal({ isOpen, onClose, initialData, onSubmit, isEditing }: CategoriaFormModalProps) {
   // Adaptar el objeto recibido (Category) a CreateCategoryDto para evitar problemas de null/undefined
-  const handleSubmit = async (data: Category) => {
+  const handleSubmit = async (data: any) => {
     const dto: CreateCategoryDto = {
       nombre: data.nombre,
+      slug: data.slug,
       descripcion: data.descripcion || undefined,
-      imagen_url: data.imagen_url || undefined,
-      activo: data.activo,
+      img_url: data.img_url || undefined,
     }
     await onSubmit(dto)
   }
@@ -36,6 +36,7 @@ export function CategoriaFormModal({ isOpen, onClose, initialData, onSubmit, isE
       initialData={initialData}
       onSubmit={handleSubmit}
       headerGradient="red"
+      subtitle="Define el nombre y la descripcion de la categoria."
     />
   )
 }

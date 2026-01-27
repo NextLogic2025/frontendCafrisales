@@ -1,25 +1,13 @@
 
 import { CheckCircle2 } from 'lucide-react'
-import { DeliverySelector } from './DeliverySelector'
 import { PaymentConditionSelector } from './PaymentConditionSelector'
-import type { DestinoTipo } from '../types'
-import type { PerfilCliente, SucursalCliente } from '../../../types'
+import type { PerfilCliente } from '../../../types'
 
 interface OrderSummaryProps {
     total: number
-    creditoDisponible: number
-    superaCredito: boolean
-    condicionComercial: string
     itemsCount: number
     confirmarPedido: () => void
     goToProducts: () => void
-    destinoTipo: DestinoTipo
-    handleDestinoTipoChange: (tipo: DestinoTipo) => void
-    sucursales: SucursalCliente[]
-    selectedSucursalId: string | null
-    setSelectedSucursalId: (id: string | null) => void
-    destinoDescripcion: string
-    invalidSucursalMessage: string | null
     perfil: PerfilCliente | null
     condicionPagoManual: 'CONTADO' | 'CREDITO'
     setCondicionPagoManual: (value: 'CONTADO' | 'CREDITO') => void
@@ -27,19 +15,9 @@ interface OrderSummaryProps {
 
 export function OrderSummary({
     total,
-    creditoDisponible,
-    superaCredito,
-    condicionComercial,
     itemsCount,
     confirmarPedido,
     goToProducts,
-    destinoTipo,
-    handleDestinoTipoChange,
-    sucursales,
-    selectedSucursalId,
-    setSelectedSucursalId,
-    destinoDescripcion,
-    invalidSucursalMessage,
     perfil,
     condicionPagoManual,
     setCondicionPagoManual
@@ -51,39 +29,20 @@ export function OrderSummary({
                 <p className="text-xl font-bold text-neutral-900">${total.toFixed(2)}</p>
             </div>
             <div className="flex items-center justify-between">
-                <p className="text-sm text-neutral-700">Crédito disponible</p>
-                <p className={`text-sm font-semibold ${superaCredito ? 'text-brand-red' : 'text-emerald-700'}`}>${creditoDisponible.toFixed(2)}</p>
+                <p className="text-sm text-neutral-700">Total</p>
+                <p className="text-xl font-bold text-neutral-900">${total.toFixed(2)}</p>
             </div>
-            <div className="flex items-center justify-between">
-                <p className="text-sm text-neutral-700">Condición comercial</p>
-                <p className="text-sm font-semibold text-neutral-900">{condicionComercial}</p>
-            </div>
-            {superaCredito ? (
-                <div className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-800">
-                    El total excede tu crédito disponible.
-                </div>
-            ) : (
-                <div className="rounded-xl bg-green-50 px-3 py-2 text-sm text-green-800">
-                    <CheckCircle2 className="mr-1 inline h-4 w-4" /> Cumple con crédito disponible.
-                </div>
-            )}
 
             <PaymentConditionSelector
                 condicionPagoManual={condicionPagoManual}
                 setCondicionPagoManual={setCondicionPagoManual}
-                superaCredito={superaCredito}
+                superaCredito={false}
             />
 
-            <DeliverySelector
-                destinoTipo={destinoTipo}
-                handleDestinoTipoChange={handleDestinoTipoChange}
-                sucursales={sucursales}
-                selectedSucursalId={selectedSucursalId}
-                setSelectedSucursalId={setSelectedSucursalId}
-                destinoDescripcion={destinoDescripcion}
-                invalidSucursalMessage={invalidSucursalMessage}
-                perfil={perfil}
-            />
+            <div className="rounded-2xl border border-neutral-200 px-3 py-3">
+                <p className="text-sm font-semibold text-neutral-900 mb-1">Dirección de Entrega</p>
+                <p className="text-sm text-neutral-600">Dirección Principal ({perfil?.direccion || 'Sin dirección registrada'})</p>
+            </div>
 
             <div className="grid gap-2">
                 <button
@@ -95,7 +54,7 @@ export function OrderSummary({
                 </button>
                 <button
                     type="button"
-                    disabled={itemsCount === 0 || (superaCredito && condicionPagoManual === 'CREDITO')}
+                    disabled={itemsCount === 0}
                     onClick={confirmarPedido}
                     className="rounded-xl bg-brand-red px-3 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
                 >
