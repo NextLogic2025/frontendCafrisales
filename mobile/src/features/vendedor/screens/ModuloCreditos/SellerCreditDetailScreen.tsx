@@ -11,6 +11,7 @@ import { OrderService, OrderDetail } from '../../../../services/api/OrderService
 import { PrimaryButton } from '../../../../components/ui/PrimaryButton'
 import { GenericModal } from '../../../../components/ui/GenericModal'
 import { TextField } from '../../../../components/ui/TextField'
+import { DatePickerModal } from '../../../../components/ui/DatePickerModal'
 import { showGlobalToast } from '../../../../utils/toastService'
 
 const currencyFormatter = new Intl.NumberFormat('es-EC', {
@@ -19,7 +20,10 @@ const currencyFormatter = new Intl.NumberFormat('es-EC', {
   minimumFractionDigits: 2,
 })
 
-const formatMoney = (value?: number | null) => currencyFormatter.format(Number.isFinite(value as number) ? (value as number) : 0)
+const formatMoney = (value?: number | string | null) => {
+  const amount = Number(value)
+  return currencyFormatter.format(Number.isFinite(amount) ? amount : 0)
+}
 
 const formatDate = (value?: string) => {
   if (!value) return '-'
@@ -49,6 +53,7 @@ export function SellerCreditDetailScreen() {
   const [paymentReference, setPaymentReference] = React.useState('')
   const [paymentNotes, setPaymentNotes] = React.useState('')
   const [submittingPayment, setSubmittingPayment] = React.useState(false)
+  const [datePickerVisible, setDatePickerVisible] = React.useState(false)
 
   const loadDetail = React.useCallback(async () => {
     if (!creditId) {
@@ -295,12 +300,16 @@ export function SellerCreditDetailScreen() {
             onChangeText={setPaymentAmount}
             placeholder="0.00"
           />
-          <TextField
-            label="Fecha (YYYY-MM-DD)"
-            value={paymentDate}
-            onChangeText={setPaymentDate}
-            placeholder="2026-01-27"
-          />
+          <View>
+            <Text className="text-sm font-semibold text-neutral-700 mb-2">Fecha de pago</Text>
+            <Pressable
+              onPress={() => setDatePickerVisible(true)}
+              className="flex-row items-center justify-between rounded-xl border border-neutral-200 bg-white px-4 py-3"
+            >
+              <Text className="text-sm text-neutral-900">{paymentDate || 'Selecciona una fecha'}</Text>
+              <Ionicons name="calendar-outline" size={18} color="#6B7280" />
+            </Pressable>
+          </View>
           <TextField
             label="Referencia (opcional)"
             value={paymentReference}
@@ -320,6 +329,17 @@ export function SellerCreditDetailScreen() {
           />
         </View>
       </GenericModal>
+
+      <DatePickerModal
+        visible={datePickerVisible}
+        title="Fecha de pago"
+        infoText="Selecciona la fecha en que se registro el pago."
+        initialDate={paymentDate}
+        onSelectDate={(value) => setPaymentDate(value)}
+        onClear={() => setPaymentDate('')}
+        onClose={() => setDatePickerVisible(false)}
+      />
     </View>
   )
 }
+

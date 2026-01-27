@@ -1,6 +1,7 @@
 import * as React from 'react'
-import { ScrollView, Text, Pressable, View } from 'react-native'
+import { Pressable, ScrollView, Text, View } from 'react-native'
 import { BRAND_COLORS } from '../../shared/types'
+import { SearchBar } from './SearchBar'
 
 type Category = {
     id: number | string
@@ -11,11 +12,49 @@ type Props = {
     categories: Category[]
     selectedId: number | string | null
     onSelect: (id: number | string) => void
+    searchValue?: string
+    onSearchChange?: (value: string) => void
+    searchPlaceholder?: string
+    actionLabel?: string
+    onActionPress?: () => void
 }
 
-export function CategoryFilter({ categories, selectedId, onSelect }: Props) {
+export function CategoryFilter({
+    categories,
+    selectedId,
+    onSelect,
+    searchValue,
+    onSearchChange,
+    searchPlaceholder,
+    actionLabel,
+    onActionPress,
+}: Props) {
     return (
         <View>
+            {(onSearchChange || onActionPress) ? (
+                <View className="px-5 pt-4">
+                    <View className="flex-row items-center">
+                        <SearchBar
+                            value={searchValue}
+                            onChangeText={onSearchChange}
+                            onClear={() => onSearchChange?.('')}
+                            placeholder={searchPlaceholder || 'Buscar'}
+                            style={{ flex: 1 }}
+                        />
+                        {onActionPress ? (
+                            <Pressable
+                                onPress={onActionPress}
+                                className="ml-2 px-4 py-3 rounded-xl border border-neutral-200 bg-white items-center justify-center"
+                                style={{ minHeight: 52 }}
+                            >
+                                <Text className="text-xs font-semibold text-neutral-700" numberOfLines={1}>
+                                    {actionLabel || 'Cliente'}
+                                </Text>
+                            </Pressable>
+                        ) : null}
+                    </View>
+                </View>
+            ) : null}
             <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}

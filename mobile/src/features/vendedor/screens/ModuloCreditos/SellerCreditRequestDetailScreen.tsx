@@ -12,19 +12,56 @@ import { TextField } from '../../../../components/ui/TextField'
 import { GenericModal } from '../../../../components/ui/GenericModal'
 import { showGlobalToast } from '../../../../utils/toastService'
 
-const formatMoney = (value?: number) => {
-  const amount = Number.isFinite(value as number) ? (value as number) : 0
+const formatMoney = (value?: number | string | null) => {
+  const amount = Number(value)
+  const safeAmount = Number.isFinite(amount) ? amount : 0
   return new Intl.NumberFormat('es-EC', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 2,
-  }).format(amount)
+  }).format(safeAmount)
+}
+
+const computeOrderTotal = (pedido?: OrderDetail['pedido'], items: OrderDetail['items'] = []) => {
+  const pedidoTotal = Number(pedido?.total)
+  if (Number.isFinite(pedidoTotal) && pedidoTotal > 0) {
+    return pedidoTotal
+  }
+  return items.reduce((sum, item) => {
+    const subtotal = Number(item?.subtotal)
+    if (Number.isFinite(subtotal) && subtotal > 0) return sum + subtotal
+    const unit = Number(item?.precio_unitario_final)
+    const qty = Number(item?.cantidad_solicitada)
+    if (Number.isFinite(unit) && Number.isFinite(qty)) return sum + unit * qty
+    return sum
+  }, 0)
+}
+
+const buildItemTitle = (item: OrderDetail['items'][number]) => {
+  const anyItem = item as any
+  const name =
+    item?.sku_nombre_snapshot ||
+    anyItem?.producto_nombre_snapshot ||
+    anyItem?.producto_nombre ||
+    anyItem?.product_name ||
+    item?.sku_codigo_snapshot ||
+    'Producto'
+  return name
+}
+
+const buildItemPresentation = (item: OrderDetail['items'][number]) => {
+  const parts: string[] = []
+  if (item?.sku_tipo_empaque_snapshot) parts.push(item.sku_tipo_empaque_snapshot)
+  if (item?.sku_peso_gramos_snapshot) parts.push(`${item.sku_peso_gramos_snapshot} g`)
+  return parts.join(' / ')
 }
 
 export function SellerCreditRequestDetailScreen() {
   const navigation = useNavigation<any>()
   const route = useRoute<any>()
   const orderId: string | undefined = route.params?.orderId
+  const fallbackClientName: string | undefined = route.params?.clientName
+  const fallbackOrderNumber: string | undefined = route.params?.orderNumber
 
   const [loading, setLoading] = React.useState(true)
   const [orderDetail, setOrderDetail] = React.useState<OrderDetail | null>(null)
@@ -74,10 +111,11 @@ export function SellerCreditRequestDetailScreen() {
     }
     setSubmitting(true)
     try {
+      const computedTotal = computeOrderTotal(pedido, orderDetail?.items || [])
       const credit = await CreditService.approveCredit({
         pedido_id: pedido.id,
         cliente_id: pedido.cliente_id,
-        monto_aprobado: pedido.total || 0,
+        monto_aprobado: computedTotal || pedido.total || 0,
         plazo_dias: plazo,
         notas: creditNotas || undefined,
       })
@@ -106,6 +144,14 @@ export function SellerCreditRequestDetailScreen() {
 
   const pedido = orderDetail?.pedido
   const items = orderDetail?.items || []
+  const computedTotal = computeOrderTotal(pedido, items)
+  const clienteLabel =
+    client?.nombre_comercial ||
+    `${client?.nombres || ''} ${client?.apellidos || ''}`.trim() ||
+    fallbackClientName ||
+    client?.ruc ||
+    pedido?.cliente_id ||
+    'Cliente sin nombre'
 
   return (
     <View className="flex-1 bg-neutral-50">
@@ -115,17 +161,31 @@ export function SellerCreditRequestDetailScreen() {
         <View className="bg-white rounded-2xl border border-neutral-100 p-4 shadow-sm">
           <Text className="text-xs text-neutral-500">Cliente</Text>
           <Text className="text-base font-semibold text-neutral-900" numberOfLines={1}>
-            {client?.nombre_comercial || client?.ruc || pedido?.cliente_id || 'Cliente'}
+            {clienteLabel}
           </Text>
           {client?.ruc && <Text className="text-xs text-neutral-500 mt-1">RUC: {client.ruc}</Text>}
+          {client?.telefono && <Text className="text-xs text-neutral-500 mt-1">Tel: {client.telefono}</Text>}
         </View>
 
         <View className="bg-white rounded-2xl border border-neutral-100 p-4 mt-4 shadow-sm">
-          <Text className="text-xs text-neutral-500">Pedido</Text>
-          <Text className="text-base font-semibold text-neutral-900">
-            #{pedido?.numero_pedido || pedido?.id?.slice(0, 8)}
-          </Text>
-          <Text className="text-xs text-neutral-500 mt-1">Total: {formatMoney(pedido?.total)}</Text>
+          <View className="flex-row items-center justify-between">
+            <View>
+              <Text className="text-xs text-neutral-500">Pedido</Text>
+              <Text className="text-base font-semibold text-neutral-900">
+                #
+                {pedido?.numero_pedido ||
+                  (pedido as any)?.numero ||
+                  (pedido as any)?.numeroPedido ||
+                  fallbackOrderNumber ||
+                  pedido?.id?.slice(0, 8) ||
+                  '-'}
+              </Text>
+            </View>
+            <View className="items-end">
+              <Text className="text-xs text-neutral-500">Total</Text>
+              <Text className="text-base font-semibold text-neutral-900">{formatMoney(computedTotal)}</Text>
+            </View>
+          </View>
         </View>
 
         <View className="bg-white rounded-2xl border border-neutral-100 p-4 mt-4 shadow-sm">
@@ -133,21 +193,40 @@ export function SellerCreditRequestDetailScreen() {
           {items.length === 0 ? (
             <Text className="text-xs text-neutral-500">No hay productos.</Text>
           ) : (
-            items.map((item, index) => (
-              <View
-                key={item.id || item.sku_id || `${index}`}
-                className={`${index > 0 ? 'mt-3 pt-3 border-t border-neutral-100' : ''}`}
-              >
-                <Text className="text-xs text-neutral-500">{item.sku_codigo_snapshot || item.sku_id}</Text>
-                <Text className="text-sm font-semibold text-neutral-900" numberOfLines={2}>
-                  {item.sku_nombre_snapshot || 'Producto'}
-                </Text>
-                <View className="flex-row justify-between mt-1">
-                  <Text className="text-xs text-neutral-600">Cantidad: {item.cantidad_solicitada ?? 0}</Text>
-                  <Text className="text-xs text-neutral-700">{formatMoney(item.subtotal)}</Text>
+            items.map((item, index) => {
+              const presentation = buildItemPresentation(item)
+              const rawCode = item?.sku_codigo_snapshot
+              const skuCode = rawCode && rawCode !== 'SIN-CODIGO' ? rawCode : item?.sku_id?.slice(0, 8)
+              return (
+                <View
+                  key={item.id || item.sku_id || `${index}`}
+                  className={`${index > 0 ? 'mt-3 pt-3 border-t border-neutral-100' : ''}`}
+                >
+                  <View className="flex-row items-center justify-between">
+                    <Text className="text-xs text-neutral-500">
+                      {skuCode ? `SKU ${skuCode}` : 'SKU'}
+                    </Text>
+                    <Text className="text-xs text-neutral-500">
+                      {item.cantidad_solicitada ?? 0} unid
+                    </Text>
+                  </View>
+                  <Text className="text-sm font-semibold text-neutral-900 mt-1" numberOfLines={2}>
+                    {buildItemTitle(item)}
+                  </Text>
+                  {presentation ? (
+                    <Text className="text-xs text-neutral-500 mt-1">{presentation}</Text>
+                  ) : null}
+                  <View className="flex-row justify-between mt-2">
+                    <Text className="text-xs text-neutral-500">Precio unitario</Text>
+                    <Text className="text-xs text-neutral-700">{formatMoney(item.precio_unitario_final)}</Text>
+                  </View>
+                  <View className="flex-row justify-between mt-1">
+                    <Text className="text-xs text-neutral-500">Subtotal</Text>
+                    <Text className="text-xs text-neutral-700">{formatMoney(item.subtotal)}</Text>
+                  </View>
                 </View>
-              </View>
-            ))
+              )
+            })
           )}
         </View>
 
@@ -181,3 +260,4 @@ export function SellerCreditRequestDetailScreen() {
     </View>
   )
 }
+

@@ -40,6 +40,8 @@ export type OrderItemDetail = {
   sku_id?: string
   sku_nombre_snapshot?: string
   sku_codigo_snapshot?: string
+  sku_peso_gramos_snapshot?: number
+  sku_tipo_empaque_snapshot?: string
   cantidad_solicitada?: number
   precio_unitario_final?: number
   subtotal?: number
@@ -81,10 +83,13 @@ const rawService = {
   async getOrderDetail(orderId: string): Promise<OrderDetail | null> {
     try {
       const data = await ApiService.get<any>(`${ORDER_API_URL}/pedidos/${orderId}`)
-      if (data?.pedido || data?.items) {
+      if (data?.pedido) {
         return data as OrderDetail
       }
       if (data?.id) {
+        return { pedido: data as OrderResponse, items: data.items || [] }
+      }
+      if (Array.isArray(data?.items) && data?.cliente_id) {
         return { pedido: data as OrderResponse, items: data.items || [] }
       }
       return null
