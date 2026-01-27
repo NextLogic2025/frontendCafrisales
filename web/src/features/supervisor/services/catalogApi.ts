@@ -1,50 +1,128 @@
+import { env } from '../../../config/env'
+import { getValidToken } from '../../../services/auth/authClient'
+
 export interface Category {
-  id: number
+  id: string | number
   nombre: string
+  slug: string
   descripcion: string | null
-  imagen_url: string | null
+  img_url: string | null
   activo: boolean
-  created_at: string
-  deleted_at: string | null
+  created_at?: string
+  deleted_at?: string | null
 }
 
 export interface CreateCategoryDto {
   nombre: string
+  slug: string
   descripcion?: string
-  imagen_url?: string
-  activo?: boolean
+  img_url?: string
 }
+
+const CATALOG_BASE_URL = env.api.catalogo
+const CATALOG_API_URL = CATALOG_BASE_URL.endsWith('/api') ? CATALOG_BASE_URL : `${CATALOG_BASE_URL}/api`
 
 export async function getAllCategories(): Promise<Category[]> {
-  return []
+  const token = await getValidToken()
+  if (!token) throw new Error('No hay sesión activa')
+
+  const res = await fetch(`${CATALOG_API_URL}/categorias`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) return []
+  return await res.json()
 }
 
-export async function getCategoryById(id: number): Promise<Category | null> {
-  return {
-    id,
-    nombre: 'Categoria Mock',
-    descripcion: null,
-    imagen_url: null,
-    activo: true,
-    created_at: new Date().toISOString(),
-    deleted_at: null
-  }
+export async function getCategoryById(id: string): Promise<Category | null> {
+  const token = await getValidToken()
+  if (!token) throw new Error('No hay sesión activa')
+
+  const res = await fetch(`${CATALOG_API_URL}/categorias/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) return null
+  return await res.json()
 }
 
 export async function createCategory(data: CreateCategoryDto): Promise<Category> {
-  return {
-    id: Math.floor(Math.random() * 1000),
-    nombre: data.nombre,
-    descripcion: data.descripcion || null,
-    imagen_url: data.imagen_url || null,
-    activo: data.activo ?? true,
-    created_at: new Date().toISOString(),
-    deleted_at: null
+  const token = await getValidToken()
+  if (!token) throw new Error('No hay sesión activa')
+
+  const res = await fetch(`${CATALOG_API_URL}/categorias`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => null)
+    throw new Error(errorData?.message || 'Error al crear la categoría')
+  }
+
+  return await res.json()
+}
+
+export async function updateCategory(id: string, data: Partial<CreateCategoryDto>): Promise<Category> {
+  const token = await getValidToken()
+  if (!token) throw new Error('No hay sesión activa')
+
+  const res = await fetch(`${CATALOG_API_URL}/categorias/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => null)
+    throw new Error(errorData?.message || 'Error al actualizar la categoría')
+  }
+
+  return await res.json()
+}
+
+export async function deleteCategory(id: string): Promise<void> {
+  const token = await getValidToken()
+  if (!token) throw new Error('No hay sesión activa')
+
+  const res = await fetch(`${CATALOG_API_URL}/categorias/${id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+
+  if (!res.ok) {
+    throw new Error('Error al eliminar categoría')
   }
 }
 
-export async function updateCategory(id: number, data: Partial<CreateCategoryDto>): Promise<Category> {
-  return getCategoryById(id) as Promise<Category>
+export async function getDeletedCategories(): Promise<Category[]> {
+  const token = await getValidToken()
+  if (!token) throw new Error('No hay sesión activa')
+
+  const res = await fetch(`${CATALOG_API_URL}/categorias/eliminadas`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) return []
+  return await res.json()
+}
+
+export async function restoreCategory(id: string | number): Promise<void> {
+  const token = await getValidToken()
+  if (!token) throw new Error('No hay sesión activa')
+
+  const res = await fetch(`${CATALOG_API_URL}/categorias/${id}/restaurar`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+
+  if (!res.ok) {
+    throw new Error('Error al restaurar categoría')
+  }
 }
 
 export interface Canal {
@@ -55,8 +133,6 @@ export interface Canal {
 
 export async function obtenerCanales(): Promise<Canal[]> {
   try {
-    const { env } = await import('../../../config/env')
-    const { getValidToken } = await import('../../../services/auth/authClient')
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
@@ -72,8 +148,4 @@ export async function obtenerCanales(): Promise<Canal[]> {
     console.error('Error fetching canales:', error)
     return []
   }
-}
-
-export async function deleteCategory(id: number): Promise<void> {
-  return Promise.resolve()
 }

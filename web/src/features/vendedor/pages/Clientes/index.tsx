@@ -11,7 +11,7 @@ import { LoadingSpinner } from '../../../../components/ui/LoadingSpinner'
 import { QuickActionButton } from '../../../../components/ui/Cards'
 import { ClienteDetailModal, getClienteDisplayName, getClienteSecondaryName } from './ClienteDetailModal'
 import type { Cliente } from '../../../supervisor/services/clientesApi'
-import { obtenerClientes } from '../../../supervisor/services/clientesApi'
+import { obtenerMisClientes } from '../../../supervisor/services/clientesApi'
 
 const ESTADOS = [
   { value: '', label: 'Todos' },
@@ -36,7 +36,7 @@ export default function VendedorClientes() {
       setIsLoading(true)
       setError(null)
       try {
-        const data = await obtenerClientes()
+        const data = await obtenerMisClientes()
         if (isMounted) setClientes(data)
       } catch (err: any) {
         console.error('Error cargando clientes:', err)

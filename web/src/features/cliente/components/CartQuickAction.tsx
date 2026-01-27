@@ -12,13 +12,14 @@ export function CartQuickAction() {
 
   const currentItem = useMemo(() => {
     if (!lastAction) return null
-    const match = items.find(item => item.id === lastAction.itemId)
+    const match = items.find(item => item.id === lastAction.itemId && item.selectedSkuId === lastAction.skuId)
     if (match) return match
     return {
       id: lastAction.itemId,
       name: lastAction.name,
       unitPrice: 0,
       quantity: lastAction.quantity,
+      selectedSkuId: lastAction.skuId
     }
   }, [items, lastAction])
 
@@ -56,7 +57,7 @@ export function CartQuickAction() {
 
   const handleQuantityChange = (delta: number) => {
     const next = Math.max(0, currentItem.quantity + delta)
-    updateQuantity(currentItem.id, next)
+    updateQuantity(currentItem.id, next, currentItem.selectedSkuId)
   }
 
   const goToCart = () => {
@@ -66,9 +67,8 @@ export function CartQuickAction() {
 
   return (
     <div
-      className={`fixed bottom-6 right-6 z-40 w-full max-w-sm transition-all duration-300 ${
-        visible ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-4 opacity-0'
-      }`}
+      className={`fixed bottom-6 right-6 z-40 w-full max-w-sm transition-all duration-300 ${visible ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-4 opacity-0'
+        }`}
     >
       <div
         className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-2xl"

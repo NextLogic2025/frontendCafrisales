@@ -36,8 +36,7 @@ export interface Producto {
   image?: string
   category: string
   inStock: boolean
-  rating?: number
-  reviews?: number
+  skus?: any[]
 }
 
 export enum EstadoFactura {

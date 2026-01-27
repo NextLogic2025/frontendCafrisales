@@ -8,6 +8,10 @@ export type BackendCartItem = {
   precio_unitario_ref?: number | null
   precio_final?: number | null
   producto_nombre?: string | null
+  // SKU fields
+  selected_sku_id?: string
+  sku_code?: string
+  presentacion?: string
 }
 
 export type BackendCart = {
@@ -27,6 +31,9 @@ type UpdateCartItemDto = {
   referido_id?: string | null
   precio_unitario_ref?: number | null
   cliente_id?: string | null
+  selected_sku_id?: string
+  sku_code?: string
+  presentacion?: string
 }
 
 export async function getCart(clienteId?: string | null): Promise<BackendCart | null> {

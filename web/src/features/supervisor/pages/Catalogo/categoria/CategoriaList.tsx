@@ -8,10 +8,11 @@ interface CategoriaListProps {
   onEdit?: (cat: Category) => void
   onDelete?: (id: number) => void
   onRestore?: (id: number) => void
+  onView?: (cat: Category) => void
   isDeletedView?: boolean
 }
 
-export function CategoriaList({ categories, onEdit, onDelete, onRestore, isDeletedView }: CategoriaListProps) {
+export function CategoriaList({ categories, onEdit, onDelete, onRestore, onView, isDeletedView }: CategoriaListProps) {
   if (categories.length === 0) {
     return (
       <div className="rounded-2xl border-2 border-dashed border-neutral-300 bg-neutral-50 p-12 text-center">
@@ -33,19 +34,16 @@ export function CategoriaList({ categories, onEdit, onDelete, onRestore, isDelet
     <CardGrid
       items={categories.map((category) => ({
         id: category.id,
-        image: category.imagen_url || null,
+        image: category.img_url || null,
         title: category.nombre,
         description: category.descripcion ?? undefined,
-        extra: (
-          <StatusBadge variant={category.activo ? 'success' : 'neutral'}>
-            {category.activo ? 'Activo' : 'Inactivo'}
-          </StatusBadge>
-        ),
+        extra: null,
+        onClick: !isDeletedView ? () => onView?.(category) : undefined,
         actions: (
           <div className="flex w-full gap-2 mt-2">
             {isDeletedView ? (
               <button
-                onClick={() => onRestore?.(category.id)}
+                onClick={() => onRestore?.(Number(category.id))}
                 className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-emerald-600 bg-white px-3 py-2 text-sm font-semibold text-emerald-600 shadow-sm transition hover:bg-emerald-600 hover:text-white hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
                 title="Restaurar categoría"
               >
@@ -55,15 +53,15 @@ export function CategoriaList({ categories, onEdit, onDelete, onRestore, isDelet
             ) : (
               <>
                 <button
-                  onClick={() => onEdit?.(category)}
+                  onClick={() => onView?.(category)}
                   className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-brand-red bg-white px-3 py-2 text-sm font-semibold text-brand-red shadow-sm transition hover:bg-brand-red/90 hover:text-white hover:shadow-md focus:outline-none focus:ring-2 focus:ring-brand-red/40"
-                  title="Editar categoría"
+                  title="Detalle"
                 >
-                  <Pencil className="h-4 w-4" />
-                  <span>Editar</span>
+                  <ImageIcon className="h-4 w-4" />
+                  <span>Ver detalles</span>
                 </button>
                 <button
-                  onClick={() => onDelete?.(category.id)}
+                  onClick={() => onDelete?.(Number(category.id))}
                   className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-red-600 bg-white px-3 py-2 text-sm font-semibold text-red-600 shadow-sm transition hover:bg-red-600 hover:text-white hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400"
                   title="Eliminar categoría"
                 >

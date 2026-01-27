@@ -43,11 +43,14 @@ export async function obtenerZonas(estado: 'activo' | 'inactivo' | 'todos' = 'ac
 
   if (!res.ok) return []
   const data = await res.json()
-  return data.map((z: any) => ({
-    ...z,
-    poligono_geografico: z.zonaGeom ?? z.zona_geom ?? null,
-    zonaGeom: z.zonaGeom ?? z.zona_geom ?? null
-  }))
+  return data.map((z: any) => {
+    const geom = z.zonaGeom ?? z.zona_geom ?? z.poligono_geografico ?? null
+    return {
+      ...z,
+      poligono_geografico: geom,
+      zonaGeom: geom
+    }
+  })
 }
 
 export async function obtenerZonaPorId(id: string | number): Promise<ZonaComercial | null> {
@@ -60,10 +63,11 @@ export async function obtenerZonaPorId(id: string | number): Promise<ZonaComerci
 
   if (!res.ok) return null
   const data = await res.json()
+  const geom = data.zonaGeom ?? data.zona_geom ?? data.poligono_geografico ?? null
   return {
     ...data,
-    poligono_geografico: data.zonaGeom ?? data.zona_geom ?? null,
-    zonaGeom: data.zonaGeom ?? data.zona_geom ?? null
+    poligono_geografico: geom,
+    zonaGeom: geom
   }
 }
 

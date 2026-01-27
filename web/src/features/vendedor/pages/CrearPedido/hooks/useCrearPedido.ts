@@ -3,6 +3,9 @@ import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Cliente } from '../../../../supervisor/services/clientesApi'
 import type { CartItem, ClienteDetalle, SucursalCliente, Producto } from '../types'
+import { obtenerClientes, obtenerClientePorId, obtenerMisClientes } from '../../../../supervisor/services/clientesApi'
+import { createOrder, cancelOrder, type CreateOrderPayload } from '../../../services/pedidosApi'
+import { approveCredit } from '../../../services/creditosApi'
 
 export const useCrearPedido = () => {
     const navigate = useNavigate()
@@ -12,6 +15,7 @@ export const useCrearPedido = () => {
     const [sucursales, setSucursales] = useState<SucursalCliente[]>([])
     const [cart, setCart] = useState<CartItem[]>([])
     const [isLoadingClientes, setIsLoadingClientes] = useState(false)
+    const [busquedaCliente, setBusquedaCliente] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
@@ -21,35 +25,75 @@ export const useCrearPedido = () => {
     const [invalidSucursalMessage, setInvalidSucursalMessage] = useState<string | null>(null)
 
     // Estado para condición de pago manual
-    const [condicionPagoManual, setCondicionPagoManual] = useState<'CONTADO' | 'CREDITO'>('CREDITO')
+    const [condicionPagoManual, setCondicionPagoManual] = useState<'CONTADO' | 'CREDITO'>('CONTADO')
+    const [isCreditoModalOpen, setIsCreditoModalOpen] = useState(false)
+    const [plazoDias, setPlazoDias] = useState(30)
+    const [notasCredito, setNotasCredito] = useState('')
 
-    const loadCartFromBackend = async (clienteId: string) => {
-        // Logic removed
-        setCart([])
+    const handlePaymentChange = (value: 'CONTADO' | 'CREDITO') => {
+        if (value === 'CREDITO') {
+            setIsCreditoModalOpen(true)
+        } else {
+            setCondicionPagoManual('CONTADO')
+        }
+    }
+
+    const handleConfirmCredito = (plazo: number, notas: string) => {
+        setPlazoDias(plazo)
+        setNotasCredito(notas)
+        setCondicionPagoManual('CREDITO')
+        setIsCreditoModalOpen(false)
+    }
+
+    const loadClientes = async () => {
+        try {
+            setIsLoadingClientes(true)
+            const items = await obtenerMisClientes()
+            setClientes(items)
+        } catch (err) {
+            console.error('Error loading clientes:', err)
+        } finally {
+            setIsLoadingClientes(false)
+        }
     }
 
     const loadClienteDetalle = async (clienteId: string) => {
-        // Logic removed
-        setClienteDetalle(null)
-        setCondicionPagoManual('CONTADO')
+        try {
+            const data = await obtenerClientePorId(clienteId)
+            if (data) {
+                setClienteDetalle({
+                    ...data,
+                    direccion_texto: data.direccion_texto || '',
+                } as any)
+            }
+        } catch (err) {
+            console.error('Error loading cliente detalle:', err)
+        }
     }
 
     const loadSucursales = async (clienteId: string) => {
-        // Logic removed
+        // Implementación simplificada ya que no se encontró API específica
         setSucursales([])
     }
 
-    // Cargar clientes y carrito desde backend
+    // Cargar clientes y carrito local
     useEffect(() => {
-        setIsLoadingClientes(false)
-        setClientes([])
+        loadClientes()
+
+        // Cargar carrito desde localStorage
+        const savedCart = localStorage.getItem('vendedor_cart')
+        if (savedCart) {
+            try {
+                setCart(JSON.parse(savedCart))
+            } catch (e) {
+                console.error('Error parsing cart from localStorage:', e)
+            }
+        }
 
         // Cargar cliente desde localStorage
         const savedCliente = localStorage.getItem('vendedor_cliente_seleccionado')
         if (savedCliente) {
             setClienteSeleccionado(savedCliente)
-            // Cargar carrito desde backend
-            loadCartFromBackend(savedCliente)
             // Cargar detalles del cliente (crédito)
             loadClienteDetalle(savedCliente)
             // Cargar sucursales del cliente
@@ -57,30 +101,37 @@ export const useCrearPedido = () => {
         }
     }, [])
 
-    const updateQuantity = async (productoId: string, newQuantity: number) => {
-        if (!clienteSeleccionado) return
+    // Persistir el carrito cuando cambie
+    useEffect(() => {
+        if (cart.length > 0) {
+            localStorage.setItem('vendedor_cart', JSON.stringify(cart))
+        } else {
+            localStorage.removeItem('vendedor_cart')
+        }
+    }, [cart])
 
+    const getItemId = (item: CartItem) => `${item.producto.id}-${(item.producto as any).selectedSkuId || 'default'}`
+
+    const updateQuantity = async (itemId: string, newQuantity: number) => {
         if (newQuantity <= 0) {
-            removeItem(productoId)
+            removeItem(itemId)
             return
         }
 
         // Actualizar estado local
         setCart(prev => prev.map(item =>
-            item.producto.id === productoId
+            getItemId(item) === itemId
                 ? { ...item, cantidad: newQuantity }
                 : item
         ))
     }
 
-    const removeItem = async (productoId: string) => {
-        if (!clienteSeleccionado) return
+    const removeItem = async (itemId: string) => {
         // Siempre eliminamos del estado local
-        setCart(prev => prev.filter(item => item.producto.id !== productoId))
+        setCart(prev => prev.filter(item => getItemId(item) !== itemId))
     }
 
     const clearCart = async () => {
-        if (!clienteSeleccionado) return
         // Actualizar estado local
         setCart([])
         localStorage.removeItem('vendedor_cart')
@@ -106,8 +157,6 @@ export const useCrearPedido = () => {
     }
 
     const total = cart.reduce((sum, item) => sum + (item.producto.price * item.cantidad), 0)
-    const creditoDisponible = 0
-    const superaCredito = false // No backend data to check credit limit
 
     const handleSubmitOrder = async () => {
         if (!clienteSeleccionado) {
@@ -120,10 +169,6 @@ export const useCrearPedido = () => {
             return
         }
 
-        if (superaCredito && condicionPagoManual === 'CREDITO') {
-            setError('El total excede el crédito disponible del cliente. Seleccione pago al Contado.')
-            return
-        }
 
         const wantsSucursal = destinoTipo === 'sucursal'
         const sucursalIdForApi = wantsSucursal && selectedSucursalId && isUuid(selectedSucursalId) ? selectedSucursalId : undefined
@@ -141,8 +186,45 @@ export const useCrearPedido = () => {
             setIsSubmitting(true)
             setError(null)
 
-            // Logic removed
-            const pedido = { id: 'DEMO-123' }
+            const payload: CreateOrderPayload = {
+                cliente_id: clienteSeleccionado,
+                zona_id: sucursalIdForApi,
+                metodo_pago: condicionPagoManual === 'CREDITO' ? 'credito' : 'contado',
+                notas: condicionPagoManual === 'CREDITO'
+                    ? `[CREDITO: ${plazoDias} dias] ${notasCredito}`.trim()
+                    : undefined,
+                items: cart.map(item => ({
+                    sku_id: (item.producto as any).selectedSkuId || item.producto.id,
+                    cantidad: item.cantidad,
+                    precio_unitario_final: item.producto.price,
+                    origen_precio: 'catalogo'
+                }))
+            }
+
+            const pedido = await createOrder(payload)
+
+            // Si es crédito, registrar la aprobación de crédito inmediatamente
+            if (condicionPagoManual === 'CREDITO') {
+                try {
+                    await approveCredit({
+                        pedido_id: pedido.id,
+                        cliente_id: clienteSeleccionado,
+                        monto_aprobado: total,
+                        plazo_dias: plazoDias,
+                        notas: notasCredito
+                    })
+                } catch (creditErr) {
+                    console.error('Error al registrar aprobación de crédito:', creditErr)
+                    // REQUISITO: Si falla la aprobación de crédito, NO debe crearse el pedido.
+                    // Intentamos cancelar el pedido creado
+                    try {
+                        await cancelOrder(pedido.id, 'Fallo registro automático de aprobación de crédito')
+                    } catch (cancelErr) {
+                        console.error('Error al intentar revertir pedido:', cancelErr)
+                    }
+                    throw new Error('Hubo un error al registrar los términos del crédito. El pedido fue cancelado automáticamente.')
+                }
+            }
 
             // Limpiar carrito local
             setCart([])
@@ -163,12 +245,37 @@ export const useCrearPedido = () => {
     }
 
     const totalItems = cart.reduce((sum, item) => sum + item.cantidad, 0)
-    const condicionComercial = superaCredito ? 'Contado' : 'Crédito'
+
+    const handleClienteSeleccion = (id: string) => {
+        setClienteSeleccionado(id)
+        if (id) {
+            localStorage.setItem('vendedor_cliente_seleccionado', id)
+            loadClienteDetalle(id)
+            loadSucursales(id)
+        } else {
+            localStorage.removeItem('vendedor_cliente_seleccionado')
+            setClienteDetalle(null)
+            setSucursales([])
+        }
+    }
+
+    const clientesFiltrados = useMemo(() => {
+        const query = busquedaCliente.toLowerCase().trim()
+        if (!query) return clientes.slice(0, 5) // Mostrar los primeros 5 como sugerencia
+        return clientes.filter(c =>
+            (c.razon_social || '').toLowerCase().includes(query) ||
+            (c.identificacion || '').includes(query) ||
+            (c.nombre_comercial || '').toLowerCase().includes(query)
+        ).slice(0, 10)
+    }, [clientes, busquedaCliente])
 
     return {
         clientes,
         clienteSeleccionado,
-        setClienteSeleccionado,
+        setClienteSeleccionado: handleClienteSeleccion,
+        busquedaCliente,
+        setBusquedaCliente,
+        clientesFiltrados,
         clienteDetalle,
         sucursales,
         cart,
@@ -181,7 +288,12 @@ export const useCrearPedido = () => {
         setSelectedSucursalId,
         invalidSucursalMessage,
         condicionPagoManual,
-        setCondicionPagoManual,
+        setCondicionPagoManual: handlePaymentChange,
+        isCreditoModalOpen,
+        setIsCreditoModalOpen,
+        handleConfirmCredito,
+        plazoDias,
+        notasCredito,
         updateQuantity,
         removeItem,
         clearCart,
@@ -190,9 +302,6 @@ export const useCrearPedido = () => {
         handleSubmitOrder,
         total,
         totalItems,
-        creditoDisponible,
-        superaCredito,
-        condicionComercial,
         selectedSucursal
     }
 }

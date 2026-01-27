@@ -77,6 +77,7 @@ export const VENDEDOR_NAV_ITEMS: SidebarItem[] = [
   { id: 'crear-pedido', label: 'Crear Pedido', to: '/vendedor/crear-pedido', icon: ShoppingCart },
   { id: 'pedidos', label: 'Pedidos', to: '/vendedor/pedidos', icon: ClipboardList },
   { id: 'facturas', label: 'Facturas', to: '/vendedor/facturas', icon: CreditCard },
+  { id: 'credito', label: 'Crédito', to: '/vendedor/credito', icon: CreditCard },
   { id: 'entregas', label: 'Entregas', to: '/vendedor/entregas', icon: Truck },
   { id: 'devoluciones', label: 'Devoluciones', to: '/vendedor/devoluciones', icon: RotateCcw },
   { id: 'reportes', label: 'Reportes', to: '/vendedor/reportes', icon: BarChart3 },

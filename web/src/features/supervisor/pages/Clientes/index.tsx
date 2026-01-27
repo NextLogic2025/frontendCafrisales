@@ -1,4 +1,4 @@
-import { Users, UserPlus } from 'lucide-react'
+import { Users, UserPlus, Layout } from 'lucide-react'
 import { SectionHeader } from 'components/ui/SectionHeader'
 import { PageHero } from 'components/ui/PageHero'
 import { Button } from 'components/ui/Button'
@@ -7,11 +7,17 @@ import { type Cliente, type ZonaComercial, type ListaPrecio } from '../../servic
 import { ClienteList } from './ClienteList'
 import { CrearClienteModal } from './CrearClienteModal'
 import { ClienteDetailModal } from './ClienteDetailModal'
+import { CrearCanalModal } from './CrearCanalModal'
+import { ClientStatusFilter } from './ClientStatusFilter'
+import { obtenerClientes } from '../../services/clientesApi'
+import { obtenerZonas } from '../../services/zonasApi'
 
 export default function ClientesPage() {
   const [clientes, setClientes] = useState<Cliente[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [filterStatus, setFilterStatus] = useState<'activo' | 'inactivo' | 'todos'>('activo')
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isChannelModalOpen, setIsChannelModalOpen] = useState(false)
   const [editingCliente, setEditingCliente] = useState<Cliente | null>(null)
   const [detailCliente, setDetailCliente] = useState<Cliente | null>(null)
   const [zonas, setZonas] = useState<ZonaComercial[]>([])
@@ -23,12 +29,12 @@ export default function ClientesPage() {
   useEffect(() => {
     cargarClientes()
     cargarCatalogos()
-  }, [])
+  }, [filterStatus])
 
   const cargarCatalogos = async () => {
     try {
-      setZonas([])
-      setListasPrecios([])
+      const zonasData = await obtenerZonas()
+      setZonas(zonasData as any)
     } catch (error) {
       console.error('Error al cargar catálogos:', error)
     }
@@ -37,7 +43,8 @@ export default function ClientesPage() {
   const cargarClientes = async () => {
     try {
       setIsLoading(true)
-      setClientes([])
+      const data = await obtenerClientes(filterStatus)
+      setClientes(data)
     } catch (error) {
       console.error('Error al cargar clientes:', error)
     } finally {
@@ -100,14 +107,28 @@ export default function ClientesPage() {
         subtitle="Listado de clientes activos e incidencias"
       />
 
-      <div className="flex justify-end">
-        <Button
-          onClick={handleOpenModal}
-          className="flex items-center gap-2 bg-brand-red text-white hover:bg-brand-red/90"
-        >
-          <UserPlus className="h-4 w-4" />
-          Crear cliente
-        </Button>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <ClientStatusFilter
+          selectedStatus={filterStatus}
+          onStatusChange={setFilterStatus}
+        />
+
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={() => setIsChannelModalOpen(true)}
+            className="flex items-center gap-2 bg-slate-800 text-white hover:bg-slate-700"
+          >
+            <Layout className="h-4 w-4" />
+            Crear canal
+          </Button>
+          <Button
+            onClick={handleOpenModal}
+            className="flex items-center gap-2 bg-brand-red text-white hover:bg-brand-red/90"
+          >
+            <UserPlus className="h-4 w-4" />
+            Crear cliente
+          </Button>
+        </div>
       </div>
 
       <ClienteList
@@ -160,6 +181,15 @@ export default function ClientesPage() {
         cliente={detailCliente}
         zonas={zonas}
         listasPrecios={listasPrecios}
+      />
+
+      <CrearCanalModal
+        isOpen={isChannelModalOpen}
+        onClose={() => setIsChannelModalOpen(false)}
+        onSuccess={() => {
+          setToast({ type: 'success', message: '¡Canal creado con éxito!' })
+          setTimeout(() => setToast(null), 3000)
+        }}
       />
 
       {/* Toast Notification */}

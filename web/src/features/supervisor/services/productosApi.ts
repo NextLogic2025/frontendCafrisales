@@ -1,93 +1,168 @@
-export interface Product {
+import { env } from '../../../config/env'
+import { getValidToken } from '../../../services/auth/authClient'
+import { useEntityCrud } from '../../../hooks/useEntityCrud'
+
+export interface CatalogProductCategory {
+  id: string
+  nombre: string
+  slug: string
+  descripcion?: string | null
+  img_url?: string | null
+}
+
+export interface CatalogProductSku {
   id: string
   codigo_sku: string
   nombre: string
+  peso_gramos: number
+  precios?: {
+    id: string
+    precio: number
+    moneda: string
+    vigente_desde: string
+    vigente_hasta?: string | null
+  }[]
+}
+
+export interface Product {
+  id: string
+  nombre: string
+  slug: string
   descripcion: string | null
-  categoria_id?: number | null
-  categoria?: {
-    id: number
-    nombre: string
-  } | null
-  peso_unitario_kg: string
-  volumen_m3: string | null
-  requiere_frio: boolean
-  unidad_medida: string
-  imagen_url: string | null
+  img_url: string | null
+  categoria_id?: string
+  categoria?: CatalogProductCategory | null
+  skus?: CatalogProductSku[]
   activo: boolean
-  created_at: string
-  deleted_at: string | null
+  created_at?: string
+  deleted_at?: string | null
 }
 
 export interface CreateProductDto {
-  codigo_sku: string
+  categoria_id: string
   nombre: string
+  slug: string
   descripcion?: string
-  categoria_id?: number | null
-  peso_unitario_kg: number
-  volumen_m3?: number | null
-  requiere_frio?: boolean
-  unidad_medida?: string
-  imagen_url?: string
-  imagenUrl?: string
-  activo?: boolean
+  img_url?: string
 }
 
+const CATALOG_BASE_URL = env.api.catalogo
+const CATALOG_API_URL = CATALOG_BASE_URL.endsWith('/api') ? CATALOG_BASE_URL : `${CATALOG_BASE_URL}/api`
+
 export async function getAllProducts(): Promise<Product[]> {
-  return []
+  const token = await getValidToken()
+  if (!token) throw new Error('No hay sesión activa')
+
+  const res = await fetch(`${CATALOG_API_URL}/productos`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) return []
+  return await res.json()
 }
 
 export async function getProductById(id: string): Promise<Product | null> {
-  return {
-    id,
-    codigo_sku: 'MOCK-001',
-    nombre: 'Producto Mock',
-    descripcion: 'Descripcion Mock',
-    peso_unitario_kg: '1.0',
-    volumen_m3: '0.1',
-    requiere_frio: false,
-    unidad_medida: 'UN',
-    imagen_url: null,
-    activo: true,
-    created_at: new Date().toISOString(),
-    deleted_at: null
-  }
+  const token = await getValidToken()
+  if (!token) throw new Error('No hay sesión activa')
+
+  const res = await fetch(`${CATALOG_API_URL}/productos/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) return null
+  return await res.json()
 }
 
 export async function createProduct(data: CreateProductDto): Promise<Product> {
-  return {
-    id: 'mock-id',
-    codigo_sku: data.codigo_sku,
-    nombre: data.nombre,
-    descripcion: data.descripcion || null,
-    peso_unitario_kg: String(data.peso_unitario_kg),
-    volumen_m3: String(data.volumen_m3 || 0),
-    requiere_frio: data.requiere_frio || false,
-    unidad_medida: data.unidad_medida || 'UN',
-    imagen_url: data.imagen_url || null,
-    activo: true,
-    created_at: new Date().toISOString(),
-    deleted_at: null
+  const token = await getValidToken()
+  if (!token) throw new Error('No hay sesión activa')
+
+  const res = await fetch(`${CATALOG_API_URL}/productos`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => null)
+    throw new Error(errorData?.message || 'Error al crear el producto')
+  }
+
+  return await res.json()
+}
+
+export async function updateProduct(id: string | number, data: Partial<CreateProductDto>): Promise<Product> {
+  const token = await getValidToken()
+  if (!token) throw new Error('No hay sesión activa')
+
+  const res = await fetch(`${CATALOG_API_URL}/productos/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => null)
+    throw new Error(errorData?.message || 'Error al actualizar el producto')
+  }
+
+  return await res.json()
+}
+
+export async function deleteProduct(id: string | number): Promise<void> {
+  const token = await getValidToken()
+  if (!token) throw new Error('No hay sesión activa')
+
+  const res = await fetch(`${CATALOG_API_URL}/productos/${id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+
+  if (!res.ok) {
+    throw new Error('Error al eliminar producto')
   }
 }
 
-export async function updateProduct(id: string, data: Partial<CreateProductDto>): Promise<Product> {
-  // Mock update
-  return {
-    id,
-    codigo_sku: data.codigo_sku || 'MOCK-001',
-    nombre: data.nombre || 'Producto Mock',
-    descripcion: data.descripcion || null,
-    peso_unitario_kg: String(data.peso_unitario_kg || '1.0'),
-    volumen_m3: String(data.volumen_m3 || '0.1'),
-    requiere_frio: data.requiere_frio || false,
-    unidad_medida: data.unidad_medida || 'UN',
-    imagen_url: data.imagen_url || null,
-    activo: true,
-    created_at: new Date().toISOString(),
-    deleted_at: null
+export async function getDeletedProducts(): Promise<Product[]> {
+  const token = await getValidToken()
+  if (!token) throw new Error('No hay sesión activa')
+
+  const res = await fetch(`${CATALOG_API_URL}/productos/eliminados`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) return []
+  return await res.json()
+}
+
+export async function restoreProduct(id: string | number): Promise<void> {
+  const token = await getValidToken()
+  if (!token) throw new Error('No hay sesión activa')
+
+  const res = await fetch(`${CATALOG_API_URL}/productos/${id}/restaurar`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+
+  if (!res.ok) {
+    throw new Error('Error al restaurar producto')
   }
 }
 
-export async function deleteProduct(id: string): Promise<void> {
-  return Promise.resolve()
+export function useProductCrud() {
+  const crud = useEntityCrud<Product, CreateProductDto, Partial<CreateProductDto>>({
+    load: getAllProducts,
+    create: createProduct,
+    update: (id: string | number, data: Partial<CreateProductDto>) => updateProduct(id, data),
+    delete: (id: string | number) => deleteProduct(id),
+  })
+
+  return {
+    ...crud,
+    getDeleted: getDeletedProducts,
+    restore: restoreProduct,
+  }
 }

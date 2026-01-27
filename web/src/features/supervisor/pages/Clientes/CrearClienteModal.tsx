@@ -97,7 +97,7 @@ export function CrearClienteModal({ isOpen, onClose, onSuccess, initialData, mod
           poligono_geografico: (z as any).poligono_geografico
         } as ZonaOption)))
 
-        setCanales(canalesData)
+        setCanales(canalesData as any)
         setVendedores(vendedoresData)
       } catch (e) {
         console.error("Error loading catalog", e)
@@ -112,7 +112,7 @@ export function CrearClienteModal({ isOpen, onClose, onSuccess, initialData, mod
   useEffect(() => {
     if (!formData.zona_comercial_id) return
 
-    const zone = zonas.find(z => z.id === formData.zona_comercial_id)
+    const zone = zonas.find(z => String(z.id) === String(formData.zona_comercial_id))
     if (zone?.vendedor_asignado?.vendedor_usuario_id) {
       setFormData(prev => ({
         ...prev,

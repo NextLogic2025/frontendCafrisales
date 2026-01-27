@@ -1,5 +1,5 @@
 import React from 'react'
-import { ShoppingCart, Star } from 'lucide-react'
+import { ShoppingCart } from 'lucide-react'
 import { Modal } from 'components/ui/Modal'
 import type { Producto } from '../types'
 
@@ -45,23 +45,43 @@ export function ProductDetailModal({
 
         <div>
           <h3 className="text-lg font-semibold text-gray-900">{producto.name}</h3>
-          <div className="flex items-center gap-2 mt-2">
-            <div className="flex items-center gap-1">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star key={i} size={14} className={i < Math.floor(producto.rating || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'} />
-              ))}
-            </div>
-            <span className="text-sm text-gray-600">({producto.reviews || 0})</span>
-          </div>
-
           <p className="mt-3 text-sm text-gray-700">{producto.description}</p>
 
-            <div className="mt-4 space-y-2 text-sm text-gray-700">
+          <div className="mt-4 space-y-2 text-sm text-gray-700">
             <p><strong>Categoría:</strong> {producto.category}</p>
             <p><strong>Stock:</strong> {producto.inStock ? 'Disponible' : 'Agotado'}</p>
             <p className="break-all"><strong>ID:</strong> {producto.id}</p>
             {producto.campania_aplicada_id != null && <p><strong>Campaña aplicada:</strong> {producto.campania_aplicada_id}</p>}
           </div>
+
+          {/* SKUs Section */}
+          {Array.isArray(producto.skus) && producto.skus.length > 0 && (
+            <div className="mt-6 space-y-3">
+              <h4 className="text-sm font-bold text-gray-900 border-b pb-1">Presentaciones (SKUs)</h4>
+              <div className="grid grid-cols-1 gap-2">
+                {producto.skus.map((sku: any) => {
+                  const currentPrice = sku.precios?.[0];
+                  return (
+                    <div key={sku.id} className="flex items-center justify-between rounded-xl bg-neutral-50 px-4 py-3 border border-neutral-100 hover:border-red-100 transition-colors">
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-neutral-400 uppercase tracking-tighter">{sku.codigo_sku}</span>
+                        <span className="text-sm font-semibold text-neutral-800">{sku.nombre}</span>
+                      </div>
+                      <div className="text-right">
+                        {currentPrice ? (
+                          <span className="text-sm font-bold text-brand-red">
+                            {currentPrice.moneda} {Number(currentPrice.precio).toFixed(2)}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-neutral-400 italic">Sin precio</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {Array.isArray(producto.promociones) && producto.promociones.length > 0 && (
             <div className="mt-3">

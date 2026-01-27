@@ -1,5 +1,5 @@
 import { useMemo, useCallback, useState } from 'react'
-import { Image as ImageIcon, Package, Tag, Search, Filter, Pencil, Trash2, RotateCcw } from 'lucide-react'
+import { Image as ImageIcon, Package, Tag, Search, Filter, Pencil, Trash2, RotateCcw, Eye } from 'lucide-react'
 import { LoadingSpinner } from 'components/ui/LoadingSpinner'
 import { StatusBadge } from 'components/ui/StatusBadge'
 import { CardGrid, type CardGridItem } from 'components/ui/CardGrid'
@@ -13,10 +13,11 @@ interface ProductosListProps {
   onEdit?: (product: Product) => void
   onDelete?: (product: Product) => Promise<void>
   onRestore?: (product: Product) => Promise<void>
+  onView?: (product: Product) => void
   isDeletedView?: boolean
 }
 
-export function ProductosList({ products, categories, isLoading, onEdit, onDelete, onRestore, isDeletedView }: ProductosListProps) {
+export function ProductosList({ products, categories, isLoading, onEdit, onDelete, onRestore, onView, isDeletedView }: ProductosListProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
 
@@ -45,7 +46,6 @@ export function ProductosList({ products, categories, isLoading, onEdit, onDelet
       const matchesSearch =
         searchTerm === '' ||
         product.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.codigo_sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.descripcion?.toLowerCase().includes(searchTerm.toLowerCase())
 
       const productCategoryId = product.categoria?.id ?? product.categoria_id ?? null
@@ -84,7 +84,7 @@ export function ProductosList({ products, categories, isLoading, onEdit, onDelet
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
           <input
             type="text"
-            placeholder="Buscar por nombre, SKU o descripción..."
+            placeholder="Buscar por nombre o descripción..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full rounded-lg border border-neutral-300 bg-white py-2 pl-10 pr-4 text-sm outline-none transition focus:border-brand-red/60 focus:shadow-[0_0_0_4px_rgba(240,65,45,0.18)]"
@@ -132,21 +132,12 @@ export function ProductosList({ products, categories, isLoading, onEdit, onDelet
         <CardGrid
           items={filteredProducts.map((product) => ({
             id: product.id,
-            image: product.imagen_url || null,
+            image: product.img_url || null,
             title: product.nombre,
-            subtitle: `SKU: ${product.codigo_sku}`,
+            subtitle: product.slug,
             tags: [resolveCategoryLabel(product)],
             description: product.descripcion || undefined,
-            extra: (
-              <>
-                <StatusBadge variant={product.activo ? 'success' : 'neutral'}>
-                  {product.activo ? 'Activo' : 'Inactivo'}
-                </StatusBadge>
-                {product.requiere_frio && (
-                  <StatusBadge variant="info">Frío</StatusBadge>
-                )}
-              </>
-            ),
+            extra: null,
             actions: (
               <div className="flex w-full gap-2 mt-2">
                 {isDeletedView ? (
@@ -161,12 +152,12 @@ export function ProductosList({ products, categories, isLoading, onEdit, onDelet
                 ) : (
                   <>
                     <button
-                      onClick={() => onEdit?.(product)}
+                      onClick={() => onView?.(product)}
                       className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-brand-red bg-white px-3 py-2 text-sm font-semibold text-brand-red shadow-sm transition hover:bg-brand-red/90 hover:text-white hover:shadow-md focus:outline-none focus:ring-2 focus:ring-brand-red/40"
-                      title="Editar producto"
+                      title="Detalles"
                     >
-                      <Pencil className="h-4 w-4" />
-                      <span>Editar</span>
+                      <Eye className="h-4 w-4" />
+                      <span>Detalles</span>
                     </button>
                     <button
                       onClick={() => handleDelete(product)}

@@ -332,7 +332,7 @@ export function ClienteForm({
               {/* Fallback to zone vendor if not in list but assigned */}
               {value.vendedor_asignado_id && !vendedores.find(v => v.id === value.vendedor_asignado_id) && (
                 <option value={value.vendedor_asignado_id}>
-                  {zonas.find(z => z.id === value.zona_comercial_id)?.vendedor_asignado?.nombre_vendedor_cache || 'Vendedor actual'}
+                  {zonas.find(z => String(z.id) === String(value.zona_comercial_id))?.vendedor_asignado?.nombre_vendedor_cache || 'Vendedor actual'}
                 </option>
               )}
             </select>
@@ -416,33 +416,61 @@ const containerStyle = { width: '100%', height: '400px' }
 function parseGeoPolygon(value: unknown): google.maps.LatLngLiteral[] {
   if (!value) return []
 
+  // Si es un string, intentar parsear JSON
   if (typeof value === 'string') {
-    try {
-      const parsed = JSON.parse(value)
-      return parseGeoPolygon(parsed)
-    } catch (e) {
-      console.warn('No se pudo parsear polígono desde string', e)
-      return []
+    if (value.startsWith('{')) {
+      try {
+        return parseGeoPolygon(JSON.parse(value))
+      } catch (e) {
+        return []
+      }
     }
+    return []
   }
 
-  if (Array.isArray(value) && value.every((p: any) => typeof p?.lat === 'number' && typeof p?.lng === 'number')) {
-    return dedupeClosingPoint(value as google.maps.LatLngLiteral[])
+  if (typeof value !== 'object' || value === null) return []
+
+  const obj = value as any
+
+  // Manejar tipo Feature de GeoJSON
+  if (obj.type === 'Feature' && obj.geometry) {
+    return parseGeoPolygon(obj.geometry)
   }
 
-  if (typeof value === 'object' && value !== null && 'coordinates' in (value as any)) {
-    const coordinates = (value as any).coordinates?.[0]
-    if (Array.isArray(coordinates)) {
-      const path = coordinates
-        .map((pair: any) => {
-          if (!Array.isArray(pair) || pair.length < 2) return null
+  // Buscar coordenadas recursivamente si es necesario (MultiPolygon o GeometryCollection)
+  let coords: any = obj.coordinates || obj.zonaGeom?.coordinates || obj.zona_geom?.coordinates || obj.points
+
+  if (Array.isArray(coords)) {
+    // Intentar encontrar el anillo exterior (primer array de puntos)
+    // GeoJSON Polygon: [[[lng, lat], ...]]
+    // GeoJSON MultiPolygon: [[[[lng, lat], ...]]]
+    let ring = coords
+    while (Array.isArray(ring[0]) && ring.length > 0 && Array.isArray(ring[0][0])) {
+      ring = ring[0]
+    }
+
+    const path = ring
+      .map((pair: any) => {
+        // Formato {lat, lng} o {latitude, longitude}
+        if (typeof pair === 'object' && pair !== null) {
+          const lat = pair.lat ?? pair.latitude ?? pair.latitud
+          const lng = pair.lng ?? pair.longitude ?? pair.longitud ?? pair.lon ?? pair.long
+          if (typeof lat === 'number' && typeof lng === 'number') {
+            return { lat, lng }
+          }
+        }
+        // Formato [lng, lat] (GeoJSON estándar)
+        if (Array.isArray(pair) && pair.length >= 2) {
           const [lng, lat] = pair
-          if (typeof lat !== 'number' || typeof lng !== 'number') return null
-          return { lat, lng }
-        })
-        .filter(Boolean) as google.maps.LatLngLiteral[]
-      return dedupeClosingPoint(path)
-    }
+          if (typeof lat === 'number' && typeof lng === 'number') {
+            return { lat, lng }
+          }
+        }
+        return null
+      })
+      .filter(Boolean) as google.maps.LatLngLiteral[]
+
+    return dedupeClosingPoint(path)
   }
 
   return []
@@ -478,16 +506,23 @@ function LocationPicker({ position, zonaId, zonas, isLoaded, loadError, onChange
   // Obtener el polígono de la zona seleccionada
   const zonaPath = useMemo(() => {
     if (!zonaId) return []
-    const zona = zonas.find((z) => z.id === zonaId)
-    if (!zona || !('poligono_geografico' in zona)) return []
-    return parseGeoPolygon((zona as any).poligono_geografico)
+    const zona = zonas.find((z) => String(z.id) === String(zonaId))
+    if (!zona || !zona.poligono_geografico) return []
+    return parseGeoPolygon(zona.poligono_geografico)
   }, [zonaId, zonas])
 
-  // Calcular el centro del polígono para centrar el mapa
-  const mapCenter = useMemo(() => {
-    if (tempMarker) return tempMarker
-    if (zonaPath.length > 0) return zonaPath[0]
-    return defaultLocationCenter
+  const [mapCenter, setMapCenter] = useState<google.maps.LatLngLiteral>(defaultLocationCenter)
+
+  // Actualizar centro cuando hay marcador o cambia la zona
+  useEffect(() => {
+    if (tempMarker) {
+      setMapCenter(tempMarker)
+    } else if (zonaPath.length > 0) {
+      // Centrar en el primer punto del polígono
+      setMapCenter(zonaPath[0])
+    } else {
+      setMapCenter(defaultLocationCenter)
+    }
   }, [tempMarker, zonaPath])
 
   // Actualizar tempMarker cuando position cambie (para edición)
@@ -497,6 +532,15 @@ function LocationPicker({ position, zonaId, zonas, isLoaded, loadError, onChange
 
   const handleMapClick = (e: google.maps.MapMouseEvent) => {
     if (e.latLng) {
+      // Si hay una zona seleccionada, validar que el punto esté dentro del polígono
+      if (zonaPath.length > 0 && window.google?.maps?.geometry?.poly) {
+        const isWithin = google.maps.geometry.poly.containsLocation(e.latLng, new google.maps.Polygon({ paths: zonaPath }))
+        if (!isWithin) {
+          alert('La ubicación debe estar dentro del área delimitada por la zona comercial.')
+          return
+        }
+      }
+
       const newPos = { lat: e.latLng.lat(), lng: e.latLng.lng() }
       setTempMarker(newPos)
       onChange(newPos)

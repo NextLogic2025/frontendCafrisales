@@ -6,9 +6,9 @@ import { Package } from 'lucide-react'
 import ProductDetailModal from '../../../cliente/components/ProductDetailModal'
 
 import { useProductos } from './hooks/useProductos'
-import { ClientSelector } from './components/ClientSelector'
 import { ProductFilters } from './components/ProductFilters'
 import { CartToast } from './components/CartToast'
+import SkuSelectionModal from './components/SkuSelectionModal'
 
 export default function VendedorProductos() {
   const {
@@ -24,10 +24,6 @@ export default function VendedorProductos() {
     categories,
     categoryId,
     setCategoryId,
-    clientes,
-    clienteSeleccionado,
-    setClienteSeleccionado,
-    loadingClientes,
     selectedProducto,
     isDetailOpen,
     openDetail,
@@ -38,7 +34,10 @@ export default function VendedorProductos() {
     setShowToast,
     lastAddedProduct,
     addToCart,
-    goToCrearPedido
+    goToCrearPedido,
+    productForSkuSelection,
+    setProductForSkuSelection,
+    confirmSkuSelection
   } = useProductos()
 
   return (
@@ -52,23 +51,9 @@ export default function VendedorProductos() {
         ]}
       />
 
-      <CartToast
-        showToast={showToast}
-        lastAddedProduct={lastAddedProduct}
-        cart={cart}
-        setCart={setCart}
-        setShowToast={setShowToast}
-        goToCrearPedido={goToCrearPedido}
-      />
+
 
       <div className="rounded-xl border border-neutral-200 bg-white p-6">
-        <ClientSelector
-          clientes={clientes}
-          clienteSeleccionado={clienteSeleccionado}
-          setClienteSeleccionado={setClienteSeleccionado}
-          loadingClientes={loadingClientes}
-        />
-
         <ProductFilters
           busqueda={busqueda}
           setBusqueda={setBusqueda}
@@ -129,6 +114,15 @@ export default function VendedorProductos() {
           isOpen={isDetailOpen}
           onClose={closeDetail}
           onAddToCart={() => { }}
+        />
+      )}
+
+      {productForSkuSelection && (
+        <SkuSelectionModal
+          producto={productForSkuSelection}
+          isOpen={!!productForSkuSelection}
+          onClose={() => setProductForSkuSelection(null)}
+          onConfirm={(sku) => confirmSkuSelection(productForSkuSelection, sku)}
         />
       )}
     </div>

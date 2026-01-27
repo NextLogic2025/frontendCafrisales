@@ -7,7 +7,8 @@ import { useModal } from '../../../../hooks/useModal'
 import { useNotification } from '../../../../hooks/useNotification'
 import { CategoriaFormModal } from './categoria/CategoriaFormModal'
 import { CategoriaList } from './categoria/CategoriaList'
-import { useCategoriaCrud } from '../../services/useCategoriaCrud'
+import { CategoriaDetailModal } from './categoria/CategoriaDetailModal'
+import { useCategoriaCrud } from '../../services/categoriaApi'
 import type { Category, CreateCategoryDto } from '../../services/catalogApi'
 
 export function CategoriasView() {
@@ -17,6 +18,9 @@ export function CategoriasView() {
   const [isDeletedView, setIsDeletedView] = useState(false)
   const [deletedCategories, setDeletedCategories] = useState<Category[]>([])
   const [loadingDeleted, setLoadingDeleted] = useState(false)
+
+  const [detailedCategory, setDetailedCategory] = useState<Category | null>(null)
+  const [isDetailOpen, setIsDetailOpen] = useState(false)
 
   const loadDeleted = async () => {
     try {
@@ -74,6 +78,11 @@ export function CategoriasView() {
     } catch (error: any) {
       notifyError(error.message || 'Error al restaurar la categoría')
     }
+  }
+
+  const handleView = (cat: Category) => {
+    setDetailedCategory(cat)
+    setIsDetailOpen(true)
   }
 
   if (isLoading) {
@@ -140,6 +149,7 @@ export function CategoriasView() {
           onEdit={!isDeletedView ? modal.openEdit : undefined}
           onDelete={!isDeletedView ? handleDelete : undefined}
           onRestore={isDeletedView ? handleRestore : undefined}
+          onView={handleView}
           isDeletedView={isDeletedView}
         />
       )}
@@ -150,6 +160,13 @@ export function CategoriasView() {
         initialData={modal.editingItem || undefined}
         onSubmit={handleSubmit}
         isEditing={modal.isEditing}
+      />
+
+      <CategoriaDetailModal
+        isOpen={isDetailOpen}
+        onClose={() => setIsDetailOpen(false)}
+        category={detailedCategory}
+        onEdit={modal.openEdit}
       />
     </div>
   )

@@ -56,6 +56,7 @@ const VendedorEntregas = React.lazy(() => import('../features/vendedor/pages/Ent
 const VendedorDevoluciones = React.lazy(() => import('../features/vendedor/pages/Devoluciones'))
 const VendedorReportes = React.lazy(() => import('../features/vendedor/pages/Reportes'))
 const VendedorNotificaciones = React.lazy(() => import('../features/vendedor/pages/Notificaciones'))
+const VendedorCredito = React.lazy(() => import('../features/vendedor/pages/Credito/credito'))
 const VendedorPerfil = React.lazy(() => import('../features/vendedor/pages/Perfil'))
 const TransportistaPage = React.lazy(() => import('../features/transportista/TransportistaPage'))
 const TransportistaInicio = React.lazy(() => import('../features/transportista/pages/Inicio'))
@@ -170,6 +171,7 @@ export default function AppRouter() {
           <Route path="devoluciones" element={<VendedorDevoluciones />} />
           <Route path="reportes" element={<VendedorReportes />} />
           <Route path="notificaciones" element={<VendedorNotificaciones />} />
+          <Route path="credito" element={<VendedorCredito />} />
           <Route path="perfil" element={<VendedorPerfil />} />
         </Route>
 

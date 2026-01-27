@@ -1,8 +1,9 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { Cliente } from '../../../../supervisor/services/clientesApi'
-import type { Producto, FiltrosState, Category, CartItem } from '../types'
+import type { FiltrosState, Category, CartItem, Producto } from '../types'
+import { getAllProducts } from '../../../../supervisor/services/productosApi'
+import { getAllCategories } from '../../../../supervisor/services/catalogApi'
 
 export const useProductos = () => {
     const navigate = useNavigate()
@@ -14,10 +15,6 @@ export const useProductos = () => {
     const [filtros, setFiltros] = useState<FiltrosState>({ category: 'all', minPrice: 0, maxPrice: 10000, inStock: true })
     const [categories, setCategories] = useState<Category[]>([])
 
-    const [clientes, setClientes] = useState<Cliente[]>([])
-    const [clienteSeleccionado, setClienteSeleccionado] = useState<string>('')
-    const [loadingClientes, setLoadingClientes] = useState(true)
-
     const [selectedProducto, setSelectedProducto] = useState<Producto | null>(null)
     const [isDetailOpen, setIsDetailOpen] = useState(false)
 
@@ -26,15 +23,23 @@ export const useProductos = () => {
     const [showToast, setShowToast] = useState(false)
     const [lastAddedProduct, setLastAddedProduct] = useState<Producto | null>(null)
 
+    const [productForSkuSelection, setProductForSkuSelection] = useState<Producto | null>(null)
+
     // Función de mapeo unificada
     const mapProductToFrontend = useCallback((items: any[]): Producto[] => {
         return items.map((p) => {
             const anyP = p as any
-            const rawBase = anyP.precio_final ?? anyP.precio_unitario ?? anyP.precio_lista ?? anyP.precio_base ?? anyP.precio ?? anyP.price ?? anyP.precioBase ?? null
+
+            // Si el producto tiene SKUs, tomamos el precio del primero como referencia
+            const firstSku = p.skus && p.skus.length > 0 ? p.skus[0] : null
+            const firstSkuPrice = firstSku?.precios && firstSku.precios.length > 0 ? firstSku.precios[0].precio : null
+
+            const rawBase = firstSkuPrice ?? anyP.precio_final ?? anyP.precio_unitario ?? anyP.precio_lista ?? anyP.precio_base ?? anyP.precio ?? anyP.price ?? anyP.precioBase ?? null
             const rawOferta = anyP.precio_oferta ?? null
             const precioBase = typeof rawBase === 'string' ? Number(rawBase) : rawBase
             const precioOferta = typeof rawOferta === 'string' ? Number(rawOferta) : rawOferta
             const price = (precioOferta ?? precioBase ?? 0) as number
+
             return {
                 id: p.id,
                 name: p.nombre,
@@ -43,31 +48,39 @@ export const useProductos = () => {
                 precio_original: typeof precioBase === 'number' && precioOferta != null ? precioBase : (typeof anyP.precio_original === 'number' ? anyP.precio_original : undefined),
                 precio_oferta: typeof precioOferta === 'number' ? precioOferta : undefined,
                 promociones: anyP.promociones || undefined,
-                image: p.imagen_url || '',
+                image: p.img_url || p.imagen_url || '',
                 category: p.categoria?.nombre || '',
-                inStock: p.activo,
-                rating: 0,
-                reviews: 0,
+                inStock: p.activo !== false,
+                skus: (p.skus || []).map((s: any) => ({
+                    ...s,
+                    sku: s.codigo_sku || s.sku || '',
+                    presentacion: s.nombre || s.presentacion || '',
+                    precios: s.precios || []
+                })),
             }
         })
     }, [])
 
-    // Cargar clientes asignados
+    // Cargar productos y categorías
     useEffect(() => {
-        setClientes([])
-        setLoadingClientes(false)
-    }, [])
+        const loadInitialData = async () => {
+            try {
+                setLoading(true)
+                const [productsData, categoriesData] = await Promise.all([
+                    getAllProducts(),
+                    getAllCategories()
+                ])
+                setProductos(mapProductToFrontend(productsData))
+                setCategories(categoriesData as any[])
+            } catch (err) {
+                console.error('Error cargando catálogo:', err)
+            } finally {
+                setLoading(false)
+            }
+        }
 
-    // Cargar productos
-    useEffect(() => {
-        setLoading(false)
-        setProductos([])
-    }, [clienteSeleccionado, mapProductToFrontend])
-
-    // Cargar categorías
-    useEffect(() => {
-        setCategories([])
-    }, [])
+        loadInitialData()
+    }, [mapProductToFrontend])
 
     // Filtrado
     const productosFiltrados = useMemo(
@@ -95,62 +108,70 @@ export const useProductos = () => {
     }
 
     const addToCart = async (producto: Producto) => {
-        if (!clienteSeleccionado) {
-            alert('Debe seleccionar un cliente primero')
-            return
+        if (producto.skus && producto.skus.length > 1) {
+            setProductForSkuSelection(producto)
+        } else {
+            const sku = producto.skus && producto.skus.length === 1 ? producto.skus[0] : null
+            confirmSkuSelection(producto, sku)
         }
+    }
 
+    const confirmSkuSelection = (producto: Producto, sku: any) => {
         try {
-            const existingItem = cart.find(item => item.producto.id === producto.id)
-            const newQuantity = existingItem ? existingItem.cantidad + 1 : 1
-
-            console.log('Adding to cart:', {
-                productoId: producto.id,
-                existingQuantity: existingItem?.cantidad || 0,
-                newQuantity
-            })
-
-            // Backend call removed.
-            // await httpOrders...
-
-            setCart(prev => {
-                const existing = prev.find(item => item.producto.id === producto.id)
-                if (existing) {
-                    return prev.map(item =>
-                        item.producto.id === producto.id
-                            ? { ...item, cantidad: item.cantidad + 1 }
-                            : item
-                    )
+            const cartProduct = { ...producto }
+            if (sku) {
+                // Determine price from SKU
+                const skuPrice = sku.precios && sku.precios.length > 0 ? sku.precios[0].precio : producto.price
+                cartProduct.price = Number(skuPrice)
+                // Add metadata for presentation
+                if (sku.presentacion) {
+                    cartProduct.name = `${producto.name} (${sku.presentacion})`
                 }
-                return [...prev, { producto, cantidad: 1 }]
+                // Store SKU ID for backend consistency if needed
+                ; (cartProduct as any).selectedSkuId = sku.id;
+                (cartProduct as any).skuCode = sku.sku
+            }
+
+            const existingItem = cart.find(item => {
+                const sameProd = item.producto.id === producto.id
+                const sameSku = (item.producto as any).selectedSkuId === (cartProduct as any).selectedSkuId
+                return sameProd && sameSku
             })
 
-            setLastAddedProduct(producto)
-            setShowToast(true)
-            setTimeout(() => setShowToast(false), 3000)
+            let updatedCart: CartItem[]
+            if (existingItem) {
+                updatedCart = cart.map(item => {
+                    const sameProd = item.producto.id === producto.id
+                    const sameSku = (item.producto as any).selectedSkuId === (cartProduct as any).selectedSkuId
+                    return sameProd && sameSku ? { ...item, cantidad: item.cantidad + 1 } : item
+                })
+            } else {
+                updatedCart = [...cart, { producto: cartProduct, cantidad: 1 }]
+            }
+
+            setCart(updatedCart)
+            localStorage.setItem('vendedor_cart', JSON.stringify(updatedCart))
+            setProductForSkuSelection(null)
+            navigate('/vendedor/crear-pedido')
         } catch (error) {
             console.error('Error adding to cart:', error)
             alert('Error al agregar producto al carrito')
         }
     }
 
+
     const goToCrearPedido = () => {
         localStorage.setItem('vendedor_cart', JSON.stringify(cart))
-        localStorage.setItem('vendedor_cliente_seleccionado', clienteSeleccionado)
         navigate('/vendedor/crear-pedido')
     }
 
     // Cargar/Guardar localStorage
     useEffect(() => {
         const savedCart = localStorage.getItem('vendedor_cart')
-        const savedCliente = localStorage.getItem('vendedor_cliente_seleccionado')
         if (savedCart) {
             try {
                 setCart(JSON.parse(savedCart))
             } catch (e) { }
-        }
-        if (savedCliente) {
-            setClienteSeleccionado(savedCliente)
         }
     }, [])
 
@@ -159,12 +180,6 @@ export const useProductos = () => {
             localStorage.setItem('vendedor_cart', JSON.stringify(cart))
         }
     }, [cart])
-
-    useEffect(() => {
-        if (clienteSeleccionado) {
-            localStorage.setItem('vendedor_cliente_seleccionado', clienteSeleccionado)
-        }
-    }, [clienteSeleccionado])
 
     return {
         productos,
@@ -179,10 +194,6 @@ export const useProductos = () => {
         categories,
         categoryId,
         setCategoryId,
-        clientes,
-        clienteSeleccionado,
-        setClienteSeleccionado,
-        loadingClientes,
         selectedProducto,
         isDetailOpen,
         openDetail,
@@ -193,6 +204,9 @@ export const useProductos = () => {
         setShowToast,
         lastAddedProduct,
         addToCart,
-        goToCrearPedido
+        goToCrearPedido,
+        productForSkuSelection,
+        setProductForSkuSelection,
+        confirmSkuSelection
     }
 }

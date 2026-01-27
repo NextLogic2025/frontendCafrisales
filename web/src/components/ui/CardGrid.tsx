@@ -9,6 +9,7 @@ export interface CardGridItem {
   description?: string;
   extra?: React.ReactNode;
   actions?: React.ReactNode;
+  onClick?: () => void;
 }
 
 interface CardGridProps {
@@ -26,7 +27,9 @@ export const CardGrid: React.FC<CardGridProps> = ({ items, columns = 4, classNam
       {items.map((item) => (
         <div
           key={item.id}
-          className="group relative overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg"
+          onClick={item.onClick}
+          className={`group relative overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg ${item.onClick ? 'cursor-pointer' : ''
+            }`}
         >
           {item.image ? (
             <div className="mb-0 overflow-hidden rounded-t-2xl bg-neutral-100 aspect-[4/3] flex items-center justify-center">
@@ -58,7 +61,10 @@ export const CardGrid: React.FC<CardGridProps> = ({ items, columns = 4, classNam
             <div className="flex-1" />
             {/* Acciones en la parte inferior */}
             {item.actions && (
-              <div className="w-full absolute left-0 bottom-0 px-6 pb-6 pt-8 bg-gradient-to-t from-white via-white to-transparent flex items-center gap-2">
+              <div
+                className="w-full absolute left-0 bottom-0 px-6 pb-6 pt-8 bg-gradient-to-t from-white via-white to-transparent flex items-center gap-2"
+                onClick={(e) => e.stopPropagation()}
+              >
                 {item.actions}
               </div>
             )}

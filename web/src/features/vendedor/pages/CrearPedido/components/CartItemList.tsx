@@ -20,14 +20,17 @@ export function CartItemList({ cart, onUpdateQuantity, onRemove }: CartItemListP
 
     return (
         <div className="lg:col-span-2 space-y-3 max-h-[60vh] overflow-auto pr-2">
-            {cart.map(item => (
-                <CartItem
-                    key={item.producto.id}
-                    item={item}
-                    onUpdateQuantity={onUpdateQuantity}
-                    onRemove={onRemove}
-                />
-            ))}
+            {cart.map(item => {
+                const itemId = `${item.producto.id}-${(item.producto as any).selectedSkuId || 'default'}`
+                return (
+                    <CartItem
+                        key={itemId}
+                        item={item}
+                        onUpdateQuantity={() => onUpdateQuantity(itemId, item.cantidad)}
+                        onRemove={() => onRemove(itemId)}
+                    />
+                )
+            })}
 
             <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-xs text-neutral-700">
                 <div className="flex items-center gap-2">

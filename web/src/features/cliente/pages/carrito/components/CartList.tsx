@@ -5,8 +5,8 @@ import { Alert } from 'components/ui/Alert'
 
 interface CartListProps {
     items: CartItemType[]
-    updateQuantity: (id: string, quantity: number) => void
-    removeItem: (id: string) => void
+    updateQuantity: (id: string, quantity: number, skuId?: string) => void
+    removeItem: (id: string, skuId?: string) => void
     warnings?: Array<{ issue: string }>
     removedItems?: Array<{ producto_id: string }>
 }
@@ -35,16 +35,22 @@ export function CartList({ items, updateQuantity, removeItem, warnings, removedI
             ) : null}
 
             {items.map(item => (
-                <div key={item.id} className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
+                <div key={`${item.id}-${item.selectedSkuId || 'default'}`} className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
                     <div className="flex-1">
                         <p className="text-sm font-semibold text-neutral-900">{item.name}</p>
-                        <p className="text-xs text-neutral-500">Precio unitario: ${item.unitPrice.toFixed(2)}</p>
+                        {item.presentacion && (
+                            <p className="text-xs text-neutral-500 font-medium">Presentación: {item.presentacion}</p>
+                        )}
+                        {item.skuCode && (
+                            <p className="text-[10px] text-neutral-400">SKU: {item.skuCode}</p>
+                        )}
+                        <p className="text-xs text-neutral-500 mt-1">Precio unitario: ${item.unitPrice.toFixed(2)}</p>
                     </div>
                     <div className="flex items-center gap-2">
                         <button
                             type="button"
                             aria-label="Disminuir"
-                            onClick={() => updateQuantity(item.id, Math.max(item.quantity - 1, 0))}
+                            onClick={() => updateQuantity(item.id, Math.max(item.quantity - 1, 0), item.selectedSkuId)}
                             className="rounded-lg border border-neutral-200 bg-neutral-50 p-1 text-neutral-700 hover:bg-neutral-100"
                         >
                             <Minus className="h-4 w-4" />
@@ -53,7 +59,7 @@ export function CartList({ items, updateQuantity, removeItem, warnings, removedI
                         <button
                             type="button"
                             aria-label="Aumentar"
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            onClick={() => updateQuantity(item.id, item.quantity + 1, item.selectedSkuId)}
                             className="rounded-lg border border-neutral-200 bg-neutral-50 p-1 text-neutral-700 hover:bg-neutral-100"
                         >
                             <Plus className="h-4 w-4" />
@@ -65,7 +71,7 @@ export function CartList({ items, updateQuantity, removeItem, warnings, removedI
                     <button
                         type="button"
                         aria-label="Eliminar"
-                        onClick={() => removeItem(item.id)}
+                        onClick={() => removeItem(item.id, item.selectedSkuId)}
                         className="rounded-lg bg-red-50 p-2 text-brand-red hover:bg-red-100"
                     >
                         <Trash2 className="h-4 w-4" />

@@ -2,13 +2,19 @@ import { useEntityCrud } from '../../../hooks/useEntityCrud'
 import {
     type Product,
     type CreateProductDto,
+    getAllProducts,
+    createProduct,
+    updateProduct,
+    deleteProduct,
+    getDeletedProducts,
+    restoreProduct
 } from './productosApi'
 
 const crudOperations = {
-    load: async (...args: any[]) => [],
-    create: async () => ({} as any),
-    update: async () => ({} as any),
-    delete: async () => { },
+    load: getAllProducts,
+    create: createProduct,
+    update: (id: string | number, data: Partial<CreateProductDto>) => updateProduct(id, data),
+    delete: (id: string | number) => deleteProduct(id),
 }
 
 export function useProductoCrud() {
@@ -16,7 +22,7 @@ export function useProductoCrud() {
 
     return {
         ...crud,
-        getDeleted: async () => [],
-        restore: async () => true,
+        getDeleted: getDeletedProducts,
+        restore: restoreProduct,
     }
 }
