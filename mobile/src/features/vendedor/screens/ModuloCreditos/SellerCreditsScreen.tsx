@@ -76,6 +76,7 @@ export function SellerCreditsScreen() {
 
       const creditData = await CreditService.getCreditsBySeller(vendedorId, ['activo', 'vencido', 'pagado'])
       setCredits(creditData)
+      const approvedOrderIds = new Set(creditData.map((credit) => credit.pedido_id).filter(Boolean))
 
       const orders = await OrderService.getOrders()
       const pending = orders.filter(
@@ -83,7 +84,8 @@ export function SellerCreditsScreen() {
           order.metodo_pago === 'credito' &&
           order.estado === 'pendiente_validacion' &&
           order.cliente_id &&
-          clientIds.has(order.cliente_id),
+          clientIds.has(order.cliente_id) &&
+          !approvedOrderIds.has(order.id),
       )
       setPendingOrders(pending)
     } finally {
@@ -225,7 +227,10 @@ export function SellerCreditsScreen() {
     )
   })
 
-  const filteredAprobados = filteredCredits.filter((credit) => (credit.estado ?? 'activo') !== 'pagado')
+  const filteredAprobados = filteredCredits.filter((credit) => {
+    const estado = credit.estado ?? 'activo'
+    return estado !== 'pagado' && estado !== 'cancelado'
+  })
   const filteredPagados = filteredCredits.filter((credit) => (credit.estado ?? '') === 'pagado')
 
   const filteredPending = pendingOrders.filter((order) => {

@@ -1,6 +1,7 @@
 ﻿import React from 'react'
 import { View, Text } from 'react-native'
 import { Header } from '../../../../components/ui/Header'
+import { ClientHeaderMenu } from '../../../../components/ui/ClientHeaderMenu'
 import { getUserName } from '../../../../storage/authStorage'
 
 export function ClientHomeScreen() {
@@ -19,6 +20,7 @@ export function ClientHomeScreen() {
                 role="CLIENTE"
                 variant="home"
                 showNotification={false}
+                rightElement={<ClientHeaderMenu />}
             />
 
             <View className="flex-1 items-center justify-center px-6">

@@ -107,6 +107,18 @@ const rawService = {
       return []
     }
   },
+
+  async cancelOrder(orderId: string, motivo?: string): Promise<boolean> {
+    try {
+      await ApiService.patch(`${ORDER_API_URL}/pedidos/${orderId}/cancel`, {
+        motivo: motivo || 'Pedido cancelado por rechazo de credito',
+      })
+      return true
+    } catch (error) {
+      logErrorForDebugging(error, 'OrderService.cancelOrder', { orderId })
+      return false
+    }
+  },
 }
 
 export const OrderService = createService('OrderService', rawService)

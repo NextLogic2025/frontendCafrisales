@@ -44,10 +44,10 @@ export function CategoryFilter({
                         {onActionPress ? (
                             <Pressable
                                 onPress={onActionPress}
-                                className="ml-2 px-4 py-3 rounded-xl border border-neutral-200 bg-white items-center justify-center"
+                                className="ml-2 px-4 py-3 rounded-xl bg-brand-red border border-brand-red items-center justify-center"
                                 style={{ minHeight: 52 }}
                             >
-                                <Text className="text-xs font-semibold text-neutral-700" numberOfLines={1}>
+                                <Text className="text-xs font-semibold text-white" numberOfLines={1}>
                                     {actionLabel || 'Cliente'}
                                 </Text>
                             </Pressable>

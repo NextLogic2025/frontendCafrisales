@@ -1,13 +1,16 @@
 import React from 'react'
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, Text, TextInput, View } from 'react-native'
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, Text, View } from 'react-native'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
 import { Header } from '../../../../components/ui/Header'
 import { SupervisorHeaderMenu } from '../../../../components/ui/SupervisorHeaderMenu'
-import { FloatingIconButton } from '../../../../components/ui/FloatingIconButton'
+import { GenericModal } from '../../../../components/ui/GenericModal'
+import { SearchBar } from '../../../../components/ui/SearchBar'
+import { CategoryFilter } from '../../../../components/ui/CategoryFilter'
 import { BRAND_COLORS } from '../../../../shared/types'
 import { CreditService, CreditListItem } from '../../../../services/api/CreditService'
 import { UserClientService } from '../../../../services/api/UserClientService'
+import { UserService, UserProfile } from '../../../../services/api/UserService'
 
 const formatMoney = (value: number) => {
   const fixed = Number.isFinite(value) ? value.toFixed(2) : '0.00'
@@ -27,11 +30,18 @@ export function SupervisorCreditsScreen() {
   const [loading, setLoading] = React.useState(false)
   const [clientNameMap, setClientNameMap] = React.useState<Record<string, string>>({})
   const [search, setSearch] = React.useState('')
+  const [vendors, setVendors] = React.useState<UserProfile[]>([])
+  const [vendorModalVisible, setVendorModalVisible] = React.useState(false)
+  const [vendorSearch, setVendorSearch] = React.useState('')
+  const [selectedVendorId, setSelectedVendorId] = React.useState<string | null>(null)
+  const [activeTab, setActiveTab] = React.useState<'pendientes' | 'pagados'>('pendientes')
 
   const loadCredits = React.useCallback(async () => {
     setLoading(true)
     try {
-      const data = await CreditService.getCreditsAll(['activo', 'vencido', 'pagado'])
+      const data = selectedVendorId
+        ? await CreditService.getCreditsBySeller(selectedVendorId, ['activo', 'vencido', 'pagado'])
+        : await CreditService.getCreditsAll(['activo', 'vencido', 'pagado'])
       setCredits(data)
 
       const uniqueClientIds = Array.from(new Set(data.map((credit) => credit.cliente_id).filter(Boolean)))
@@ -49,12 +59,22 @@ export function SupervisorCreditsScreen() {
     } finally {
       setLoading(false)
     }
+  }, [selectedVendorId])
+
+  const loadVendors = React.useCallback(async () => {
+    try {
+      const data = await UserService.getVendors()
+      setVendors(data)
+    } catch {
+      setVendors([])
+    }
   }, [])
 
   useFocusEffect(
     React.useCallback(() => {
       loadCredits()
-    }, [loadCredits]),
+      loadVendors()
+    }, [loadCredits, loadVendors]),
   )
 
   const filtered = React.useMemo(() => {
@@ -69,6 +89,12 @@ export function SupervisorCreditsScreen() {
       )
     })
   }, [credits, search, clientNameMap])
+
+  const filteredPendientes = filtered.filter((credit) => {
+    const estado = credit.estado ?? 'activo'
+    return estado !== 'pagado' && estado !== 'cancelado'
+  })
+  const filteredPagados = filtered.filter((credit) => (credit.estado ?? '') === 'pagado')
 
   const renderItem = ({ item }: { item: CreditListItem }) => {
     const estado = item.estado || 'activo'
@@ -121,22 +147,26 @@ export function SupervisorCreditsScreen() {
     )
   }
 
+  const selectedVendor = vendors.find((vendor) => vendor.id === selectedVendorId)
+  const vendorButtonLabel = selectedVendor?.name || 'Vendedor'
+
   return (
     <View className="flex-1 bg-neutral-50">
       <Header title="Creditos" variant="standard" rightElement={<SupervisorHeaderMenu />} />
 
-      <View className="px-5 mt-4">
-        <View className="bg-white rounded-2xl border border-neutral-100 px-4 py-3 flex-row items-center">
-          <Ionicons name="search-outline" size={18} color="#9CA3AF" />
-          <TextInput
-            placeholder="Buscar por cliente o pedido"
-            placeholderTextColor="#9CA3AF"
-            value={search}
-            onChangeText={setSearch}
-            className="flex-1 text-sm text-neutral-800 ml-2"
-          />
-        </View>
-      </View>
+      <CategoryFilter
+        categories={[
+          { id: 'pendientes', name: 'Pendientes' },
+          { id: 'pagados', name: 'Pagados' },
+        ]}
+        selectedId={activeTab}
+        onSelect={(id) => setActiveTab(id as 'pendientes' | 'pagados')}
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Buscar por cliente o pedido"
+        actionLabel={vendorButtonLabel}
+        onActionPress={() => setVendorModalVisible(true)}
+      />
 
       {loading && credits.length === 0 ? (
         <View className="flex-1 items-center justify-center">
@@ -144,7 +174,7 @@ export function SupervisorCreditsScreen() {
         </View>
       ) : (
         <FlatList
-          data={filtered}
+          data={activeTab === 'pendientes' ? filteredPendientes : filteredPagados}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
@@ -154,20 +184,69 @@ export function SupervisorCreditsScreen() {
               <View className="p-4 rounded-full bg-red-50 mb-4">
                 <Ionicons name="cash-outline" size={36} color={BRAND_COLORS.red} />
               </View>
-              <Text className="text-lg font-bold text-neutral-900 mb-2">Sin creditos</Text>
+              <Text className="text-lg font-bold text-neutral-900 mb-2">
+                {activeTab === 'pendientes' ? 'Sin creditos pendientes' : 'Sin creditos pagados'}
+              </Text>
               <Text className="text-sm text-neutral-500 text-center">
-                No hay creditos registrados.
+                {activeTab === 'pendientes'
+                  ? 'No hay creditos pendientes para mostrar.'
+                  : 'No hay creditos pagados para mostrar.'}
               </Text>
             </View>
           }
         />
       )}
 
-      <FloatingIconButton
-        icon="checkmark-done-outline"
-        accessibilityLabel="Aprobar creditos"
-        onPress={() => navigation.navigate('SupervisorSolicitudesCredito')}
-      />
+      <GenericModal
+        visible={vendorModalVisible}
+        title="Seleccionar vendedor"
+        onClose={() => setVendorModalVisible(false)}
+      >
+        <View className="gap-4">
+          <SearchBar
+            value={vendorSearch}
+            onChangeText={setVendorSearch}
+            onClear={() => setVendorSearch('')}
+            placeholder="Buscar vendedor"
+          />
+          <Pressable
+            onPress={() => {
+              setSelectedVendorId(null)
+              setVendorModalVisible(false)
+            }}
+            className="px-4 py-3 rounded-xl border border-neutral-200 bg-neutral-50"
+          >
+            <Text className="text-sm font-semibold text-neutral-700">Todos los vendedores</Text>
+          </Pressable>
+          <View className="max-h-80">
+            {vendors
+              .filter((vendor) => {
+                if (!vendorSearch.trim()) return true
+                const query = vendorSearch.trim().toLowerCase()
+                const label = `${vendor.name || ''} ${vendor.email || ''}`.toLowerCase()
+                return label.includes(query)
+              })
+              .map((vendor) => (
+                <Pressable
+                  key={vendor.id}
+                  onPress={() => {
+                    setSelectedVendorId(vendor.id)
+                    setVendorModalVisible(false)
+                  }}
+                  className="px-4 py-3 rounded-xl border border-neutral-100 bg-white mb-2"
+                >
+                  <Text className="text-sm font-semibold text-neutral-900" numberOfLines={1}>
+                    {vendor.name || vendor.email || vendor.id}
+                  </Text>
+                  {vendor.email ? <Text className="text-xs text-neutral-500">{vendor.email}</Text> : null}
+                </Pressable>
+              ))}
+            {vendors.length === 0 && (
+              <Text className="text-sm text-neutral-500 text-center py-6">No hay vendedores.</Text>
+            )}
+          </View>
+        </View>
+      </GenericModal>
     </View>
   )
 }

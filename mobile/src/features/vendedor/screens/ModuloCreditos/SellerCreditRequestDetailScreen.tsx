@@ -1,5 +1,5 @@
 import React from 'react'
-import { ActivityIndicator, ScrollView, Text, View } from 'react-native'
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { Header } from '../../../../components/ui/Header'
 import { SellerHeaderMenu } from '../../../../components/ui/SellerHeaderMenu'
@@ -70,6 +70,9 @@ export function SellerCreditRequestDetailScreen() {
   const [creditPlazo, setCreditPlazo] = React.useState('30')
   const [creditNotas, setCreditNotas] = React.useState('')
   const [submitting, setSubmitting] = React.useState(false)
+  const [rejecting, setRejecting] = React.useState(false)
+  const [rejectModalVisible, setRejectModalVisible] = React.useState(false)
+  const [rejectReason, setRejectReason] = React.useState('')
 
   const loadDetail = React.useCallback(async () => {
     if (!orderId) {
@@ -128,6 +131,26 @@ export function SellerCreditRequestDetailScreen() {
       navigation.goBack()
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const rejectCredit = async () => {
+    if (!orderId) {
+      showGlobalToast('No se pudo identificar el pedido', 'error')
+      return
+    }
+    setRejecting(true)
+    try {
+      const success = await OrderService.cancelOrder(orderId, rejectReason)
+      if (!success) {
+        showGlobalToast('No se pudo rechazar el credito', 'error')
+        return
+      }
+      showGlobalToast('Pedido rechazado', 'success')
+      setRejectModalVisible(false)
+      navigation.goBack()
+    } finally {
+      setRejecting(false)
     }
   }
 
@@ -230,8 +253,14 @@ export function SellerCreditRequestDetailScreen() {
           )}
         </View>
 
-        <View className="mt-5">
+        <View className="mt-5 gap-3">
           <PrimaryButton title="Aprobar credito" onPress={() => setModalVisible(true)} />
+          <Pressable
+            onPress={() => setRejectModalVisible(true)}
+            className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 items-center"
+          >
+            <Text className="text-sm font-semibold text-red-600">Rechazar credito</Text>
+          </Pressable>
         </View>
       </ScrollView>
 
@@ -254,6 +283,22 @@ export function SellerCreditRequestDetailScreen() {
             title={submitting ? 'Aprobando...' : 'Confirmar'}
             onPress={approveCredit}
             disabled={submitting}
+          />
+        </View>
+      </GenericModal>
+
+      <GenericModal visible={rejectModalVisible} title="Rechazar credito" onClose={() => setRejectModalVisible(false)}>
+        <View className="gap-4">
+          <TextField
+            label="Motivo (opcional)"
+            value={rejectReason}
+            onChangeText={setRejectReason}
+            placeholder="Sin stock, cliente no disponible..."
+          />
+          <PrimaryButton
+            title={rejecting ? 'Rechazando...' : 'Confirmar rechazo'}
+            onPress={rejectCredit}
+            disabled={rejecting}
           />
         </View>
       </GenericModal>

@@ -95,6 +95,18 @@ const rawService = {
     }
   },
 
+  async getCreditsByClient(clienteId: string, estados?: string[]): Promise<CreditListItem[]> {
+    try {
+      const estadoQuery = estados && estados.length > 0 ? `?estado=${encodeURIComponent(estados.join(','))}` : ''
+      const url = `${CREDIT_API_URL}/creditos/mis${estadoQuery}`
+      const data = await ApiService.get<CreditListItem[]>(url)
+      return data.map(normalizeCredit)
+    } catch (error) {
+      logErrorForDebugging(error, 'CreditService.getCreditsByClient', { clienteId })
+      return []
+    }
+  },
+
   async getCreditById(creditId: string): Promise<CreditDetailResponse | null> {
     try {
       const data = await ApiService.get<CreditDetailResponse>(`${CREDIT_API_URL}/creditos/${creditId}`)
@@ -122,6 +134,18 @@ const rawService = {
       return true
     } catch (error) {
       logErrorForDebugging(error, 'CreditService.registerPayment', { creditId })
+      return false
+    }
+  },
+
+  async rejectCredit(creditId: string, motivo?: string): Promise<boolean> {
+    try {
+      await ApiService.put(`${CREDIT_API_URL}/creditos/${creditId}/rechazar`, {
+        motivo: motivo || 'Credito rechazado',
+      })
+      return true
+    } catch (error) {
+      logErrorForDebugging(error, 'CreditService.rejectCredit', { creditId })
       return false
     }
   },
