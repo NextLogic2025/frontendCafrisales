@@ -10,6 +10,8 @@ import { ClientCartScreen } from '../features/cliente/screens/ModuloCarrito/Clie
 import { ClientOrderReviewScreen } from '../features/cliente/screens/ModuloCarrito/ClientOrderReviewScreen'
 import { ClientCreditsScreen } from '../features/cliente/screens/ModuloCreditos/ClientCreditsScreen'
 import { ClientCreditDetailScreen } from '../features/cliente/screens/ModuloCreditos/ClientCreditDetailScreen'
+import { ClientOrdersScreen } from '../features/cliente/screens/ModuloPedidos/ClientOrdersScreen'
+import { ClientOrderDetailScreen } from '../features/cliente/screens/ModuloPedidos/ClientOrderDetailScreen'
 
 const Tab = createBottomTabNavigator()
 const Stack = createNativeStackNavigator()
@@ -32,6 +34,8 @@ export function ClientNavigator() {
       <Stack.Screen name="ConfirmarPedidoCliente" component={ClientOrderReviewScreen} />
       <Stack.Screen name="ClienteCreditos" component={ClientCreditsScreen} />
       <Stack.Screen name="ClienteCreditoDetalle" component={ClientCreditDetailScreen} />
+      <Stack.Screen name="ClientePedidos" component={ClientOrdersScreen} />
+      <Stack.Screen name="ClientePedidoDetalle" component={ClientOrderDetailScreen} />
     </Stack.Navigator>
   )
 }

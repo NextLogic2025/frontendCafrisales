@@ -40,7 +40,7 @@ export function ClientCreditsScreen() {
   const navigation = useNavigation<any>()
   const [credits, setCredits] = React.useState<CreditListItem[]>([])
   const [loading, setLoading] = React.useState(false)
-  const [activeTab, setActiveTab] = React.useState<'pendientes' | 'pagados'>('pendientes')
+  const [activeTab, setActiveTab] = React.useState<'pendientes' | 'pagados' | 'rechazados'>('pendientes')
   const [searchText, setSearchText] = React.useState('')
 
   const loadCredits = React.useCallback(async () => {
@@ -83,6 +83,7 @@ export function ClientCreditsScreen() {
     return estado !== 'pagado' && estado !== 'cancelado'
   })
   const filteredPagados = filtered.filter((credit) => (credit.estado ?? '') === 'pagado')
+  const filteredRechazados = filtered.filter((credit) => (credit.estado ?? '') === 'cancelado')
 
   const renderItem = ({ item }: { item: CreditListItem }) => {
     const estado = item.estado || 'activo'
@@ -135,9 +136,10 @@ export function ClientCreditsScreen() {
         categories={[
           { id: 'pendientes', name: 'Pendientes' },
           { id: 'pagados', name: 'Pagados' },
+          { id: 'rechazados', name: 'Rechazados' },
         ]}
         selectedId={activeTab}
-        onSelect={(id) => setActiveTab(id as 'pendientes' | 'pagados')}
+        onSelect={(id) => setActiveTab(id as 'pendientes' | 'pagados' | 'rechazados')}
         searchValue={searchText}
         onSearchChange={setSearchText}
         searchPlaceholder="Buscar por pedido"
@@ -149,7 +151,13 @@ export function ClientCreditsScreen() {
         </View>
       ) : (
         <FlatList
-          data={activeTab === 'pendientes' ? filteredPendientes : filteredPagados}
+          data={
+            activeTab === 'pendientes'
+              ? filteredPendientes
+              : activeTab === 'rechazados'
+              ? filteredRechazados
+              : filteredPagados
+          }
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
@@ -160,11 +168,17 @@ export function ClientCreditsScreen() {
                 <Ionicons name="card-outline" size={36} color={BRAND_COLORS.red} />
               </View>
               <Text className="text-lg font-bold text-neutral-900 mb-2">
-                {activeTab === 'pendientes' ? 'Sin creditos pendientes' : 'Sin creditos pagados'}
+                {activeTab === 'pendientes'
+                  ? 'Sin creditos pendientes'
+                  : activeTab === 'rechazados'
+                  ? 'Sin creditos rechazados'
+                  : 'Sin creditos pagados'}
               </Text>
               <Text className="text-sm text-neutral-500 text-center">
                 {activeTab === 'pendientes'
                   ? 'No tienes creditos en curso.'
+                  : activeTab === 'rechazados'
+                  ? 'No tienes creditos rechazados.'
                   : 'No tienes creditos pagados para mostrar.'}
               </Text>
             </View>

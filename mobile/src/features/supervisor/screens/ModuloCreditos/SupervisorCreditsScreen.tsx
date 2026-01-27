@@ -34,7 +34,7 @@ export function SupervisorCreditsScreen() {
   const [vendorModalVisible, setVendorModalVisible] = React.useState(false)
   const [vendorSearch, setVendorSearch] = React.useState('')
   const [selectedVendorId, setSelectedVendorId] = React.useState<string | null>(null)
-  const [activeTab, setActiveTab] = React.useState<'pendientes' | 'pagados'>('pendientes')
+  const [activeTab, setActiveTab] = React.useState<'pendientes' | 'pagados' | 'rechazados'>('pendientes')
 
   const loadCredits = React.useCallback(async () => {
     setLoading(true)
@@ -95,6 +95,7 @@ export function SupervisorCreditsScreen() {
     return estado !== 'pagado' && estado !== 'cancelado'
   })
   const filteredPagados = filtered.filter((credit) => (credit.estado ?? '') === 'pagado')
+  const filteredRechazados = filtered.filter((credit) => (credit.estado ?? '') === 'cancelado')
 
   const renderItem = ({ item }: { item: CreditListItem }) => {
     const estado = item.estado || 'activo'
@@ -158,9 +159,10 @@ export function SupervisorCreditsScreen() {
         categories={[
           { id: 'pendientes', name: 'Pendientes' },
           { id: 'pagados', name: 'Pagados' },
+          { id: 'rechazados', name: 'Rechazados' },
         ]}
         selectedId={activeTab}
-        onSelect={(id) => setActiveTab(id as 'pendientes' | 'pagados')}
+        onSelect={(id) => setActiveTab(id as 'pendientes' | 'pagados' | 'rechazados')}
         searchValue={search}
         onSearchChange={setSearch}
         searchPlaceholder="Buscar por cliente o pedido"
@@ -174,7 +176,13 @@ export function SupervisorCreditsScreen() {
         </View>
       ) : (
         <FlatList
-          data={activeTab === 'pendientes' ? filteredPendientes : filteredPagados}
+          data={
+            activeTab === 'pendientes'
+              ? filteredPendientes
+              : activeTab === 'rechazados'
+              ? filteredRechazados
+              : filteredPagados
+          }
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
@@ -185,11 +193,17 @@ export function SupervisorCreditsScreen() {
                 <Ionicons name="cash-outline" size={36} color={BRAND_COLORS.red} />
               </View>
               <Text className="text-lg font-bold text-neutral-900 mb-2">
-                {activeTab === 'pendientes' ? 'Sin creditos pendientes' : 'Sin creditos pagados'}
+                {activeTab === 'pendientes'
+                  ? 'Sin creditos pendientes'
+                  : activeTab === 'rechazados'
+                  ? 'Sin creditos rechazados'
+                  : 'Sin creditos pagados'}
               </Text>
               <Text className="text-sm text-neutral-500 text-center">
                 {activeTab === 'pendientes'
                   ? 'No hay creditos pendientes para mostrar.'
+                  : activeTab === 'rechazados'
+                  ? 'No hay creditos rechazados para mostrar.'
                   : 'No hay creditos pagados para mostrar.'}
               </Text>
             </View>

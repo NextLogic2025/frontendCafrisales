@@ -13,6 +13,8 @@ import { SellerCreditsScreen } from '../features/vendedor/screens/ModuloCreditos
 import { SellerCreditDetailScreen } from '../features/vendedor/screens/ModuloCreditos/SellerCreditDetailScreen'
 import { SellerCreditRequestsScreen } from '../features/vendedor/screens/ModuloCreditos/SellerCreditRequestsScreen'
 import { SellerCreditRequestDetailScreen } from '../features/vendedor/screens/ModuloCreditos/SellerCreditRequestDetailScreen'
+import { SellerOrdersScreen } from '../features/vendedor/screens/ModuloPedidos/SellerOrdersScreen'
+import { SellerOrderDetailScreen } from '../features/vendedor/screens/ModuloPedidos/SellerOrderDetailScreen'
 
 const Tab = createBottomTabNavigator()
 const Stack = createNativeStackNavigator()
@@ -38,6 +40,8 @@ export function SellerNavigator() {
       <Stack.Screen name="CreditoDetalle" component={SellerCreditDetailScreen} />
       <Stack.Screen name="SolicitudesCredito" component={SellerCreditRequestsScreen} />
       <Stack.Screen name="SolicitudCreditoDetalle" component={SellerCreditRequestDetailScreen} />
+      <Stack.Screen name="SellerPedidos" component={SellerOrdersScreen} />
+      <Stack.Screen name="SellerPedidoDetalle" component={SellerOrderDetailScreen} />
     </Stack.Navigator>
   )
 }

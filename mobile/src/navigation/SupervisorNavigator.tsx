@@ -30,6 +30,8 @@ import { SupervisorPriceDetailScreen } from '../features/supervisor/screens/Modu
 import { SupervisorPriceFormScreen } from '../features/supervisor/screens/ModuloCatalogo/ModuloPrecios/SupervisorPriceFormScreen'
 import { SupervisorCreditsScreen } from '../features/supervisor/screens/ModuloCreditos/SupervisorCreditsScreen'
 import { SupervisorCreditDetailScreen } from '../features/supervisor/screens/ModuloCreditos/SupervisorCreditDetailScreen'
+import { SupervisorOrdersScreen } from '../features/supervisor/screens/ModuloPedidos/SupervisorOrdersScreen'
+import { SupervisorOrderDetailScreen } from '../features/supervisor/screens/ModuloPedidos/SupervisorOrderDetailScreen'
 
 const Tab = createBottomTabNavigator()
 const Stack = createNativeStackNavigator()
@@ -75,6 +77,8 @@ export function SupervisorNavigator() {
             <Stack.Screen name="SupervisorZoneDetail" component={SupervisorZoneDetailScreen} />
             <Stack.Screen name="SupervisorCreditos" component={SupervisorCreditsScreen} />
             <Stack.Screen name="SupervisorCreditoDetalle" component={SupervisorCreditDetailScreen} />
+            <Stack.Screen name="SupervisorPedidos" component={SupervisorOrdersScreen} />
+            <Stack.Screen name="SupervisorPedidoDetalle" component={SupervisorOrderDetailScreen} />
         </Stack.Navigator>
     )
 }

@@ -9,6 +9,7 @@ import { OrderService, OrderListItem } from '../../../../services/api/OrderServi
 import { UserClientService } from '../../../../services/api/UserClientService'
 import { getValidToken } from '../../../../services/auth/authClient'
 import { Ionicons } from '@expo/vector-icons'
+import { CreditService } from '../../../../services/api/CreditService'
 
 const formatMoney = (value?: number) => {
   const amount = Number.isFinite(value as number) ? (value as number) : 0
@@ -53,7 +54,19 @@ export function SellerCreditRequestsScreen() {
           order.cliente_id &&
           clientIds.has(order.cliente_id),
       )
-      setRequests(pending)
+      if (pending.length === 0) {
+        setRequests([])
+        return
+      }
+
+      const approvals = await Promise.all(
+        pending.map(async (order) => {
+          const credit = await CreditService.getCreditByOrder(order.id)
+          return Boolean(credit?.credito?.id)
+        }),
+      )
+      const filteredPending = pending.filter((_, index) => !approvals[index])
+      setRequests(filteredPending)
     } finally {
       setLoading(false)
     }

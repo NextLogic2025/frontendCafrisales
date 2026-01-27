@@ -33,6 +33,12 @@ export type OrderResponse = {
   descuento_pedido_valor?: number
   estado?: string
   cliente_id?: string
+  metodo_pago?: 'contado' | 'credito'
+  origen?: string
+  creado_por_id?: string
+  creado_por?: string
+  actualizado_por?: string
+  fecha_entrega_sugerida?: string
 }
 
 export type OrderItemDetail = {
@@ -50,6 +56,14 @@ export type OrderItemDetail = {
 export type OrderDetail = {
   pedido?: OrderResponse
   items?: OrderItemDetail[]
+  historial?: OrderHistoryItem[]
+}
+
+export type OrderHistoryItem = {
+  estado?: string
+  cambiado_por_id?: string
+  motivo?: string
+  creado_en?: string
 }
 
 export type OrderListItem = OrderResponse & {
@@ -87,10 +101,10 @@ const rawService = {
         return data as OrderDetail
       }
       if (data?.id) {
-        return { pedido: data as OrderResponse, items: data.items || [] }
+        return { pedido: data as OrderResponse, items: data.items || [], historial: data.historial || [] }
       }
       if (Array.isArray(data?.items) && data?.cliente_id) {
-        return { pedido: data as OrderResponse, items: data.items || [] }
+        return { pedido: data as OrderResponse, items: data.items || [], historial: data.historial || [] }
       }
       return null
     } catch (error) {
@@ -108,6 +122,15 @@ const rawService = {
     }
   },
 
+  async getMyOrders(): Promise<OrderListItem[]> {
+    try {
+      return await ApiService.get<OrderListItem[]>(`${ORDER_API_URL}/pedidos/my-orders`)
+    } catch (error) {
+      logErrorForDebugging(error, 'OrderService.getMyOrders')
+      return []
+    }
+  },
+
   async cancelOrder(orderId: string, motivo?: string): Promise<boolean> {
     try {
       await ApiService.patch(`${ORDER_API_URL}/pedidos/${orderId}/cancel`, {
@@ -116,6 +139,16 @@ const rawService = {
       return true
     } catch (error) {
       logErrorForDebugging(error, 'OrderService.cancelOrder', { orderId })
+      return false
+    }
+  },
+
+  async updatePaymentMethod(orderId: string, metodo_pago: 'contado' | 'credito'): Promise<boolean> {
+    try {
+      await ApiService.patch(`${ORDER_API_URL}/pedidos/${orderId}/metodo-pago`, { metodo_pago })
+      return true
+    } catch (error) {
+      logErrorForDebugging(error, 'OrderService.updatePaymentMethod', { orderId })
       return false
     }
   },

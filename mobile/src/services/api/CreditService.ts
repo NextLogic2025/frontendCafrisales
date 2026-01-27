@@ -128,6 +128,28 @@ const rawService = {
     }
   },
 
+  async getCreditByOrder(pedidoId: string): Promise<CreditDetailResponse | null> {
+    try {
+      const data = await ApiService.get<CreditDetailResponse>(`${CREDIT_API_URL}/creditos?pedido_id=${encodeURIComponent(pedidoId)}`)
+      if (!data) return null
+      const credito = data.credito ? normalizeCredit(data.credito as CreditListItem) : data.credito
+      const pagos = (data.pagos || []).map((p) => ({
+        ...p,
+        monto_pago: toNumber(p.monto_pago),
+      }))
+      const totales = data.totales
+        ? {
+            total_pagado: toNumber(data.totales.total_pagado),
+            saldo: toNumber(data.totales.saldo),
+          }
+        : undefined
+      return { ...data, credito, pagos, totales }
+    } catch (error) {
+      logErrorForDebugging(error, 'CreditService.getCreditByOrder', { pedidoId })
+      return null
+    }
+  },
+
   async registerPayment(creditId: string, payload: RegisterPaymentPayload): Promise<boolean> {
     try {
       await ApiService.post(`${CREDIT_API_URL}/creditos/${creditId}/pagos`, payload)

@@ -45,7 +45,7 @@ export function SellerCreditsScreen() {
   const [loading, setLoading] = React.useState(false)
   const [clientNameMap, setClientNameMap] = React.useState<Record<string, string>>({})
   const [clients, setClients] = React.useState<UserClient[]>([])
-  const [activeTab, setActiveTab] = React.useState<'pendientes' | 'aprobados' | 'pagados'>('pendientes')
+  const [activeTab, setActiveTab] = React.useState<'pendientes' | 'aprobados' | 'pagados' | 'rechazados'>('pendientes')
   const [searchText, setSearchText] = React.useState('')
   const [clientModalVisible, setClientModalVisible] = React.useState(false)
   const [clientSearch, setClientSearch] = React.useState('')
@@ -232,6 +232,7 @@ export function SellerCreditsScreen() {
     return estado !== 'pagado' && estado !== 'cancelado'
   })
   const filteredPagados = filteredCredits.filter((credit) => (credit.estado ?? '') === 'pagado')
+  const filteredRechazados = filteredCredits.filter((credit) => (credit.estado ?? '') === 'cancelado')
 
   const filteredPending = pendingOrders.filter((order) => {
     if (selectedClientId && order.cliente_id !== selectedClientId) return false
@@ -250,9 +251,10 @@ export function SellerCreditsScreen() {
           { id: 'pendientes', name: 'Pendientes' },
           { id: 'aprobados', name: 'Aprobados' },
           { id: 'pagados', name: 'Pagados' },
+          { id: 'rechazados', name: 'Rechazados' },
         ]}
         selectedId={activeTab}
-        onSelect={(id) => setActiveTab(id as 'pendientes' | 'aprobados' | 'pagados')}
+        onSelect={(id) => setActiveTab(id as 'pendientes' | 'aprobados' | 'pagados' | 'rechazados')}
         searchValue={searchText}
         onSearchChange={setSearchText}
         searchPlaceholder="Buscar por cliente o pedido"
@@ -271,6 +273,8 @@ export function SellerCreditsScreen() {
               ? filteredPending
               : activeTab === 'pagados'
               ? filteredPagados
+              : activeTab === 'rechazados'
+              ? filteredRechazados
               : filteredAprobados
           }
           keyExtractor={(item) => item.id}
@@ -287,6 +291,8 @@ export function SellerCreditsScreen() {
                   ? 'Sin solicitudes'
                   : activeTab === 'pagados'
                   ? 'Sin creditos pagados'
+                  : activeTab === 'rechazados'
+                  ? 'Sin creditos rechazados'
                   : 'Sin creditos'}
               </Text>
               <Text className="text-sm text-neutral-500 text-center">
@@ -294,6 +300,8 @@ export function SellerCreditsScreen() {
                   ? 'No hay pedidos a credito pendientes de aprobacion.'
                   : activeTab === 'pagados'
                   ? 'No hay creditos pagados para mostrar.'
+                  : activeTab === 'rechazados'
+                  ? 'No hay creditos rechazados para mostrar.'
                   : 'Todavia no tienes creditos registrados.'}
               </Text>
             </View>

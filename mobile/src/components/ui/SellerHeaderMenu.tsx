@@ -31,6 +31,7 @@ export function SellerHeaderMenu({ extraActions = [] }: Props) {
     { label: 'Clientes', icon: 'people-outline', onPress: () => navigateToTab('Clientes') },
     { label: 'Productos', icon: 'cube-outline', onPress: () => navigateToTab('Productos') },
     { label: 'Carrito', icon: 'cart-outline', onPress: () => navigateToTab('Carrito') },
+    { label: 'Pedidos', icon: 'receipt-outline', onPress: () => navigation.navigate('SellerPedidos') },
     { label: 'Creditos', icon: 'cash-outline', onPress: openCredits },
   ]
 
