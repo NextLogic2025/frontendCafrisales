@@ -32,6 +32,7 @@ export function SellerHeaderMenu({ extraActions = [] }: Props) {
     { label: 'Productos', icon: 'cube-outline', onPress: () => navigateToTab('Productos') },
     { label: 'Carrito', icon: 'cart-outline', onPress: () => navigateToTab('Carrito') },
     { label: 'Creditos', icon: 'cash-outline', onPress: openCredits },
+    { label: 'Solicitudes', icon: 'document-text-outline', onPress: () => navigation.navigate('SolicitudesCredito') },
   ]
 
   return <HeaderMenu actions={[...actions, ...extraActions]} />

@@ -53,6 +53,9 @@ function getUserFriendlyApiMessage(status: number, backendMessage?: string): str
         if (msg.includes('desactivado') || msg.includes('bloqueado')) return ERROR_MESSAGES.ACCOUNT_DISABLED
         if (msg.includes('no encontrado') || msg.includes('not found')) return ERROR_MESSAGES.NOT_FOUND
         if (msg.includes('ya existe') || msg.includes('duplicad')) return ERROR_MESSAGES.DUPLICATE_ENTRY
+        if (msg.includes('zona') || msg.includes('canal') || msg.includes('vendedor') || msg.includes('comercial')) {
+            return backendMessage
+        }
     }
 
     switch (status) {

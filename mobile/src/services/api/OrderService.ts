@@ -35,6 +35,27 @@ export type OrderResponse = {
   cliente_id?: string
 }
 
+export type OrderItemDetail = {
+  id?: string
+  sku_id?: string
+  sku_nombre_snapshot?: string
+  sku_codigo_snapshot?: string
+  cantidad_solicitada?: number
+  precio_unitario_final?: number
+  subtotal?: number
+}
+
+export type OrderDetail = {
+  pedido?: OrderResponse
+  items?: OrderItemDetail[]
+}
+
+export type OrderListItem = OrderResponse & {
+  metodo_pago?: 'contado' | 'credito'
+  estado?: string
+  items?: OrderItemDetail[]
+}
+
 const ORDER_BASE_URL = env.api.orderUrl
 const ORDER_API_URL = ORDER_BASE_URL.endsWith('/api') ? ORDER_BASE_URL : `${ORDER_BASE_URL}/api`
 
@@ -45,6 +66,40 @@ const rawService = {
     } catch (error) {
       logErrorForDebugging(error, 'OrderService.createOrder')
       return null
+    }
+  },
+
+  async getOrderById(orderId: string): Promise<OrderResponse | null> {
+    try {
+      return await ApiService.get<OrderResponse>(`${ORDER_API_URL}/pedidos/${orderId}`)
+    } catch (error) {
+      logErrorForDebugging(error, 'OrderService.getOrderById', { orderId })
+      return null
+    }
+  },
+
+  async getOrderDetail(orderId: string): Promise<OrderDetail | null> {
+    try {
+      const data = await ApiService.get<any>(`${ORDER_API_URL}/pedidos/${orderId}`)
+      if (data?.pedido || data?.items) {
+        return data as OrderDetail
+      }
+      if (data?.id) {
+        return { pedido: data as OrderResponse, items: data.items || [] }
+      }
+      return null
+    } catch (error) {
+      logErrorForDebugging(error, 'OrderService.getOrderDetail', { orderId })
+      return null
+    }
+  },
+
+  async getOrders(): Promise<OrderListItem[]> {
+    try {
+      return await ApiService.get<OrderListItem[]>(`${ORDER_API_URL}/pedidos`)
+    } catch (error) {
+      logErrorForDebugging(error, 'OrderService.getOrders')
+      return []
     }
   },
 }

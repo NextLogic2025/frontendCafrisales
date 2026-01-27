@@ -6,11 +6,9 @@ import { Header } from '../../../../components/ui/Header'
 import { CartSummary } from '../../../../components/ui/CartSummary'
 import { PrimaryButton } from '../../../../components/ui/PrimaryButton'
 import { GenericModal } from '../../../../components/ui/GenericModal'
-import { TextField } from '../../../../components/ui/TextField'
 import { useCart } from '../../../../context/CartContext'
 import { showGlobalToast } from '../../../../utils/toastService'
 import { OrderService } from '../../../../services/api/OrderService'
-import { CreditService } from '../../../../services/api/CreditService'
 import { useStableInsets } from '../../../../hooks/useStableInsets'
 
 export function ClientOrderReviewScreen() {
@@ -20,8 +18,6 @@ export function ClientOrderReviewScreen() {
   const [submitting, setSubmitting] = React.useState(false)
   const [checked, setChecked] = React.useState(false)
   const [creditModalVisible, setCreditModalVisible] = React.useState(false)
-  const [creditPlazo, setCreditPlazo] = React.useState('30')
-  const [creditNotas, setCreditNotas] = React.useState('')
 
   const totals = cart.getTotals()
 
@@ -52,25 +48,11 @@ export function ClientOrderReviewScreen() {
         return
       }
 
-      if (cart.paymentMethod === 'credito' && order.cliente_id) {
-        const plazo = Number(creditPlazo)
-        const credit = await CreditService.approveCredit({
-          pedido_id: order.id,
-          cliente_id: order.cliente_id,
-          monto_aprobado: totals.total,
-          plazo_dias: Number.isFinite(plazo) ? plazo : 30,
-          notas: creditNotas || undefined,
-        })
-        if (!credit) {
-          showGlobalToast('Pedido creado, pero no se pudo aprobar el credito', 'warning')
-        } else {
-          showGlobalToast('Credito aprobado correctamente', 'success')
-        }
+      if (cart.paymentMethod === 'credito') {
+        showGlobalToast('Pedido creado. Credito pendiente de aprobacion.', 'info')
       }
 
       cart.clear()
-      setCreditNotas('')
-      setCreditPlazo('30')
       showGlobalToast('Pedido creado correctamente', 'success')
       navigation.navigate('ClienteTabs', { screen: 'Carrito' })
     } finally {
@@ -151,28 +133,15 @@ export function ClientOrderReviewScreen() {
 
       <GenericModal
         visible={creditModalVisible}
-        title="Aprobar credito"
+        title="Pago a credito"
         onClose={() => setCreditModalVisible(false)}
       >
         <View className="gap-4">
           <Text className="text-sm text-neutral-600">
-            El credito se aprobara despues de crear el pedido.
+            El pedido se creara y quedara pendiente de aprobacion por un vendedor o supervisor.
           </Text>
-          <TextField
-            label="Plazo en dias"
-            keyboardType="numeric"
-            value={creditPlazo}
-            onChangeText={setCreditPlazo}
-            placeholder="30"
-          />
-          <TextField
-            label="Notas"
-            value={creditNotas}
-            onChangeText={setCreditNotas}
-            placeholder="Observaciones"
-          />
           <PrimaryButton
-            title={submitting ? 'Aprobando...' : 'Confirmar credito'}
+            title={submitting ? 'Creando pedido...' : 'Crear pedido a credito'}
             onPress={submitOrder}
             disabled={submitting}
           />

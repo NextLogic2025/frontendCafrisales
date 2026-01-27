@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react'
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import { Header } from '../../../../components/ui/Header'
 import { UserService, type UserProfile } from '../../../../services/api/UserService'
-import { ClientService } from '../../../../services/api/ClientService'
+import { UserClientService } from '../../../../services/api/UserClientService'
 import { signOut } from '../../../../services/auth/authClient'
 import { useToast } from '../../../../context/ToastContext'
 import { UserProfileTemplate, type CommercialData } from '../../../../components/profile/UserProfileTemplate'
@@ -20,40 +20,26 @@ export function ClientProfileScreen() {
             const user = await UserService.getProfile()
             setProfile(user)
 
-            if (user) {
-                const myClient = await ClientService.getMyClientData()
+            if (user?.id) {
+                const myClient = await UserClientService.getClient(user.id)
 
                 if (myClient) {
-                    // Mapeo de listas de precios conocidas
-                    const priceListNames: Record<number, string> = {
-                        1: 'General',
-                        2: 'Mayorista',
-                        3: 'Horeca'
-                    }
-                    const listaId = myClient.lista_precios_id ?? 0
-                    const priceListName = priceListNames[listaId] || (listaId ? `Lista #${listaId}` : 'Sin lista')
-
-                    // Usar el nombre de la zona que viene del backend (ya enriquecido)
-                    const zoneName = myClient.zona_comercial_nombre ||
-                                   (myClient.zona_comercial_id ? `Zona #${myClient.zona_comercial_id}` : 'General')
-
-                    // Usar el nombre del vendedor que viene del backend (ya enriquecido)
-                    const vendorName = myClient.vendedor_nombre ||
-                                     (myClient.vendedor_asignado_id ? 'Asignado' : 'No asignado')
+                    const zoneName = myClient.zona_id ? `Zona #${myClient.zona_id}` : 'General'
+                    const vendorName = myClient.vendedor_asignado_id ? 'Asignado' : 'No asignado'
 
                     setCommercialData({
-                        identificacion: myClient.identificacion,
-                        tipo_identificacion: myClient.tipo_identificacion,
-                        razon_social: myClient.razon_social,
+                        identificacion: myClient.ruc ?? undefined,
+                        tipo_identificacion: myClient.ruc ? 'RUC' : undefined,
+                        razon_social: myClient.nombre_comercial ?? undefined,
                         nombre_comercial: myClient.nombre_comercial ?? undefined,
-                        lista_precios: priceListName,
+                        lista_precios: 'General',
                         vendedor_asignado: vendorName,
                         zona_comercial: zoneName,
-                        tiene_credito: myClient.tiene_credito,
-                        limite_credito: Number.parseFloat(myClient.limite_credito || '0'),
-                        saldo_actual: Number.parseFloat(myClient.saldo_actual || '0'),
-                        dias_plazo: myClient.dias_plazo,
-                        direccion: myClient.direccion_texto ?? undefined
+                        tiene_credito: false,
+                        limite_credito: 0,
+                        saldo_actual: 0,
+                        dias_plazo: undefined,
+                        direccion: myClient.direccion ?? undefined
                     })
                 }
             }

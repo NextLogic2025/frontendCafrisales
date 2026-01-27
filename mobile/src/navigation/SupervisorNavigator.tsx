@@ -28,6 +28,10 @@ import { SupervisorSkuFormScreen } from '../features/supervisor/screens/ModuloCa
 import { SupervisorPricesScreen } from '../features/supervisor/screens/ModuloCatalogo/ModuloPrecios/SupervisorPricesScreen'
 import { SupervisorPriceDetailScreen } from '../features/supervisor/screens/ModuloCatalogo/ModuloPrecios/SupervisorPriceDetailScreen'
 import { SupervisorPriceFormScreen } from '../features/supervisor/screens/ModuloCatalogo/ModuloPrecios/SupervisorPriceFormScreen'
+import { SupervisorCreditsScreen } from '../features/supervisor/screens/ModuloCreditos/SupervisorCreditsScreen'
+import { SupervisorCreditApprovalsScreen } from '../features/supervisor/screens/ModuloCreditos/SupervisorCreditApprovalsScreen'
+import { SupervisorCreditRequestDetailScreen } from '../features/supervisor/screens/ModuloCreditos/SupervisorCreditRequestDetailScreen'
+import { SupervisorCreditDetailScreen } from '../features/supervisor/screens/ModuloCreditos/SupervisorCreditDetailScreen'
 
 const Tab = createBottomTabNavigator()
 const Stack = createNativeStackNavigator()
@@ -71,6 +75,10 @@ export function SupervisorNavigator() {
             <Stack.Screen name="SupervisorClientForm" component={SupervisorClientFormScreen} />
             <Stack.Screen name="SupervisorTeamDetail" component={SupervisorTeamDetailScreen} />
             <Stack.Screen name="SupervisorZoneDetail" component={SupervisorZoneDetailScreen} />
+            <Stack.Screen name="SupervisorCreditos" component={SupervisorCreditsScreen} />
+            <Stack.Screen name="SupervisorSolicitudesCredito" component={SupervisorCreditApprovalsScreen} />
+            <Stack.Screen name="SupervisorSolicitudCreditoDetalle" component={SupervisorCreditRequestDetailScreen} />
+            <Stack.Screen name="SupervisorCreditoDetalle" component={SupervisorCreditDetailScreen} />
         </Stack.Navigator>
     )
 }
