@@ -20,17 +20,10 @@ export default function VendedorCrearPedido() {
     total,
     condicionPagoManual,
     setCondicionPagoManual,
-    destinoTipo,
-    handleDestinoTipoChange,
-    sucursales,
     clienteDetalle,
-    selectedSucursalId,
-    setSelectedSucursalId,
-    invalidSucursalMessage,
     goBackToProducts,
     handleSubmitOrder,
     isSubmitting,
-    selectedSucursal,
     busquedaCliente,
     setBusquedaCliente,
     clientesFiltrados,
@@ -43,12 +36,6 @@ export default function VendedorCrearPedido() {
     plazoDias,
     notasCredito,
   } = useCrearPedido()
-
-  const destinoDescripcion = destinoTipo === 'cliente'
-    ? 'Cliente principal'
-    : selectedSucursal
-      ? `${selectedSucursal.nombre_sucursal || selectedSucursal.nombre}${selectedSucursal.zona_nombre ? ` · ${selectedSucursal.zona_nombre}` : ''}`
-      : 'Selecciona una sucursal'
 
   return (
     <div className="space-y-6">
@@ -110,14 +97,7 @@ export default function VendedorCrearPedido() {
               total={total}
               condicionPagoManual={condicionPagoManual}
               setCondicionPagoManual={setCondicionPagoManual}
-              destinoTipo={destinoTipo}
-              onDestinoChange={handleDestinoTipoChange}
-              sucursales={sucursales}
               clienteDetalle={clienteDetalle}
-              selectedSucursalId={selectedSucursalId}
-              onSucursalSelect={setSelectedSucursalId}
-              invalidSucursalMessage={invalidSucursalMessage}
-              destinoDescripcion={destinoDescripcion}
               onGoBack={goBackToProducts}
               onSubmit={handleSubmitOrder}
               isSubmitting={isSubmitting}

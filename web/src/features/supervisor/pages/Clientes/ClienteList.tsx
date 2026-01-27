@@ -8,12 +8,12 @@ interface ClienteListProps {
   clientes: Cliente[]
   isLoading: boolean
   onEdit?: (cliente: Cliente) => void
-  onDelete?: (cliente: Cliente) => void
   onView?: (cliente: Cliente) => void
   zonas: ZonaComercial[]
+  listasPrecios: any[]
 }
 
-export function ClienteList({ clientes, isLoading, onEdit, onDelete, onView, zonas }: ClienteListProps) {
+export function ClienteList({ clientes, isLoading, onEdit, onView, zonas }: ClienteListProps) {
   if (isLoading) {
     return (
       <div className="flex justify-center py-12">
@@ -39,7 +39,6 @@ export function ClienteList({ clientes, isLoading, onEdit, onDelete, onView, zon
           key={cliente.id}
           cliente={cliente}
           onEdit={onEdit}
-          onDelete={onDelete}
           onView={onView}
           zonas={zonas}
         />

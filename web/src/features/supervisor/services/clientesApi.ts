@@ -288,6 +288,9 @@ export async function actualizarCliente(id: string, data: Partial<CreateClienteD
     payload.longitud = data.ubicacion_gps.coordinates[0]
     payload.latitud = data.ubicacion_gps.coordinates[1]
   }
+  // Fallback for explicit lat/lng update if not using ubicacion_gps object
+  if (data.latitud !== undefined) payload.latitud = data.latitud
+  if (data.longitud !== undefined) payload.longitud = data.longitud
 
   const res = await fetch(url, {
     method: 'PATCH',

@@ -12,13 +12,12 @@ const ESTADO_COLORES: Record<string, string> = {
 interface ClienteCardProps {
   cliente: Cliente
   onEdit?: (cliente: Cliente) => void
-  onDelete?: (cliente: Cliente) => void
   onView?: (cliente: Cliente) => void
   zonas: ZonaComercial[]
 }
 
 
-export function ClienteCard({ cliente, onEdit, onDelete, onView, zonas }: ClienteCardProps) {
+export function ClienteCard({ cliente, onEdit, onView, zonas }: ClienteCardProps) {
   const estado = cliente.estado || (cliente.bloqueado ? 'bloqueado' : cliente.deleted_at ? 'inactivo' : 'activo')
   const estadoColor = ESTADO_COLORES[estado] || 'bg-gray-100 text-gray-800'
 
@@ -93,19 +92,14 @@ export function ClienteCard({ cliente, onEdit, onDelete, onView, zonas }: Client
         </div>
       </div>
 
-      {(onEdit || onDelete || onView) && (
-        <div className="mt-4 flex justify-end gap-2">
-          {onView && (
-            <QuickActionButton label="Ver detalles" icon={<Building2 className="h-4 w-4" />} onClick={() => onView(cliente)} />
-          )}
-          {onEdit && (
-            <QuickActionButton label="Editar" icon={<CheckCircle className="h-4 w-4" />} onClick={() => onEdit(cliente)} />
-          )}
-          {onDelete && (
-            <QuickActionButton label="Eliminar" icon={<XCircle className="h-4 w-4" />} onClick={() => onDelete(cliente)} />
-          )}
-        </div>
-      )}
+      <div className="mt-4 flex justify-end gap-2">
+        {onView && (
+          <QuickActionButton label="Ver detalles" icon={<Building2 className="h-4 w-4" />} onClick={() => onView(cliente)} />
+        )}
+        {onEdit && (
+          <QuickActionButton label="Editar" icon={<CheckCircle className="h-4 w-4" />} onClick={() => onEdit(cliente)} />
+        )}
+      </div>
     </div>
   )
 }

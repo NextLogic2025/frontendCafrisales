@@ -1,22 +1,14 @@
 
 import { CheckCircle2 } from 'lucide-react'
 import { PaymentConditionSelector } from './PaymentConditionSelector'
-import { DestinationSelector } from './DestinationSelector'
-import type { SucursalCliente, ClienteDetalle } from '../types'
+import type { ClienteDetalle } from '../types'
 
 interface OrderSummaryProps {
     totalItems: number
     total: number
     condicionPagoManual: 'CONTADO' | 'CREDITO'
     setCondicionPagoManual: (value: 'CONTADO' | 'CREDITO') => void
-    destinoTipo: 'cliente' | 'sucursal'
-    onDestinoChange: (tipo: 'cliente' | 'sucursal') => void
-    sucursales: SucursalCliente[]
     clienteDetalle: ClienteDetalle | null
-    selectedSucursalId: string | null
-    onSucursalSelect: (id: string) => void
-    invalidSucursalMessage: string | null
-    destinoDescripcion: string
     onGoBack: () => void
     onSubmit: () => void
     isSubmitting: boolean
@@ -28,14 +20,7 @@ export function OrderSummary({
     total,
     condicionPagoManual,
     setCondicionPagoManual,
-    destinoTipo,
-    onDestinoChange,
-    sucursales,
     clienteDetalle,
-    selectedSucursalId,
-    onSucursalSelect,
-    invalidSucursalMessage,
-    destinoDescripcion,
     onGoBack,
     onSubmit,
     isSubmitting,
@@ -57,16 +42,15 @@ export function OrderSummary({
                 setCondicionPagoManual={setCondicionPagoManual}
             />
 
-            <DestinationSelector
-                destinoTipo={destinoTipo}
-                onDestinoChange={onDestinoChange}
-                sucursales={sucursales}
-                clienteDetalle={clienteDetalle}
-                selectedSucursalId={selectedSucursalId}
-                onSucursalSelect={onSucursalSelect}
-                invalidSucursalMessage={invalidSucursalMessage}
-                destinoDescripcion={destinoDescripcion}
-            />
+            {clienteDetalle && (
+                <div className="rounded-2xl border border-neutral-200 px-3 py-3">
+                    <p className="text-sm font-semibold text-neutral-900 mb-1">Destino del pedido</p>
+                    <p className="text-sm text-neutral-700">
+                        {clienteDetalle?.direccion_texto || clienteDetalle?.direccion || 'Dirección del cliente'}
+                    </p>
+                    {clienteDetalle?.ciudad && <p className="text-xs text-neutral-500">{clienteDetalle.ciudad}</p>}
+                </div>
+            )}
 
             <div className="grid gap-2">
                 <button

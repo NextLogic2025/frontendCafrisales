@@ -2,7 +2,7 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Cliente } from '../../../../supervisor/services/clientesApi'
-import type { CartItem, ClienteDetalle, SucursalCliente, Producto } from '../types'
+import type { CartItem, ClienteDetalle, Producto } from '../types'
 import { obtenerClientes, obtenerClientePorId, obtenerMisClientes } from '../../../../supervisor/services/clientesApi'
 import { createOrder, cancelOrder, type CreateOrderPayload } from '../../../services/pedidosApi'
 import { approveCredit } from '../../../services/creditosApi'
@@ -12,17 +12,11 @@ export const useCrearPedido = () => {
     const [clientes, setClientes] = useState<Cliente[]>([])
     const [clienteSeleccionado, setClienteSeleccionado] = useState<string>('')
     const [clienteDetalle, setClienteDetalle] = useState<ClienteDetalle | null>(null)
-    const [sucursales, setSucursales] = useState<SucursalCliente[]>([])
     const [cart, setCart] = useState<CartItem[]>([])
     const [isLoadingClientes, setIsLoadingClientes] = useState(false)
     const [busquedaCliente, setBusquedaCliente] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState<string | null>(null)
-
-    // Estado para destino del pedido
-    const [destinoTipo, setDestinoTipo] = useState<'cliente' | 'sucursal'>('cliente')
-    const [selectedSucursalId, setSelectedSucursalId] = useState<string | null>(null)
-    const [invalidSucursalMessage, setInvalidSucursalMessage] = useState<string | null>(null)
 
     // Estado para condición de pago manual
     const [condicionPagoManual, setCondicionPagoManual] = useState<'CONTADO' | 'CREDITO'>('CONTADO')
@@ -71,11 +65,6 @@ export const useCrearPedido = () => {
         }
     }
 
-    const loadSucursales = async (clienteId: string) => {
-        // Implementación simplificada ya que no se encontró API específica
-        setSucursales([])
-    }
-
     // Cargar clientes y carrito local
     useEffect(() => {
         loadClientes()
@@ -96,8 +85,6 @@ export const useCrearPedido = () => {
             setClienteSeleccionado(savedCliente)
             // Cargar detalles del cliente (crédito)
             loadClienteDetalle(savedCliente)
-            // Cargar sucursales del cliente
-            loadSucursales(savedCliente)
         }
     }, [])
 
@@ -142,20 +129,6 @@ export const useCrearPedido = () => {
         navigate('/vendedor/productos')
     }
 
-    const isUuid = useCallback((value: string | null | undefined) => {
-        if (!value) return false
-        return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
-    }, [])
-
-    const selectedSucursal = useMemo(() => sucursales.find(s => s.id === selectedSucursalId) ?? null, [sucursales, selectedSucursalId])
-
-    const handleDestinoTipoChange = (tipo: 'cliente' | 'sucursal') => {
-        setDestinoTipo(tipo)
-        if (tipo === 'cliente') {
-            setSelectedSucursalId(null)
-        }
-    }
-
     const total = cart.reduce((sum, item) => sum + (item.producto.price * item.cantidad), 0)
 
     const handleSubmitOrder = async () => {
@@ -169,26 +142,12 @@ export const useCrearPedido = () => {
             return
         }
 
-
-        const wantsSucursal = destinoTipo === 'sucursal'
-        const sucursalIdForApi = wantsSucursal && selectedSucursalId && isUuid(selectedSucursalId) ? selectedSucursalId : undefined
-
-        if (wantsSucursal && !selectedSucursalId) {
-            setInvalidSucursalMessage('Selecciona una sucursal para poder enviar el pedido a esa ubicación.')
-            return
-        }
-        if (wantsSucursal && selectedSucursalId && !sucursalIdForApi) {
-            setInvalidSucursalMessage('La sucursal seleccionada no tiene un identificador válido.')
-            return
-        }
-
         try {
             setIsSubmitting(true)
             setError(null)
 
             const payload: CreateOrderPayload = {
                 cliente_id: clienteSeleccionado,
-                zona_id: sucursalIdForApi,
                 metodo_pago: condicionPagoManual === 'CREDITO' ? 'credito' : 'contado',
                 notas: condicionPagoManual === 'CREDITO'
                     ? `[CREDITO: ${plazoDias} dias] ${notasCredito}`.trim()
@@ -251,11 +210,9 @@ export const useCrearPedido = () => {
         if (id) {
             localStorage.setItem('vendedor_cliente_seleccionado', id)
             loadClienteDetalle(id)
-            loadSucursales(id)
         } else {
             localStorage.removeItem('vendedor_cliente_seleccionado')
             setClienteDetalle(null)
-            setSucursales([])
         }
     }
 
@@ -277,16 +234,11 @@ export const useCrearPedido = () => {
         setBusquedaCliente,
         clientesFiltrados,
         clienteDetalle,
-        sucursales,
         cart,
         isLoadingClientes,
         isSubmitting,
         error,
         setError,
-        destinoTipo,
-        selectedSucursalId,
-        setSelectedSucursalId,
-        invalidSucursalMessage,
         condicionPagoManual,
         setCondicionPagoManual: handlePaymentChange,
         isCreditoModalOpen,
@@ -298,10 +250,8 @@ export const useCrearPedido = () => {
         removeItem,
         clearCart,
         goBackToProducts,
-        handleDestinoTipoChange,
         handleSubmitOrder,
         total,
         totalItems,
-        selectedSucursal
     }
 }

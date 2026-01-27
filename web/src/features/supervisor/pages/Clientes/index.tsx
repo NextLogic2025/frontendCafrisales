@@ -83,16 +83,6 @@ export default function ClientesPage() {
     setDetailCliente(cliente)
   }
 
-  const handleDelete = async (cliente: Cliente) => {
-    if (!confirm(`¿Eliminar cliente ${cliente.razon_social}?`)) return
-    try {
-      // no-op
-      await cargarClientes()
-    } catch (error) {
-      console.error('Error al eliminar cliente:', error)
-      alert('No se pudo eliminar el cliente')
-    }
-  }
 
   return (
     <div className="space-y-6">
@@ -135,7 +125,6 @@ export default function ClientesPage() {
         clientes={clientes}
         isLoading={isLoading}
         onEdit={handleEdit}
-        onDelete={handleDelete}
         onView={handleView}
         zonas={zonas}
         listasPrecios={listasPrecios}

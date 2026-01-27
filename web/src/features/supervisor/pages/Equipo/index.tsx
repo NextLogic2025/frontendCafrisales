@@ -4,7 +4,7 @@ import { PageHero } from 'components/ui/PageHero'
 import { Button } from 'components/ui/Button'
 import { Alert } from 'components/ui/Alert'
 import { useState, useEffect } from 'react'
-import { type Usuario, getUsers } from '../../services/usuariosApi'
+import { type Usuario, getUsers, updateEstadoUsuario } from '../../services/usuariosApi'
 import { EquipoList } from './EquipoList'
 import { CrearUsuarioModal } from './CrearUsuarioModal'
 
@@ -56,7 +56,7 @@ export default function EquipoPage() {
   const handleDeactivate = async (usuario: Usuario) => {
     if (!confirm(`¿Deseas desactivar a ${usuario.nombre}?`)) return
     try {
-      // no-op
+      await updateEstadoUsuario(usuario.id, 'inactivo')
       setGlobalMessage({ type: 'success', message: 'Usuario desactivado exitosamente' })
       cargarEquipo()
     } catch (error: any) {
@@ -67,7 +67,7 @@ export default function EquipoPage() {
   const handleActivate = async (usuario: Usuario) => {
     if (!confirm(`¿Deseas activar a ${usuario.nombre}?`)) return
     try {
-      // no-op
+      await updateEstadoUsuario(usuario.id, 'activo')
       setGlobalMessage({ type: 'success', message: 'Usuario activado exitosamente' })
       cargarEquipo()
     } catch (error: any) {

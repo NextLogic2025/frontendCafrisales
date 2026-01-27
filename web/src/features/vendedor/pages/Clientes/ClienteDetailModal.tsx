@@ -21,57 +21,18 @@ interface ClienteDetailModalProps {
 }
 
 export function ClienteDetailModal({ isOpen, onClose, cliente }: ClienteDetailModalProps) {
-  const [sucursales, setSucursales] = useState<Sucursal[]>([])
-  const [isLoadingSucursales, setIsLoadingSucursales] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
   const { isLoaded, loadError } = useJsApiLoader({
     id: GOOGLE_MAP_SCRIPT_ID,
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
     libraries: GOOGLE_MAP_LIBRARIES
   })
 
+  useEffect(() => {
+    // Clean up if needed when modal closes
+  }, [isOpen])
+
   const modalTitle = getClienteDisplayName(cliente)
   const secondaryName = cliente ? getClienteSecondaryName(cliente, modalTitle) : null
-
-  useEffect(() => {
-    if (!isOpen || !cliente) return
-    const selectedRole = getSelectedRole()
-    // Si el rol seleccionado en el frontend no está entre los permitidos, evitar la llamada
-    // Incluir 'vendedor' porque el backend ya permite a vendedores ver sucursales
-    if (!selectedRole || !['admin', 'supervisor', 'cliente', 'vendedor'].includes(selectedRole)) {
-      setSucursales([])
-      setError('No tienes autorización para ver las sucursales de este cliente.')
-      return
-    }
-    let cancelado = false
-    const cargarSucursales = async () => {
-      try {
-        setIsLoadingSucursales(true)
-        setError(null)
-        // Mock data
-        if (!cancelado) setSucursales([])
-      } catch (err: any) {
-        if (!cancelado) {
-          setError('No se pudieron cargar las sucursales.')
-          setSucursales([])
-        }
-      } finally {
-        if (!cancelado) setIsLoadingSucursales(false)
-      }
-    }
-    cargarSucursales()
-    return () => {
-      cancelado = true
-    }
-  }, [isOpen, cliente?.id])
-
-  useEffect(() => {
-    if (!isOpen) {
-      setSucursales([])
-      setError(null)
-    }
-  }, [isOpen])
 
   const zona = useMemo(() => cliente?.zona_comercial ?? null, [cliente])
 
@@ -91,17 +52,7 @@ export function ClienteDetailModal({ isOpen, onClose, cliente }: ClienteDetailMo
     return null
   }, [cliente])
 
-  const markersSucursales = useMemo(() => {
-    return sucursales.reduce((acc, sucursal) => {
-      const coords = sucursal.ubicacion_gps?.coordinates
-      if (coords && typeof coords[0] === 'number' && typeof coords[1] === 'number') {
-        acc.push({ sucursal, marker: { lat: coords[1], lng: coords[0] } })
-      }
-      return acc
-    }, [] as Array<{ sucursal: Sucursal; marker: google.maps.LatLngLiteral }>)
-  }, [sucursales])
-
-  const mapCenter = mainLocation || markersSucursales[0]?.marker || zonaPath[0] || defaultCenter
+  const mapCenter = mainLocation || zonaPath[0] || defaultCenter
 
   const listaNombre = cliente?.lista_precios?.nombre ?? (cliente?.lista_precios_id ? `Lista ${cliente.lista_precios_id}` : null)
   const zonaNombre = zona?.nombre ?? (cliente?.zona_comercial_id ? `Zona ${cliente.zona_comercial_id}` : null)
@@ -124,8 +75,6 @@ export function ClienteDetailModal({ isOpen, onClose, cliente }: ClienteDetailMo
       {!cliente && <p className="text-sm text-neutral-600">Selecciona un cliente para ver detalles.</p>}
       {cliente && (
         <div className="space-y-4">
-          {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
-
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-1">
               <p className="text-lg font-bold text-neutral-900">{modalTitle}</p>
@@ -164,7 +113,7 @@ export function ClienteDetailModal({ isOpen, onClose, cliente }: ClienteDetailMo
           <div className="space-y-2 rounded-lg border border-neutral-200 bg-white p-3">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-neutral-800">Mapa general</p>
-              <span className="text-xs text-neutral-500">Pin rojo: matriz · Pins azules: sucursales</span>
+              <span className="text-xs text-neutral-500">Pin rojo: matriz</span>
             </div>
             {!GOOGLE_MAPS_API_KEY && <p className="text-xs text-amber-700">Configura VITE_GOOGLE_MAPS_API_KEY para visualizar el mapa.</p>}
             {loadError && <p className="text-xs text-red-700">No se pudo cargar Google Maps.</p>}
@@ -203,15 +152,6 @@ export function ClienteDetailModal({ isOpen, onClose, cliente }: ClienteDetailMo
                   {mainLocation && (
                     <AdvancedMarker position={mainLocation} icon="http://maps.google.com/mapfiles/ms/icons/red-dot.png" title="Matriz" />
                   )}
-
-                  {markersSucursales.map(({ sucursal, marker }) => (
-                    <AdvancedMarker
-                      key={sucursal.id}
-                      position={marker}
-                      icon="http://maps.google.com/mapfiles/ms/icons/blue-dot.png"
-                      title={sucursal.nombre_sucursal}
-                    />
-                  ))}
                 </GoogleMap>
               </div>
             )}
@@ -227,45 +167,6 @@ export function ClienteDetailModal({ isOpen, onClose, cliente }: ClienteDetailMo
                 </a>
               </div>
             )}
-          </div>
-
-          <div className="space-y-2 rounded-lg border border-neutral-200 bg-white p-3">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-neutral-800">Sucursales ({sucursales.length})</p>
-              {isLoadingSucursales && <span className="text-xs text-neutral-500">Cargando...</span>}
-            </div>
-            {sucursales.length === 0 && !isLoadingSucursales && (
-              <p className="text-sm text-neutral-600">No hay sucursales registradas.</p>
-            )}
-            <div className="grid gap-3 md:grid-cols-2">
-              {sucursales.map((sucursal) => {
-                const coords = sucursal.ubicacion_gps?.coordinates
-                return (
-                  <div key={sucursal.id} className="rounded-lg border border-neutral-200 bg-neutral-50 p-3">
-                    <p className="font-semibold text-neutral-900">{sucursal.nombre_sucursal}</p>
-                    {sucursal.direccion_entrega && <p className="text-xs text-neutral-700">{sucursal.direccion_entrega}</p>}
-                    {sucursal.zona_nombre && <p className="text-xs text-neutral-700">Zona: {sucursal.zona_nombre}</p>}
-                    {sucursal.contacto_nombre && <p className="text-xs text-neutral-700">Contacto: {sucursal.contacto_nombre}</p>}
-                    {sucursal.contacto_telefono && <p className="text-xs text-neutral-700">Tel: {sucursal.contacto_telefono}</p>}
-                    {coords && (
-                      <div className="mt-1 space-y-1">
-                        <p className="text-xs font-medium text-emerald-600">
-                          Ubicación: {coords[1].toFixed(6)}, {coords[0].toFixed(6)}
-                        </p>
-                        <a
-                          href={buildDirectionsUrl(coords[1], coords[0])}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs font-semibold text-brand-red transition hover:text-brand-red-dark"
-                        >
-                          Cómo llegar
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
           </div>
         </div>
       )}
