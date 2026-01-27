@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Linking, RefreshControl } from 'react-native'
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Linking, RefreshControl, Image } from 'react-native'
 import { useRoute, useNavigation } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
 
@@ -94,6 +94,12 @@ export function SupervisorClientDetailScreen() {
 
     const contactName = [client.nombres, client.apellidos].filter(Boolean).join(' ')
     const coordinatesReady = typeof client.latitud === 'number' && typeof client.longitud === 'number'
+    const initials = client.nombre_comercial
+        ? client.nombre_comercial.slice(0, 2).toUpperCase()
+        : contactName
+            ? contactName.slice(0, 2).toUpperCase()
+            : 'CL'
+    const avatarUrl = (client as any)?.url_avatar || (client as any)?.avatar_url || (client as any)?.img_url
 
     return (
         <View className="flex-1 bg-neutral-50">
@@ -110,52 +116,74 @@ export function SupervisorClientDetailScreen() {
                 refreshControl={
                     <RefreshControl refreshing={loading} onRefresh={loadData} tintColor={BRAND_COLORS.red} />
                 }
+                contentContainerStyle={{ paddingBottom: 120 }}
             >
                 <View className="px-5 py-4">
-                    <View className="bg-white p-4 rounded-2xl border border-neutral-100 shadow-sm">
-                        <Text className="text-2xl font-bold text-neutral-900 mb-1" numberOfLines={2}>
-                            {client.nombre_comercial}
-                        </Text>
-                        <Text className="text-neutral-600 text-sm font-medium">
-                            {contactName || client.email || 'Sin contacto'}
-                        </Text>
-
-                        {client.ruc ? (
-                            <View className="mt-3">
-                                <Text className="text-neutral-500 text-xs font-medium mb-1">RUC</Text>
-                                <Text className="text-neutral-900 text-sm font-semibold">{client.ruc}</Text>
+                    <View className="bg-white rounded-3xl border border-neutral-100 shadow-sm overflow-hidden">
+                        <View className="bg-brand-red px-5 py-6">
+                            <View className="flex-row items-center">
+                                <View className="h-16 w-16 rounded-2xl items-center justify-center bg-white/20 border border-white/30 overflow-hidden">
+                                    {avatarUrl ? (
+                                        <Image source={{ uri: avatarUrl }} className="h-full w-full" resizeMode="cover" />
+                                    ) : (
+                                        <Text className="text-white text-lg font-bold">{initials}</Text>
+                                    )}
+                                </View>
+                                <View className="flex-1 ml-4">
+                                    <Text className="text-white text-xl font-bold" numberOfLines={2}>
+                                        {client.nombre_comercial}
+                                    </Text>
+                                    <Text className="text-white/80 text-sm mt-1" numberOfLines={1}>
+                                        {contactName || client.email || 'Sin contacto'}
+                                    </Text>
+                                    <View className="flex-row items-center mt-2">
+                                        <View className="px-3 py-1 rounded-full bg-white/20">
+                                            <Text className="text-white text-[11px] font-semibold">
+                                                {client.estado === 'inactivo' ? 'Inactivo' : 'Activo'}
+                                            </Text>
+                                        </View>
+                                        {client.canal_nombre || client.canal_codigo ? (
+                                            <View className="px-3 py-1 rounded-full bg-white/20 ml-2">
+                                                <Text className="text-white text-[11px] font-semibold">
+                                                    {client.canal_nombre || client.canal_codigo}
+                                                </Text>
+                                            </View>
+                                        ) : null}
+                                    </View>
+                                </View>
                             </View>
-                        ) : null}
-
-                        <View className="mt-3">
-                            <Text className="text-neutral-500 text-xs font-medium mb-1">Canal comercial</Text>
-                            <Text className="text-neutral-900 text-sm font-semibold">
-                                {client.canal_nombre || client.canal_codigo || 'Sin canal'}
-                            </Text>
                         </View>
 
-                        {zone ? (
-                            <View className="mt-3">
-                                <Text className="text-neutral-500 text-xs font-medium mb-1">Zona</Text>
-                                <Text className="text-neutral-900 text-sm font-semibold">
-                                    {zone.nombre} ({zone.codigo})
-                                </Text>
+                        <View className="px-5 py-5">
+                            <View className="flex-row flex-wrap gap-2">
+                                {client.ruc ? (
+                                    <View className="px-3 py-2 rounded-xl bg-neutral-50 border border-neutral-200">
+                                        <Text className="text-[10px] text-neutral-400 font-semibold">RUC</Text>
+                                        <Text className="text-sm text-neutral-900 font-semibold">{client.ruc}</Text>
+                                    </View>
+                                ) : null}
+                                {zone ? (
+                                    <View className="px-3 py-2 rounded-xl bg-neutral-50 border border-neutral-200">
+                                        <Text className="text-[10px] text-neutral-400 font-semibold">Zona</Text>
+                                        <Text className="text-sm text-neutral-900 font-semibold">
+                                            {zone.nombre} ({zone.codigo})
+                                        </Text>
+                                    </View>
+                                ) : null}
                             </View>
-                        ) : null}
 
-                        <View className="mt-3">
-                            <Text className="text-neutral-500 text-xs font-medium mb-1">Direccion</Text>
-                            <Text className="text-neutral-900 text-sm font-semibold">
-                                {client.direccion}
-                            </Text>
+                            <View className="mt-4 bg-neutral-50 border border-neutral-200 rounded-2xl px-4 py-3">
+                                <Text className="text-[10px] uppercase text-neutral-400 font-bold">Direccion</Text>
+                                <Text className="text-sm text-neutral-900 mt-1">{client.direccion}</Text>
+                            </View>
+
+                            {client.telefono ? (
+                                <View className="mt-3 bg-neutral-50 border border-neutral-200 rounded-2xl px-4 py-3">
+                                    <Text className="text-[10px] uppercase text-neutral-400 font-bold">Telefono</Text>
+                                    <Text className="text-sm text-neutral-900 mt-1">{client.telefono}</Text>
+                                </View>
+                            ) : null}
                         </View>
-
-                        {client.telefono ? (
-                            <View className="mt-3">
-                                <Text className="text-neutral-500 text-xs font-medium mb-1">Telefono</Text>
-                                <Text className="text-neutral-900 text-sm font-semibold">{client.telefono}</Text>
-                            </View>
-                        ) : null}
                     </View>
 
                     {coordinatesReady ? (

@@ -4,6 +4,7 @@ import { TabNavigation } from '../components/ui/TabNavigation'
 
 import { ClientHomeScreen } from '../features/cliente/screens/ModuloInicio/ClientHomeScreen'
 import { ClientProfileScreen } from '../features/cliente/screens/ModuloPerfil/ClientProfileScreen'
+import { ClientProductNavigator } from '../features/cliente/screens/ModuloProductos/ClientProductNavigator'
 
 const Tab = createBottomTabNavigator()
 
@@ -14,6 +15,7 @@ export function ClientNavigator() {
             screenOptions={{ headerShown: false }}
         >
             <Tab.Screen name="Inicio" component={ClientHomeScreen} />
+            <Tab.Screen name="Productos" component={ClientProductNavigator} />
             <Tab.Screen name="Perfil" component={ClientProfileScreen} />
         </Tab.Navigator>
     )

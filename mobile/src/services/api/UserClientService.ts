@@ -58,6 +58,16 @@ const rawService = {
     }
   },
 
+  async getClientsByVendedor(vendedorId: string): Promise<UserClient[]> {
+    try {
+      const data = await ApiService.get<UserClient[]>(`${USERS_API_URL}/vendedores/${vendedorId}/clientes`)
+      return data.map(normalizeClient)
+    } catch (error) {
+      logErrorForDebugging(error, 'UserClientService.getClientsByVendedor', { vendedorId })
+      return []
+    }
+  },
+
   async getClient(usuarioId: string): Promise<UserClient | null> {
     try {
       const client = await ApiService.get<UserClient>(`${USERS_API_URL}/clientes/${usuarioId}`)
