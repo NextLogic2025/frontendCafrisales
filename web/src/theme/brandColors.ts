@@ -1,0 +1,6 @@
+export const BRAND_COLORS = {
+    red: '#F0412D',
+    red700: '#C52C1B',
+    gold: '#F4D46A',
+    cream: '#FFF5D9',
+}

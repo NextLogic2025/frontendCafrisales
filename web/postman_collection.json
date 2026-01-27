@@ -1,0 +1,194 @@
+{
+  "info": {
+    "name": "Cafrilosa Backend - Complete API",
+    "_postman_id": "cafrilosa-backend-complete",
+    "description": "Colección generada automáticamente: endpoints de todos los microservicios (auth, user, catalog, zone, order, credit, route)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth Service",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"secret\"\n}" },
+            "url": { "raw": "{{auth_url}}/api/auth/login", "host": ["{{auth_url}}"], "path": ["api","auth","login"] }
+          }
+        },
+        {
+          "name": "Register (service or admin)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"newuser@example.com\",\n  \"password\": \"secret\",\n  \"name\": \"Nuevo Usuario\",\n  \"rol\": \"cliente\"\n}" },
+            "url": { "raw": "{{auth_url}}/api/auth/register", "host":["{{auth_url}}"], "path":["api","auth","register"] }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode":"raw","raw":"{\n  \"refresh_token\": \"{{refresh_token}}\"\n}" }, "url": { "raw": "{{auth_url}}/api/auth/refresh" } }
+        },
+        {
+          "name": "Logout",
+          "request": { "method": "POST", "header": [{ "key":"Content-Type","value":"application/json" }], "body": { "mode":"raw","raw":"{\n  \"refresh_token\": \"{{refresh_token}}\"\n}" }, "url": { "raw": "{{auth_url}}/api/auth/logout" } }
+        },
+        {
+          "name": "Listar sesiones (autenticado)",
+          "request": { "method": "GET", "header": [{ "key":"Authorization","value":"Bearer {{jwt}}" }], "url": { "raw": "{{auth_url}}/api/auth/sesiones" } }
+        }
+      ]
+    },
+    {
+      "name": "User Service",
+      "item": [
+        {
+          "name": "Create Vendedor",
+          "request": { "method":"POST","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{jwt}}"}],"body":{"mode":"raw","raw":"{\n  \"email\": \"vendedor@example.com\",\n  \"password\": \"secret\",\n  \"nombres\": \"Juan\",\n  \"apellidos\": \"Pérez\",\n  \"telefono\": \"+511900000000\",\n  \"codigo_empleado\": \"V123\",\n  \"supervisor_id\": \"00000000-0000-0000-0000-000000000000\"\n}"},"url":{"raw":"{{user_url}}/api/usuarios/vendedor"} }
+        },
+        {
+          "name": "Create Bodeguero",
+          "request": { "method":"POST","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{jwt}}"}],"body":{"mode":"raw","raw":"{\n  \"email\": \"bodeguero@example.com\",\n  \"password\": \"secret\",\n  \"nombres\": \"Ana\",\n  \"apellidos\": \"Gonzales\",\n  \"codigo_empleado\": \"B001\"\n}"},"url":{"raw":"{{user_url}}/api/usuarios/bodeguero"} }
+        },
+        {
+          "name": "Create Transportista",
+          "request": { "method":"POST","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{jwt}}"}],"body":{"mode":"raw","raw":"{\n  \"email\": \"driver@example.com\",\n  \"password\": \"secret\",\n  \"nombres\": \"Luis\",\n  \"apellidos\": \"Lopez\",\n  \"codigo_empleado\": \"T009\",\n  \"numero_licencia\": \"ABC-12345\"\n}"},"url":{"raw":"{{user_url}}/api/usuarios/transportista"} }
+        },
+        {
+          "name": "Create Supervisor",
+          "request": { "method":"POST","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{jwt}}"}],"body":{"mode":"raw","raw":"{\n  \"email\": \"sup@example.com\",\n  \"password\": \"secret\",\n  \"nombres\": \"María\",\n  \"apellidos\": \"Ramos\",\n  \"codigo_empleado\": \"S007\"\n}"},"url":{"raw":"{{user_url}}/api/usuarios/supervisor"} }
+        },
+        {
+          "name": "Get User by id",
+          "request": { "method":"GET","header":[{"key":"Authorization","value":"Bearer {{jwt}}"}],"url":{"raw":"{{user_url}}/api/usuarios/{{userId}}"} }
+        },
+        {
+          "name": "Patch User",
+          "request": { "method":"PATCH","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{jwt}}"}],"body":{"mode":"raw","raw":"{\n  \"perfil\":{ \"nombres\": \"Nuevo\" }\n}"},"url":{"raw":"{{user_url}}/api/usuarios/{{userId}}"} }
+        },
+        {
+          "name": "Suspend User",
+          "request": { "method":"PUT","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{jwt}}"}],"body":{"mode":"raw","raw":"{\n  \"motivo\": \"Incumplimiento\"\n}"},"url":{"raw":"{{user_url}}/api/usuarios/{{userId}}/suspender"} }
+        },
+        {
+          "name": "List Staff - Vendedores",
+          "request": { "method":"GET","header":[{"key":"Authorization","value":"Bearer {{jwt}}"}],"url":{"raw":"{{user_url}}/api/staff/vendedores"} }
+        },
+        {
+          "name": "Clients - List",
+          "request": { "method":"GET","header":[{"key":"Authorization","value":"Bearer {{jwt}}"}],"url":{"raw":"{{user_url}}/api/clientes?estado=activo"} }
+        },
+        {
+          "name": "Create Client",
+          "request": { "method":"POST","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{jwt}}"}],"body":{"mode":"raw","raw":"{\n  \"usuario_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"canal_id\": \"00000000-0000-0000-0000-000000000001\",\n  \"nombre_comercial\": \"Tienda Demo\",\n  \"zona_id\": \"00000000-0000-0000-0000-000000000002\",\n  \"direccion\": \"Av. Principal 123\",\n  \"latitud\": -12.04318,\n  \"longitud\": -77.02824\n}"},"url":{"raw":"{{user_url}}/api/clientes"} }
+        },
+        {
+          "name": "Assign Vendedor to Client",
+          "request": { "method":"PUT","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{jwt}}"}],"body":{"mode":"raw","raw":"{\n  \"vendedor_id\": \"00000000-0000-0000-0000-000000000010\"\n}"},"url":{"raw":"{{user_url}}/api/clientes/{{clienteUsuarioId}}/asignar-vendedor"} }
+        },
+        {
+          "name": "Get Clientes by Vendedor (query controller)",
+          "request": { "method":"GET","header":[{"key":"Authorization","value":"Bearer {{jwt}}"}],"url":{"raw":"{{user_url}}/api/vendedores/{{vendedorId}}/clientes"} }
+        },
+        {
+          "name": "Profiles - Get My Profile",
+          "request": { "method":"GET","header":[{"key":"Authorization","value":"Bearer {{jwt}}"}],"url":{"raw":"{{user_url}}/api/usuarios/me/perfil"} }
+        },
+        {
+          "name": "Profiles - Upsert My Profile",
+          "request": { "method":"PUT","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{jwt}}"}],"body":{"mode":"raw","raw":"{\n  \"nombres\": \"MiNombre\",\n  \"apellidos\": \"MiApellido\",\n  \"telefono\": \"+51900000000\"\n}"},"url":{"raw":"{{user_url}}/api/usuarios/me/perfil"} }
+        },
+        {
+          "name": "Channels - List",
+          "request": { "method":"GET","url":{"raw":"{{user_url}}/api/canales"} }
+        },
+        {
+          "name": "Channels - Create",
+          "request": { "method":"POST","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{jwt}}"}],"body":{"mode":"raw","raw":"{\n  \"nombre\": \"Canal Demo\",\n  \"codigo\": \"C01\"\n}"},"url":{"raw":"{{user_url}}/api/canales"} }
+        }
+      ]
+    },
+    {
+      "name": "Zone Service",
+      "item": [
+        { "name": "Create Zone","request":{ "method":"POST","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{jwt}}"}],"body":{"mode":"raw","raw":"{\n  \"codigo\": \"Z001\",\n  \"nombre\": \"Zona Centro\",\n  \"descripcion\": \"Zona central\",\n  \"zonaGeom\": { \"type\": \"Polygon\", \"coordinates\": [[[ -77.03, -12.04 ], [ -77.02, -12.04 ], [ -77.02, -12.05 ], [ -77.03, -12.05 ], [ -77.03, -12.04 ]]] }\n}"},"url":{"raw":"{{zone_url}}/api/zones"} } },
+        { "name":"List Zones","request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer {{jwt}}"}],"url":{"raw":"{{zone_url}}/api/zones?estado=activo"}} },
+        { "name":"Get Zone by id","request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer {{jwt}}"}],"url":{"raw":"{{zone_url}}/api/zones/{{zoneId}}"}} },
+        { "name":"Update Zone (patch)","request":{"method":"PATCH","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{jwt}}"}],"body":{"mode":"raw","raw":"{\n  \"nombre\": \"Nombre actualizado\"\n}"},"url":{"raw":"{{zone_url}}/api/zones/{{zoneId}}"}} },
+        { "name":"Get Zone schedules","request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer {{jwt}}"}],"url":{"raw":"{{zone_url}}/api/zones/{{zoneId}}/horarios"}} },
+        { "name":"Update Zone schedules","request":{"method":"PUT","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{jwt}}"}],"body":{"mode":"raw","raw":"[ { \"dia\": \"Lunes\", \"inicio\": \"08:00\", \"fin\": \"17:00\" } ]"},"url":{"raw":"{{zone_url}}/api/zones/{{zoneId}}/horarios"}} },
+        { "name":"Update Geometry","request":{"method":"PUT","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{jwt}}"}],"body":{"mode":"raw","raw":"{ \"geometry\": { \"type\": \"Polygon\", \"coordinates\": [[[ -77.03, -12.04 ], [ -77.02, -12.04 ], [ -77.02, -12.05 ], [ -77.03, -12.05 ], [ -77.03, -12.04 ]]] } }"},"url":{"raw":"{{zone_url}}/api/zones/{{zoneId}}/geometria"}} },
+        { "name":"Resolve Zone by point","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{ \"lat\": -12.04318, \"lon\": -77.02824 }"},"url":{"raw":"{{zone_url}}/api/zones/resolver"}} },
+        { "name":"Internal: Get zone by id (service token)","request":{"method":"GET","header":[{"key":"x-service-token","value":"{{SERVICE_TOKEN}}"}],"url":{"raw":"{{zone_url}}/api/internal/zones/{{zoneId}}"}} }
+      ]
+    },
+    {
+      "name": "Route Service",
+      "item": [
+        { "name":"Fleet - Create","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{jwt}}"}],"body":{"mode":"raw","raw":"{\n  \"placa\": \"ABC-123\",\n  \"modelo\": \"Camión 1\",\n  \"capacidad_kg\": 2000\n}"},"url":{"raw":"{{route_url}}/api/fleet"}} },
+        { "name":"Fleet - List","request":{"method":"GET","url":{"raw":"{{route_url}}/api/fleet"}} },
+        { "name":"Fleet - Update status","request":{"method":"PATCH","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{jwt}}"}],"body":{"mode":"raw","raw":"{ \"estado\": \"DISPONIBLE\" }"},"url":{"raw":"{{route_url}}/api/fleet/{{vehicleId}}/status"}} },
+        { "name":"Commercial - Create rutero","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{jwt}}"}],"body":{"mode":"raw","raw":"{\n  \"fecha_rutero\": \"2026-02-01\",\n  \"zona_id\": \"00000000-0000-0000-0000-000000000002\",\n  \"vendedor_id\": \"00000000-0000-0000-0000-000000000010\"\n}"},"url":{"raw":"{{route_url}}/api/commercial-routes"}} },
+        { "name":"Commercial - Add visit","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{jwt}}"}],"body":{"mode":"raw","raw":"{ \"cliente_id\": \"00000000-0000-0000-0000-000000000100\", \"orden_visita\": 1 }"},"url":{"raw":"{{route_url}}/api/commercial-routes/{{routeId}}/visits"}} },
+        { "name":"Commercial - Publish","request":{"method":"PATCH","header":[{"key":"Authorization","value":"Bearer {{jwt}}"}],"url":{"raw":"{{route_url}}/api/commercial-routes/{{routeId}}/publish"}} },
+        { "name":"Logistics - Create","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{jwt}}"}],"body":{"mode":"raw","raw":"{\n  \"fecha\": \"2026-02-01\",\n  \"placa\": \"ABC-123\",\n  \"conductor_id\": \"00000000-0000-0000-0000-000000000010\"\n}"},"url":{"raw":"{{route_url}}/api/logistic-routes"}} },
+        { "name":"Logistics - Add order to truck","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{jwt}}"}],"body":{"mode":"raw","raw":"{ \"pedido_id\": \"00000000-0000-0000-0000-000000000200\" }"},"url":{"raw":"{{route_url}}/api/logistic-routes/{{logisticId}}/orders"}} }
+      ]
+    },
+    {
+      "name": "Order Service",
+      "item": [
+        { "name":"Create Order","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"cliente_id\": \"00000000-0000-0000-0000-000000000100\",\n  \"items\": [ { \"sku_id\": \"00000000-0000-0000-0000-000000000300\", \"cantidad\": 2, \"precio_unitario\": 9.5 } ]\n}"},"url":{"raw":"{{order_url}}/api/orders"}} },
+        { "name":"List Orders","request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer {{jwt}}"}],"url":{"raw":"{{order_url}}/api/orders"}} },
+        { "name":"Get My Orders","request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer {{jwt}}"}],"url":{"raw":"{{order_url}}/api/orders/my-orders"}} },
+        { "name":"Get Order by id","request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer {{jwt}}"}],"url":{"raw":"{{order_url}}/api/orders/{{orderId}}"}} },
+        { "name":"Update Order status","request":{"method":"PATCH","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{jwt}}"}],"body":{"mode":"raw","raw":"{ \"estado\": \"ENTREGADO\" }"},"url":{"raw":"{{order_url}}/api/orders/{{orderId}}/status"}} },
+        { "name":"Cancel Order","request":{"method":"PATCH","header":[{"key":"Authorization","value":"Bearer {{jwt}}"}],"url":{"raw":"{{order_url}}/api/orders/{{orderId}}/cancel"}} }
+      ]
+    },
+    {
+      "name": "Validations",
+      "item": [
+        { "name":"Create Validation","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{jwt}}"}],"body":{"mode":"raw","raw":"{\n  \"pedido_id\": \"00000000-0000-0000-0000-000000000200\",\n  \"bodeguero_id\": \"00000000-0000-0000-0000-000000000010\",\n  \"items\": [ { \"item_pedido_id\": \"it-1\", \"cantidad_ajustada\": 1 } ]\n}"},"url":{"raw":"{{order_url}}/api/validations"}} },
+        { "name":"Find validations by order","request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer {{jwt}}"}],"url":{"raw":"{{order_url}}/api/validations/order/{{orderId}}"}} }
+      ]
+    },
+    {
+      "name": "Credit Service",
+      "item": [
+        { "name":"Create Credit","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{jwt}}"}],"body":{"mode":"raw","raw":"{\n  \"pedido_id\": \"00000000-0000-0000-0000-000000000200\",\n  \"cliente_id\": \"00000000-0000-0000-0000-000000000100\",\n  \"aprobado_por_vendedor_id\": \"00000000-0000-0000-0000-000000000010\",\n  \"monto_aprobado\": 150.0,\n  \"plazo_dias\": 30\n}"},"url":{"raw":"{{credit_url}}/api/credits"}} },
+        { "name":"Register Payment","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{jwt}}"}],"body":{"mode":"raw","raw":"{\n  \"aprobacion_credito_id\": \"00000000-0000-0000-0000-000000000500\",\n  \"monto_pago\": 50.0,\n  \"registrado_por_id\": \"00000000-0000-0000-0000-000000000010\"\n}"},"url":{"raw":"{{credit_url}}/api/payments"}} },
+        { "name":"Payments - Get by credit","request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer {{jwt}}"}],"url":{"raw":"{{credit_url}}/api/payments/credit/{{creditApprovalId}}"}} },
+        { "name":"Reports - Portfolio","request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer {{jwt}}"}],"url":{"raw":"{{credit_url}}/api/reports/portfolio"}} }
+      ]
+    },
+    {
+      "name": "Catalog Service",
+      "item": [
+        { "name":"Create Category","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{jwt}}"}],"body":{"mode":"raw","raw":"{ \"nombre\": \"Bebidas\", \"slug\": \"bebidas\" }"},"url":{"raw":"{{catalog_url}}/api/categorias"}} },
+        { "name":"Create Product Complete","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{jwt}}"}],"body":{"mode":"raw","raw":"{\n  \"categoria_nombre\": \"Bebidas\",\n  \"nombre\": \"Café Molido\",\n  \"sku\": { \"codigo_sku\": \"CAF-001\", \"nombre\": \"Café 250g\", \"peso_gramos\": 250 },\n  \"precio\": { \"precio\": 5.0 }\n}"},"url":{"raw":"{{catalog_url}}/api/productos/complete"}} },
+        { "name":"Create SKU","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{jwt}}"}],"body":{"mode":"raw","raw":"{\n  \"producto_id\": \"00000000-0000-0000-0000-000000000400\",\n  \"codigo_sku\": \"SKU-001\",\n  \"nombre\": \"Producto SKU\",\n  \"peso_gramos\": 500\n}"},"url":{"raw":"{{catalog_url}}/api/skus"}} },
+        { "name":"Get SKU Current Price","request":{"method":"GET","url":{"raw":"{{catalog_url}}/api/skus/{{skuId}}/precio-vigente"}} },
+        { "name":"Create SKU Price","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{jwt}}"}],"body":{"mode":"raw","raw":"{ \"precio\": 4.5, \"moneda\": \"USD\" }"},"url":{"raw":"{{catalog_url}}/api/skus/{{skuId}}/precio"}} }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "auth_url", "value": "http://localhost:3001" },
+    { "key": "user_url", "value": "http://localhost:3002" },
+    { "key": "catalog_url", "value": "http://localhost:3003" },
+    { "key": "order_url", "value": "http://localhost:3004" },
+    { "key": "warehouse_url", "value": "http://localhost:3005" },
+    { "key": "transportista_url", "value": "http://localhost:3006" },
+    { "key": "zone_url", "value": "http://localhost:3003" },
+    { "key": "credit_url", "value": "http://localhost:3003" },
+    { "key": "route_url", "value": "http://localhost:3003" },
+    { "key": "jwt", "value": "" },
+    { "key": "refresh_token", "value": "" },
+    { "key": "SERVICE_TOKEN", "value": "" }
+  ]
+}

@@ -1,0 +1,68 @@
+// import { httpWarehouse } from '../../../services/api/http'
+
+export interface StockItem {
+    id: string
+    ubicacionId: string
+    loteId: string
+    // Extend with joined data usually returned by findAll
+    ubicacion?: {
+        id: string
+        codigoVisual: string
+        almacen?: { id: string; nombre: string }
+    }
+    lote?: {
+        id: string
+        numeroLote: string
+        producto?: {
+            id: string
+            nombre: string
+            codigo_sku: string
+        }
+        fechaVencimiento: string
+    }
+    cantidadFisica: string // usually string from decimal in DB
+    cantidadReservada: string
+    cantidadDisponible: string
+    updatedAt: string
+}
+
+export interface CreateStockDto {
+    ubicacionId: string
+    loteId: string
+    cantidadFisica: number
+}
+
+export interface AjusteStockDto {
+    ubicacionId: string
+    loteId: string
+    cantidad: number
+    usuarioResponsableId: string // UUID
+}
+
+export async function getAllStock(): Promise<StockItem[]> {
+    return []
+}
+
+export async function getStockByLocation(id: string): Promise<StockItem[]> {
+    return []
+}
+
+export async function getStockByProduct(id: string): Promise<StockItem[]> {
+    return []
+}
+
+export async function createStock(data: CreateStockDto): Promise<StockItem> {
+    return {
+        id: 'mock-id',
+        ubicacionId: data.ubicacionId,
+        loteId: data.loteId,
+        cantidadFisica: String(data.cantidadFisica),
+        cantidadReservada: '0',
+        cantidadDisponible: String(data.cantidadFisica),
+        updatedAt: new Date().toISOString()
+    }
+}
+
+export async function adjustStock(data: AjusteStockDto): Promise<void> {
+    return Promise.resolve()
+}
