@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-const { BRAND_COLORS } = require('../../shared/types/brandColors.cjs')
+const { BRAND_COLORS } = require('./shared/types/brandColors.cjs')
 
 module.exports = {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
