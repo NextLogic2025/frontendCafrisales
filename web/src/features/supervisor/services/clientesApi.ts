@@ -15,10 +15,21 @@ export interface Cliente {
   ubicacion_gps?: { type: 'Point'; coordinates: [number, number] } | null
   latitud?: number | null
   longitud?: number | null
+  estado?: 'activo' | 'inactivo' | 'suspendido' | string | null
+  email?: string | null
   created_at: string
   updated_at: string
   deleted_at: string | null
   zona_comercial?: { id: number; nombre: string }
+  canal_nombre?: string | null
+  canal_codigo?: string | null
+  bloqueado?: boolean
+  tiene_credito?: boolean
+  limite_credito?: string
+  saldo_actual?: string
+  dias_plazo?: number
+  lista_precios?: { id: string | number; nombre: string } | null
+  lista_precios_id?: string | number | null
 }
 
 export interface CreateClienteDto {
@@ -53,6 +64,70 @@ export interface ZonaComercial {
 import { env } from '../../../config/env'
 import { getValidToken } from '../../../services/auth/authClient'
 
+type BackendCliente = {
+  usuario_id?: string
+  canal_id?: string | number | null
+  nombre_comercial?: string | null
+  ruc?: string | null
+  zona_id?: string | number | null
+  direccion?: string | null
+  latitud?: number | null
+  longitud?: number | null
+  vendedor_asignado_id?: string | null
+  creado_en?: string
+  actualizado_en?: string
+  email?: string | null
+  estado?: string | null
+  nombres?: string | null
+  apellidos?: string | null
+  telefono?: string | null
+  canal_nombre?: string | null
+  canal_codigo?: string | null
+}
+
+function mapCliente(raw: BackendCliente | Cliente): Cliente {
+  const usuarioId = (raw as any).usuario_id || (raw as any).usuario_principal_id || (raw as any).id
+  const nombres = (raw as any).nombres ?? null
+  const apellidos = (raw as any).apellidos ?? null
+  const nombreComercial = (raw as any).nombre_comercial ?? null
+  const ruc = (raw as any).ruc ?? (raw as any).identificacion ?? ''
+  const direccion = (raw as any).direccion ?? (raw as any).direccion_texto ?? null
+
+  return {
+    id: String(usuarioId || ''),
+    usuario_principal_id: usuarioId || null,
+    identificacion: String(ruc || ''),
+    tipo_identificacion: (raw as any).tipo_identificacion || 'RUC',
+    nombres,
+    apellidos,
+    razon_social: (raw as any).razon_social || nombreComercial || [nombres, apellidos].filter(Boolean).join(' ') || (raw as any).email || 'Cliente',
+    nombre_comercial: nombreComercial,
+    telefono: (raw as any).telefono ?? null,
+    canal_id: (raw as any).canal_id ?? null,
+    vendedor_asignado_id: (raw as any).vendedor_asignado_id ?? null,
+    zona_comercial_id: (raw as any).zona_id ?? (raw as any).zona_comercial_id ?? null,
+    direccion_texto: direccion,
+    ubicacion_gps: (raw as any).ubicacion_gps ?? null,
+    latitud: (raw as any).latitud ?? null,
+    longitud: (raw as any).longitud ?? null,
+    estado: (raw as any).estado ?? null,
+    email: (raw as any).email ?? null,
+    created_at: (raw as any).created_at || (raw as any).creado_en || new Date().toISOString(),
+    updated_at: (raw as any).updated_at || (raw as any).actualizado_en || new Date().toISOString(),
+    deleted_at: (raw as any).deleted_at ?? null,
+    zona_comercial: (raw as any).zona_comercial ?? undefined,
+    canal_nombre: (raw as any).canal_nombre ?? null,
+    canal_codigo: (raw as any).canal_codigo ?? null,
+    bloqueado: (raw as any).bloqueado ?? false,
+    tiene_credito: (raw as any).tiene_credito ?? false,
+    limite_credito: (raw as any).limite_credito ?? '0.00',
+    saldo_actual: (raw as any).saldo_actual ?? '0.00',
+    dias_plazo: (raw as any).dias_plazo ?? 0,
+    lista_precios: (raw as any).lista_precios ?? null,
+    lista_precios_id: (raw as any).lista_precios_id ?? null,
+  }
+}
+
 export async function obtenerClientes(): Promise<Cliente[]> {
   try {
     const token = await getValidToken()
@@ -64,7 +139,8 @@ export async function obtenerClientes(): Promise<Cliente[]> {
     const res = await fetch(url, { headers })
     if (!res.ok) return []
     const data = await res.json().catch(() => [])
-    return Array.isArray(data) ? data : []
+    const list = Array.isArray(data) ? data : []
+    return list.map(mapCliente)
   } catch (error) {
     console.error('Error fetching clientes:', error)
     return []
@@ -82,7 +158,7 @@ export async function obtenerClientePorId(id: string): Promise<Cliente | null> {
     const res = await fetch(url, { headers })
     if (!res.ok) return null
     const data = await res.json().catch(() => null)
-    return data as Cliente | null
+    return data ? mapCliente(data as BackendCliente) : null
   } catch (error) {
     console.error('Error fetching cliente by id:', error)
     return null
@@ -128,27 +204,18 @@ export async function crearCliente(data: CreateClienteDto): Promise<Cliente> {
   }
 
   const created = await res.json()
-  return {
-    id: created.id ?? String(Math.random()),
-    usuario_principal_id: created.usuario_id ?? created.usuario_principal_id ?? null,
-    identificacion: data.identificacion,
-    tipo_identificacion: data.tipo_identificacion ?? 'RUC',
-    nombres: data.nombres ?? null,
-    apellidos: data.apellidos ?? null,
-    razon_social: data.razon_social,
-    nombre_comercial: created.nombre_comercial ?? data.nombre_comercial ?? null,
-    telefono: data.telefono ?? null,
+  return mapCliente({
+    ...created,
+    usuario_id: created.usuario_id ?? created.usuario_principal_id ?? created.id,
+    nombre_comercial: created.nombre_comercial ?? data.nombre_comercial ?? data.razon_social,
+    ruc: data.identificacion ?? created.ruc,
     canal_id: created.canal_id ?? data.canal_id ?? null,
+    zona_id: created.zona_id ?? data.zona_comercial_id ?? null,
+    direccion: created.direccion ?? data.direccion_texto ?? null,
+    latitud: created.latitud ?? data.latitud ?? null,
+    longitud: created.longitud ?? data.longitud ?? null,
     vendedor_asignado_id: created.vendedor_asignado_id ?? data.vendedor_asignado_id ?? null,
-    zona_comercial_id: created.zona_id ?? data.zona_comercial_id ?? null,
-    direccion_texto: created.direccion ?? data.direccion_texto ?? null,
-    ubicacion_gps: data.ubicacion_gps ?? null,
-    latitud: (created.latitud ?? data.latitud) ?? null,
-    longitud: (created.longitud ?? data.longitud) ?? null,
-    created_at: created.created_at ?? new Date().toISOString(),
-    updated_at: created.updated_at ?? new Date().toISOString(),
-    deleted_at: created.deleted_at ?? null,
-  }
+  } as BackendCliente)
 }
 
 export async function actualizarCliente(id: string, data: Partial<CreateClienteDto>): Promise<Cliente> {
@@ -209,5 +276,4 @@ export async function obtenerZonas(): Promise<ZonaComercial[]> {
     return []
   }
 }
-
 

@@ -48,20 +48,32 @@ export async function updateCategory(id: number, data: Partial<CreateCategoryDto
 }
 
 export interface Canal {
-  id: number
+  id: string | number
   nombre: string
   codigo: string
 }
 
 export async function obtenerCanales(): Promise<Canal[]> {
-  return [
-    { id: 1, nombre: 'Canal Mayorista', codigo: 'MAY' },
-    { id: 2, nombre: 'Canal Minorista', codigo: 'MIN' },
-    { id: 3, nombre: 'Horeca', codigo: 'HOR' }
-  ]
+  try {
+    const { env } = await import('../../../config/env')
+    const { getValidToken } = await import('../../../services/auth/authClient')
+    const token = await getValidToken()
+    if (!token) throw new Error('No hay sesión activa')
+
+    const base = env.api.usuarios
+    const url = `${base}/api/canales`
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!res.ok) return []
+    const data = await res.json().catch(() => [])
+    return Array.isArray(data) ? data : []
+  } catch (error) {
+    console.error('Error fetching canales:', error)
+    return []
+  }
 }
 
 export async function deleteCategory(id: number): Promise<void> {
   return Promise.resolve()
 }
-

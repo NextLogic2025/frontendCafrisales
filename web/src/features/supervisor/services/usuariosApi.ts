@@ -27,6 +27,22 @@ export interface CreateUserPayload {
     apellidos: string
     telefono?: string
   }
+  cliente?: {
+    canal_id?: string | number | null
+    nombre_comercial?: string | null
+    ruc?: string | null
+    zona_id?: string | number | null
+    direccion?: string | null
+    latitud?: number | null
+    longitud?: number | null
+    vendedor_asignado_id?: string | null
+    condiciones?: {
+      permite_negociacion?: boolean
+      porcentaje_descuento_max?: number
+      requiere_aprobacion_supervisor?: boolean
+      observaciones?: string | null
+    }
+  }
   vendedor?: {
     codigo_empleado: string
   }
@@ -72,6 +88,9 @@ export async function createUsuario(data: CreateUserPayload) {
       numero_licencia: data.transportista.numero_licencia,
     }
   }
+  if (data.cliente) {
+    payload.cliente = data.cliente
+  }
 
   const res = await fetch(url, {
     method: 'POST',
@@ -88,6 +107,46 @@ export async function createUsuario(data: CreateUserPayload) {
   }
 
   return await res.json()
+}
+
+export async function updateUsuario(
+  userId: string,
+  data: Partial<{
+    nombres: string
+    apellidos: string
+    telefono: string
+  }>,
+) {
+  const token = await getValidToken()
+  if (!token) throw new Error('No hay sesión activa')
+
+  const url = `${env.api.usuarios}/api/usuarios/${userId}`
+  const payload: any = {}
+  if (data.nombres || data.apellidos || data.telefono) {
+    payload.perfil = {
+      ...(data.nombres ? { nombres: data.nombres } : {}),
+      ...(data.apellidos ? { apellidos: data.apellidos } : {}),
+      ...(data.telefono ? { telefono: data.telefono } : {}),
+    }
+  }
+
+  if (Object.keys(payload).length === 0) return
+
+  const res = await fetch(url, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => null)
+    throw new Error(errorData?.message || 'Error al actualizar el usuario')
+  }
+
+  return await res.json().catch(() => null)
 }
 
 
@@ -239,4 +298,3 @@ export async function getUsers(): Promise<Usuario[]> {
     return []
   }
 }
-

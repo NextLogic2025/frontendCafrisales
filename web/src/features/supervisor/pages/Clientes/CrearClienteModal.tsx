@@ -17,8 +17,8 @@ import {
 import { obtenerZonas } from '../../services/zonasApi'
 import { obtenerCanales } from '../../services/catalogApi'
 import { obtenerVendedores, type Vendedor } from '../../services/usuariosApi'
-import { crearCliente, actualizarCliente } from '../../services/clientesApi'
-import { createUsuario } from '../../services/usuariosApi'
+import { actualizarCliente, obtenerClientePorId } from '../../services/clientesApi'
+import { createUsuario, updateUsuario } from '../../services/usuariosApi'
 
 interface CrearClienteModalProps {
   isOpen: boolean
@@ -29,6 +29,7 @@ interface CrearClienteModalProps {
 }
 
 type Step = 1 | 2 | 3
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export function CrearClienteModal({ isOpen, onClose, onSuccess, initialData, mode = 'create' }: CrearClienteModalProps) {
   const [currentStep, setCurrentStep] = useState<Step>(1)
@@ -40,6 +41,15 @@ export function CrearClienteModal({ isOpen, onClose, onSuccess, initialData, mod
   const [canales, setCanales] = useState<CanalOption[]>([])
   const [vendedores, setVendedores] = useState<Vendedor[]>([])
   const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+
+  const waitForClient = async (usuarioId: string) => {
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      const clientData = await obtenerClientePorId(usuarioId)
+      if (clientData) return clientData
+      await delay(350)
+    }
+    return null
+  }
 
   useEffect(() => {
     if (!isOpen) return
@@ -172,6 +182,11 @@ export function CrearClienteModal({ isOpen, onClose, onSuccess, initialData, mod
         // Step A: Create User Account
         let usuarioId = formData.usuario_principal_id
         if (!usuarioId) {
+          const canalId =
+            typeof formData.canal_id === 'number'
+              ? String(formData.canal_id)
+              : (formData.canal_id as unknown as string) ?? undefined
+
           const userPayload = {
             email: formData.contacto_email,
             password: formData.contacto_password,
@@ -181,6 +196,16 @@ export function CrearClienteModal({ isOpen, onClose, onSuccess, initialData, mod
               apellidos: formData.apellidos,
               telefono: formData.contacto_telefono || undefined,
             },
+            cliente: {
+              canal_id: canalId,
+              nombre_comercial: formData.nombre_comercial || formData.razon_social || undefined,
+              ruc: formData.identificacion || undefined,
+              zona_id: String(formData.zona_comercial_id ?? '') || undefined,
+              direccion: formData.direccion_texto ?? undefined,
+              latitud: formData.latitud ?? undefined,
+              longitud: formData.longitud ?? undefined,
+              vendedor_asignado_id: formData.vendedor_asignado_id ?? undefined,
+            },
           }
 
           const created = await createUsuario(userPayload as any)
@@ -188,29 +213,17 @@ export function CrearClienteModal({ isOpen, onClose, onSuccess, initialData, mod
           if (!usuarioId) {
             throw new Error('No se pudo obtener el id del usuario creado')
           }
-          // Update data in case of retry
           setFormData(prev => ({ ...prev, usuario_principal_id: usuarioId }))
         }
 
-        // Step B: Create Client Record
-        const canalId = typeof formData.canal_id === 'number'
-          ? canalMapping[formData.canal_id] ?? String(formData.canal_id)
-          : (formData.canal_id as unknown as string) ?? undefined
-
-        const payload: any = {
-          usuario_id: usuarioId,
-          canal_id: canalId,
-          nombre_comercial: formData.nombre_comercial || formData.razon_social || undefined,
-          zona_id: String(formData.zona_comercial_id ?? '') || undefined,
-          direccion: formData.direccion_texto ?? undefined,
-          latitud: formData.latitud ?? undefined,
-          longitud: formData.longitud ?? undefined,
-          vendedor_asignado_id: formData.vendedor_asignado_id ?? undefined,
-        }
-
-        console.log('crearCliente payload', payload)
-        await crearCliente(payload)
+        const syncedClient = usuarioId ? await waitForClient(usuarioId) : null
         setSubmitMessage({ type: 'success', message: 'Cliente creado exitosamente' })
+        if (syncedClient) {
+          // refresh UI list with known client
+          onSuccess()
+          handleClose()
+          return
+        }
       } else {
         if (!initialData?.id) throw new Error('Falta id del cliente')
         const payload: any = {
@@ -226,6 +239,11 @@ export function CrearClienteModal({ isOpen, onClose, onSuccess, initialData, mod
 
         console.log('actualizarCliente payload', payload)
         await actualizarCliente(initialData.id as string, payload)
+        await updateUsuario(initialData.id as string, {
+          nombres: formData.nombres || undefined,
+          apellidos: formData.apellidos || undefined,
+          telefono: formData.contacto_telefono || undefined,
+        })
         setSubmitMessage({ type: 'success', message: 'Cliente guardado' })
       }
 
@@ -326,5 +344,3 @@ export function CrearClienteModal({ isOpen, onClose, onSuccess, initialData, mod
     </Modal>
   )
 }
-
-
