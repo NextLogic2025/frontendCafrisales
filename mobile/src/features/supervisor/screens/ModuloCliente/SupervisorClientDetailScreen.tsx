@@ -178,10 +178,14 @@ export function SupervisorClientDetailScreen() {
                             </View>
 
                             {client.telefono ? (
-                                <View className="mt-3 bg-neutral-50 border border-neutral-200 rounded-2xl px-4 py-3">
+                                <TouchableOpacity
+                                    onPress={() => Linking.openURL(`tel:${client.telefono}`)}
+                                    activeOpacity={0.8}
+                                    className="mt-3 bg-neutral-50 border border-neutral-200 rounded-2xl px-4 py-3"
+                                >
                                     <Text className="text-[10px] uppercase text-neutral-400 font-bold">Telefono</Text>
                                     <Text className="text-sm text-neutral-900 mt-1">{client.telefono}</Text>
-                                </View>
+                                </TouchableOpacity>
                             ) : null}
                         </View>
                     </View>

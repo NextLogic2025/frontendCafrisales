@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { Header } from '../../../../components/ui/Header'
+import { SellerHeaderMenu } from '../../../../components/ui/SellerHeaderMenu'
 import { UserService, type UserProfile } from '../../../../services/api/UserService'
 import { signOut } from '../../../../services/auth/authClient'
 import { useToast } from '../../../../context/ToastContext'
@@ -60,7 +61,7 @@ export function SellerProfileScreen() {
 
     return (
         <>
-            <Header title="Perfil Vendedor" variant="standard" showNotification={false} />
+            <Header title="Perfil Vendedor" variant="standard" showNotification={false} rightElement={<SellerHeaderMenu />} />
             <UserProfileTemplate
                 user={profile ? {
                     id: profile.id,

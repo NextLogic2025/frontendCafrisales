@@ -9,6 +9,8 @@ export { CatalogCategoryService } from './CatalogCategoryService'
 export { CatalogProductService } from './CatalogProductService'
 export { CatalogSkuService } from './CatalogSkuService'
 export { CatalogPriceService } from './CatalogPriceService'
+export { OrderService } from './OrderService'
+export { CreditService } from './CreditService'
 export { ClientService } from './ClientService'
 export { InvoiceService } from './InvoiceService'
 export { NotificationService } from './NotificationService'
@@ -50,6 +52,8 @@ export type { CatalogCategory } from './CatalogCategoryService'
 export type { CatalogProduct } from './CatalogProductService'
 export type { CatalogSku } from './CatalogSkuService'
 export type { CatalogSkuPrice as CatalogPrice } from './CatalogPriceService'
+export type { CreateOrderPayload, OrderItemPayload, OrderResponse } from './OrderService'
+export type { ApproveCreditPayload, CreditResponse, CreditListItem } from './CreditService'
 
 export type {
     Client,

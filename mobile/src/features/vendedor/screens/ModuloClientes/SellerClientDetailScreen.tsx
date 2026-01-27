@@ -3,6 +3,7 @@ import { ActivityIndicator, Image, Linking, RefreshControl, ScrollView, Text, To
 import { Ionicons } from '@expo/vector-icons'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { Header } from '../../../../components/ui/Header'
+import { SellerHeaderMenu } from '../../../../components/ui/SellerHeaderMenu'
 import { BRAND_COLORS } from '../../../../shared/types'
 import { UserClient, UserClientService } from '../../../../services/api/UserClientService'
 import { Zone, ZoneService } from '../../../../services/api/ZoneService'
@@ -50,7 +51,7 @@ export function SellerClientDetailScreen() {
   if (loading && !client) {
     return (
       <View className="flex-1 bg-neutral-50">
-        <Header title="Detalle Cliente" variant="standard" onBackPress={() => navigation.goBack()} />
+        <Header title="Detalle Cliente" variant="standard" onBackPress={() => navigation.goBack()} rightElement={<SellerHeaderMenu />} />
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color={BRAND_COLORS.red} />
           <Text className="text-neutral-500 mt-4 text-sm">Cargando informacion...</Text>
@@ -62,7 +63,7 @@ export function SellerClientDetailScreen() {
   if (!client) {
     return (
       <View className="flex-1 bg-neutral-50">
-        <Header title="Detalle Cliente" variant="standard" onBackPress={() => navigation.goBack()} />
+        <Header title="Detalle Cliente" variant="standard" onBackPress={() => navigation.goBack()} rightElement={<SellerHeaderMenu />} />
         <View className="flex-1 items-center justify-center px-6">
           <View className="bg-neutral-100 w-20 h-20 rounded-full items-center justify-center mb-4">
             <Ionicons name="search-outline" size={40} color="#9CA3AF" />
@@ -85,7 +86,7 @@ export function SellerClientDetailScreen() {
 
   return (
     <View className="flex-1 bg-neutral-50">
-      <Header title="Detalle Cliente" variant="standard" onBackPress={() => navigation.goBack()} />
+      <Header title="Detalle Cliente" variant="standard" onBackPress={() => navigation.goBack()} rightElement={<SellerHeaderMenu />} />
 
       <ScrollView
         className="flex-1"
@@ -152,12 +153,16 @@ export function SellerClientDetailScreen() {
                 <Text className="text-sm text-neutral-900 mt-1">{client.direccion}</Text>
               </View>
 
-              {client.telefono ? (
-                <View className="mt-3 bg-neutral-50 border border-neutral-200 rounded-2xl px-4 py-3">
-                  <Text className="text-[10px] uppercase text-neutral-400 font-bold">Telefono</Text>
-                  <Text className="text-sm text-neutral-900 mt-1">{client.telefono}</Text>
-                </View>
-              ) : null}
+            {client.telefono ? (
+              <TouchableOpacity
+                onPress={() => Linking.openURL(`tel:${client.telefono}`)}
+                activeOpacity={0.8}
+                className="mt-3 bg-neutral-50 border border-neutral-200 rounded-2xl px-4 py-3"
+              >
+                <Text className="text-[10px] uppercase text-neutral-400 font-bold">Telefono</Text>
+                <Text className="text-sm text-neutral-900 mt-1">{client.telefono}</Text>
+              </TouchableOpacity>
+            ) : null}
             </View>
           </View>
 

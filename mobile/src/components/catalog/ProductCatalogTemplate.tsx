@@ -19,11 +19,13 @@ type CategoryOption = {
 type Props = {
   title?: string
   onProductPress?: (product: CatalogProduct) => void
+  onQuickAdd?: (product: CatalogProduct) => void
+  headerRightElement?: React.ReactNode
 }
 
 const ALL_CATEGORY_ID = 'todos'
 
-export function ProductCatalogTemplate({ title = 'Productos', onProductPress }: Props) {
+export function ProductCatalogTemplate({ title = 'Productos', onProductPress, onQuickAdd, headerRightElement }: Props) {
   const [products, setProducts] = React.useState<CatalogProduct[]>([])
   const [categories, setCategories] = React.useState<CatalogCategory[]>([])
   const [loading, setLoading] = React.useState(false)
@@ -119,7 +121,7 @@ export function ProductCatalogTemplate({ title = 'Productos', onProductPress }: 
 
   return (
     <View className="flex-1 bg-neutral-50">
-      <Header title={title} variant="standard" />
+      <Header title={title} variant="standard" rightElement={headerRightElement} />
 
       <View className="bg-white px-5 py-4 border-b border-neutral-100">
         <SearchBar
@@ -152,6 +154,7 @@ export function ProductCatalogTemplate({ title = 'Productos', onProductPress }: 
               categoryName={getCategoryName(item)}
               priceLabel={getPriceLabel(item)}
               onPress={onProductPress ? () => onProductPress(item) : () => {}}
+              onQuickAdd={onQuickAdd ? () => onQuickAdd(item) : undefined}
             />
           </View>
         )}

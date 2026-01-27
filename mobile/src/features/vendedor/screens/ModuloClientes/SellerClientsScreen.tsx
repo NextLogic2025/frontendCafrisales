@@ -5,6 +5,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { jwtDecode } from 'jwt-decode'
 import { Header } from '../../../../components/ui/Header'
 import { SearchBar } from '../../../../components/ui/SearchBar'
+import { SellerHeaderMenu } from '../../../../components/ui/SellerHeaderMenu'
 import { BRAND_COLORS } from '../../../../shared/types'
 import { getValidToken } from '../../../../services/auth/authClient'
 import { UserClient, UserClientService } from '../../../../services/api/UserClientService'
@@ -109,7 +110,7 @@ export function SellerClientsScreen() {
 
   return (
     <View className="flex-1 bg-neutral-50">
-      <Header title="Clientes" variant="standard" />
+      <Header title="Clientes" variant="standard" rightElement={<SellerHeaderMenu />} />
 
       <View className="px-5 py-4 bg-white shadow-sm z-10">
         <View className="mb-3">

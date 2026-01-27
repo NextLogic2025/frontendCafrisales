@@ -3,6 +3,7 @@ import { Image, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react
 import { Ionicons } from '@expo/vector-icons'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { Header } from '../../../../components/ui/Header'
+import { SellerHeaderMenu } from '../../../../components/ui/SellerHeaderMenu'
 import { EmptyState } from '../../../../components/ui/EmptyState'
 import { PrimaryButton } from '../../../../components/ui/PrimaryButton'
 import { BRAND_COLORS } from '../../../../shared/types'
@@ -11,7 +12,7 @@ import { SkuPickerModal } from '../../../../components/catalog/SkuPickerModal'
 import { useCart } from '../../../../context/CartContext'
 import { showGlobalToast } from '../../../../utils/toastService'
 
-export function ClientProductDetailScreen() {
+export function SellerProductDetailScreen() {
   const navigation = useNavigation<any>()
   const route = useRoute<any>()
   const productParam: CatalogProduct | undefined = route.params?.product
@@ -79,7 +80,7 @@ export function ClientProductDetailScreen() {
   if (!product && !loading) {
     return (
       <View className="flex-1 bg-neutral-50">
-        <Header title="Detalle del producto" variant="standard" onBackPress={() => navigation.goBack()} />
+        <Header title="Detalle del producto" variant="standard" onBackPress={() => navigation.goBack()} rightElement={<SellerHeaderMenu />} />
         <EmptyState
           icon="search-outline"
           title="Producto no encontrado"
@@ -91,7 +92,7 @@ export function ClientProductDetailScreen() {
 
   return (
     <View className="flex-1 bg-neutral-50">
-      <Header title="Detalle del producto" variant="standard" onBackPress={() => navigation.goBack()} />
+      <Header title="Detalle del producto" variant="standard" onBackPress={() => navigation.goBack()} rightElement={<SellerHeaderMenu />} />
 
       <ScrollView
         className="flex-1"

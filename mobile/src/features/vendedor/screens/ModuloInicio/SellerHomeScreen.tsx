@@ -1,6 +1,7 @@
 ﻿import React from 'react'
 import { View, Text } from 'react-native'
 import { Header } from '../../../../components/ui/Header'
+import { SellerHeaderMenu } from '../../../../components/ui/SellerHeaderMenu'
 import { getUserName } from '../../../../storage/authStorage'
 
 export function SellerHomeScreen() {
@@ -19,6 +20,7 @@ export function SellerHomeScreen() {
                 role="VENDEDOR"
                 variant="home"
                 showNotification={false}
+                rightElement={<SellerHeaderMenu />}
             />
 
             <View className="flex-1 items-center justify-center px-6">
