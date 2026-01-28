@@ -29,6 +29,7 @@ export type OrderResponse = {
     subtotal?: number
     impuesto?: number
     descuento_pedido_valor?: number
+    descuento_pedido_tipo?: 'porcentaje' | 'monto' | 'fijo'
     estado?: string
     cliente_id?: string
     created_at?: string
@@ -98,4 +99,19 @@ export async function cancelOrder(orderId: string, motivo: string): Promise<void
     if (!res.ok) {
         throw new Error('Error al cancelar el pedido')
     }
+}
+
+export async function getOrderById(id: string): Promise<OrderResponse> {
+    const token = await getValidToken()
+    if (!token) throw new Error('No hay sesión activa')
+
+    const res = await fetch(`${ORDERS_API_URL}/pedidos/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    })
+
+    if (!res.ok) {
+        throw new Error('Error al obtener el pedido')
+    }
+
+    return await res.json()
 }

@@ -109,11 +109,20 @@ export function OrderDetailsModal({
                                 detalle.items.map(item => {
                                     const wasAdjusted = item.cantidad_solicitada != null && item.cantidad_solicitada !== item.quantity
                                     const requestedQty = item.cantidad_solicitada ?? item.quantity
+                                    const hasDiscount = !!item.descuento_item_valor
+                                    const isNegotiated = item.origen_precio === 'negociado'
 
                                     return (
                                         <div key={item.id} className="grid gap-4 px-4 py-3 md:grid-cols-3">
                                             <div className="md:col-span-2">
-                                                <p className="text-sm font-semibold text-neutral-900">{item.productName}</p>
+                                                <p className="text-sm font-semibold text-neutral-900 flex items-center gap-2">
+                                                    {item.productName}
+                                                    {isNegotiated && (
+                                                        <span className="bg-blue-100 text-blue-700 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                                                            NEGOCIADO
+                                                        </span>
+                                                    )}
+                                                </p>
                                                 <div className="flex flex-col gap-1 mt-1">
                                                     {wasAdjusted ? (
                                                         <>
@@ -121,7 +130,14 @@ export function OrderDetailsModal({
                                                                 Solicitado: {requestedQty} {item.unit}
                                                             </p>
                                                             <p className="text-xs font-bold text-orange-600">
-                                                                Enviado: {item.quantity} {item.unit} × ${Number(item.precio_unitario_final || item.unitPrice || 0).toFixed(2)}
+                                                                Enviado: {item.quantity} {item.unit} × {hasDiscount ? (
+                                                                    <span className="text-green-600">
+                                                                        ${Number(item.precio_unitario_final || item.unitPrice || 0).toFixed(2)}
+                                                                        <span className="ml-1 text-[10px] bg-green-50 px-1 py-0.5 rounded italic">(-{item.descuento_item_valor}{item.descuento_item_tipo === 'porcentaje' ? '%' : '$'})</span>
+                                                                    </span>
+                                                                ) : (
+                                                                    `$${Number(item.precio_unitario_final || item.unitPrice || 0).toFixed(2)}`
+                                                                )}
                                                             </p>
                                                             {item.motivo_ajuste && (
                                                                 <p className="text-xs text-red-500 italic">
@@ -131,7 +147,14 @@ export function OrderDetailsModal({
                                                         </>
                                                     ) : (
                                                         <p className="text-xs text-neutral-500">
-                                                            {item.quantity} {item.unit} × ${Number(item.precio_unitario_final || item.unitPrice || 0).toFixed(2)}
+                                                            {item.quantity} {item.unit} × {hasDiscount ? (
+                                                                <span className="text-green-600 font-semibold">
+                                                                    ${Number(item.precio_unitario_final || item.unitPrice || 0).toFixed(2)}
+                                                                    <span className="ml-1 text-[10px] bg-green-50 px-1 py-0.5 rounded italic font-normal text-green-700">(-{item.descuento_item_valor}{item.descuento_item_tipo === 'porcentaje' ? '%' : '$'})</span>
+                                                                </span>
+                                                            ) : (
+                                                                `$${Number(item.precio_unitario_final || item.unitPrice || 0).toFixed(2)}`
+                                                            )}
                                                         </p>
                                                     )}
                                                 </div>
@@ -149,6 +172,28 @@ export function OrderDetailsModal({
                                 })
                             )}
                         </div>
+
+                        {/* Summary of discounts */}
+                        {detalle.descuento_pedido_valor && (
+                            <div className="mt-4 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm font-semibold text-green-800">Descuento Global Aplicado</span>
+                                    <span className="bg-green-100 text-green-700 text-[10px] px-2 py-0.5 rounded-full font-bold">
+                                        {detalle.descuento_pedido_tipo === 'porcentaje' ? `${detalle.descuento_pedido_valor}%` : `$${detalle.descuento_pedido_valor}`}
+                                    </span>
+                                </div>
+                                <p className="text-sm font-bold text-green-800">
+                                    Total Descontado: -${Number(detalle.descuento_pedido_tipo === 'porcentaje'
+                                        ? (detalle.items.reduce((sum: number, i: any) => sum + Number(i.subtotal || 0), 0) * (Number(detalle.descuento_pedido_valor) / 100))
+                                        : detalle.descuento_pedido_valor
+                                    ).toFixed(2)}
+                                    {/* Note: The totalAmount in Pedido usually already reflects the discount. 
+                                        If we want to show the 'raw' vs 'discounted', we'd need more logic, 
+                                        but showing the global value is what's requested. 
+                                    */}
+                                </p>
+                            </div>
+                        )}
                     </div>
 
                 </div>

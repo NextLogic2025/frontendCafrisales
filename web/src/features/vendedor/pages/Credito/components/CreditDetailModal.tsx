@@ -6,9 +6,11 @@ interface CreditDetailModalProps {
     onClose: () => void
     detail: CreditDetail | null
     loading: boolean
+    onApprove?: (credit: any) => void
+    onReject?: (id: string) => void
 }
 
-export function CreditDetailModal({ isOpen, onClose, detail, loading }: CreditDetailModalProps) {
+export function CreditDetailModal({ isOpen, onClose, detail, loading, onApprove, onReject }: CreditDetailModalProps) {
     if (!isOpen) return null
 
     return (
@@ -159,13 +161,30 @@ export function CreditDetailModal({ isOpen, onClose, detail, loading }: CreditDe
                     )}
                 </div>
 
-                <div className="p-4 bg-neutral-50 border-t border-neutral-100 flex justify-end">
+                <div className="p-4 bg-neutral-50 border-t border-neutral-100 flex justify-between items-center gap-4">
                     <button
                         onClick={onClose}
                         className="px-6 py-2 rounded-xl bg-white border border-neutral-200 text-sm font-bold text-neutral-600 hover:bg-neutral-100 transition-colors"
                     >
                         Cerrar Detalle
                     </button>
+
+                    {detail?.credito.estado === 'pendiente' && onApprove && onReject && (
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => onReject(detail.credito.id)}
+                                className="px-6 py-2 rounded-xl bg-white border border-red-200 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors"
+                            >
+                                Rechazar
+                            </button>
+                            <button
+                                onClick={() => onApprove(detail.credito)}
+                                className="px-6 py-2 rounded-xl bg-brand-red text-sm font-bold text-white hover:bg-brand-red/90 transition-colors shadow-lg shadow-brand-red/20"
+                            >
+                                Aprobar Crédito
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

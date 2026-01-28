@@ -114,3 +114,23 @@ export async function getCreditDetail(id: string): Promise<CreditDetail> {
 
     return await res.json()
 }
+export async function rejectCredit(id: string, motivo?: string): Promise<boolean> {
+    const token = await getValidToken()
+    if (!token) throw new Error('No hay sesión activa')
+
+    const res = await fetch(`${CREDIT_API_URL}/creditos/${id}/rechazar`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ motivo: motivo || 'Crédito rechazado por vendedor' }),
+    })
+
+    if (!res.ok) {
+        const errorData = await res.json().catch(() => null)
+        throw new Error(errorData?.message || 'Error al rechazar el crédito')
+    }
+
+    return true
+}

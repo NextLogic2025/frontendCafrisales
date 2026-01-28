@@ -2,17 +2,20 @@ import { useState, useEffect } from 'react'
 import { PageHero } from '../../../../components/ui/PageHero'
 import { CreditCard, TrendingUp, AlertCircle, History, Filter, Loader2, Calendar, FileText } from 'lucide-react'
 import { SectionHeader } from '../../../../components/ui/SectionHeader'
-import { getCredits, getCreditDetail, type CreditListItem, type CreditDetail } from '../../services/creditosApi'
+import { getCredits, getCreditDetail, approveCredit, rejectCredit, type CreditListItem, type CreditDetail } from '../../services/creditosApi'
+import { getOrders, getOrderById, cancelOrder } from '../../services/pedidosApi'
 import { CreditDetailModal } from './components/CreditDetailModal'
+import { AprobarCreditoModal } from '../CrearPedido/components/AprobarCreditoModal'
 
-type FilterType = 'TODOS' | 'APROBADO' | 'PENDIENTES' | 'PAGADOS' | 'RECHAZADOS'
+type FilterType = 'TODOS' | 'SOLICITUDES' | 'APROBADO' | 'PENDIENTES' | 'PAGADOS' | 'RECHAZADOS'
 
 const FILTER_MAPPING: Record<FilterType, string[]> = {
     'TODOS': [],
+    'SOLICITUDES': [], // Handled separately
     'APROBADO': ['activo'],
     'PENDIENTES': ['vencido'],
     'PAGADOS': ['pagado'],
-    'RECHAZADOS': ['cancelado']
+    'RECHAZADOS': ['cancelado'],
 }
 
 export default function VendedorCredito() {
@@ -25,12 +28,45 @@ export default function VendedorCredito() {
     const [selectedDetail, setSelectedDetail] = useState<CreditDetail | null>(null)
     const [loadingDetail, setLoadingDetail] = useState(false)
 
-    const handleViewDetail = async (id: string) => {
+    // Aprobación
+    const [isApproveOpen, setIsApproveOpen] = useState(false)
+    const [pendingCredit, setPendingCredit] = useState<CreditListItem | null>(null)
+
+    const handleViewDetail = async (id: string, isRequest: boolean) => {
         setIsDetailOpen(true)
         setLoadingDetail(true)
         try {
-            const data = await getCreditDetail(id)
-            setSelectedDetail(data)
+            if (isRequest) {
+                // Fetch Order Detail and map to CreditDetail
+                const order = await getOrderById(id) // id is orderId here
+                const mockDetail: CreditDetail = {
+                    credito: {
+                        id: order.id, // Use order ID
+                        pedido_id: order.id,
+                        cliente_id: order.cliente_id || '',
+                        aprobado_por_vendedor_id: '',
+                        monto_aprobado: String(order.total || 0),
+                        moneda: 'USD',
+                        plazo_dias: 0,
+                        fecha_aprobacion: '',
+                        fecha_vencimiento: '',
+                        estado: 'pendiente',
+                        notas: null,
+                        total_pagado: '0',
+                        saldo: String(order.total || 0)
+                    },
+                    totales: {
+                        total_aprobado: order.total || 0,
+                        total_pagado: 0,
+                        saldo: order.total || 0
+                    },
+                    pagos: []
+                }
+                setSelectedDetail(mockDetail)
+            } else {
+                const data = await getCreditDetail(id)
+                setSelectedDetail(data)
+            }
         } catch (error) {
             console.error('Error fetching credit detail:', error)
         } finally {
@@ -43,20 +79,97 @@ export default function VendedorCredito() {
         setSelectedDetail(null)
     }
 
-    useEffect(() => {
-        const fetchCredits = async () => {
-            setLoading(true)
-            try {
+    const fetchCredits = async () => {
+        setLoading(true)
+        try {
+            if (filter === 'SOLICITUDES') {
+                const orders = await getOrders()
+                // Filter: Created by 'cliente' (implied?), 'credito', 'pendiente_validacion'
+                // Actually backend returns all Orders. We must filter.
+                const requests = orders.filter(o =>
+                    o.estado === 'pendiente_validacion' &&
+                    // @ts-ignore
+                    o.metodo_pago === 'credito'
+                )
+
+                const mapped: CreditListItem[] = requests.map(r => ({
+                    id: r.id, // Using Order ID as ID
+                    pedido_id: r.id,
+                    cliente_id: r.cliente_id || 'Unknown',
+                    aprobado_por_vendedor_id: '',
+                    monto_aprobado: r.total || 0,
+                    moneda: 'USD',
+                    plazo_dias: 0,
+                    fecha_aprobacion: '',
+                    fecha_vencimiento: r.creado_en || r.created_at || '', // as created date
+                    estado: 'pendiente',
+                    notas: null,
+                    total_pagado: 0,
+                    saldo: r.total || 0
+                }))
+                setCredits(mapped)
+            } else {
                 const data = await getCredits(FILTER_MAPPING[filter])
                 setCredits(data)
-            } catch (error) {
-                console.error('Error fetching credits:', error)
-            } finally {
-                setLoading(false)
             }
+        } catch (error) {
+            console.error('Error fetching credits:', error)
+            setCredits([])
+        } finally {
+            setLoading(false)
         }
+    }
+
+    useEffect(() => {
         fetchCredits()
     }, [filter])
+
+    const handleOpenApprove = (credit: CreditListItem) => {
+        // credit.id is OrderId if from SOLICITUDES
+        setPendingCredit(credit)
+        setIsApproveOpen(true)
+        setIsDetailOpen(false)
+    }
+
+    const handleConfirmApprove = async (plazo: number, notas: string) => {
+        if (!pendingCredit) return
+
+        try {
+            await approveCredit({
+                pedido_id: pendingCredit.pedido_id,
+                cliente_id: pendingCredit.cliente_id,
+                monto_aprobado: Number(pendingCredit.monto_aprobado),
+                plazo_dias: plazo,
+                notas
+            })
+            alert('Crédito aprobado exitosamente')
+            setIsApproveOpen(false)
+            setPendingCredit(null)
+            fetchCredits()
+        } catch (error) {
+            console.error(error)
+            alert('Error al aprobar el crédito')
+        }
+    }
+
+    const handleReject = async (id: string) => {
+        if (!confirm('¿Está seguro de rechazar este crédito?')) return
+
+        try {
+            if (filter === 'SOLICITUDES') {
+                // Rejecting a request => Cancel Order
+                await cancelOrder(id, 'Solicitud de crédito rechazada')
+            } else {
+                await rejectCredit(id)
+            }
+            alert('Crédito rechazado exitosamente')
+            setIsDetailOpen(false)
+            fetchCredits()
+        } catch (error) {
+            console.error(error)
+            alert('Error al rechazar el crédito')
+        }
+    }
 
     const getStatusColor = (estado: string) => {
         switch (estado.toLowerCase()) {
@@ -64,6 +177,8 @@ export default function VendedorCredito() {
             case 'vencido': return 'bg-orange-100 text-orange-700 border-orange-200'
             case 'pagado': return 'bg-blue-100 text-blue-700 border-blue-200'
             case 'cancelado': return 'bg-neutral-100 text-neutral-700 border-neutral-200'
+            case 'pendiente': return 'bg-purple-100 text-purple-700 border-purple-200'
+            case 'pendiente_validacion': return 'bg-purple-100 text-purple-700 border-purple-200'
             default: return 'bg-neutral-100 text-neutral-600 border-neutral-200'
         }
     }
@@ -71,17 +186,20 @@ export default function VendedorCredito() {
     const getStatusLabel = (estado: string) => {
         switch (estado.toLowerCase()) {
             case 'activo': return 'Aprobado'
-            case 'vencido': return 'Pendiente'
+            case 'vencido': return 'Pendiente Pago'
             case 'pagado': return 'Pagado'
             case 'cancelado': return 'Rechazado'
+            case 'pendiente': return 'Solicitud'
+            case 'pendiente_validacion': return 'Solicitud'
             default: return estado
         }
     }
 
-    // Totales calculados
-    const totalCartera = credits.reduce((sum, c) => sum + Number(c.monto_aprobado), 0)
-    const totalSaldo = credits.reduce((sum, c) => sum + Number(c.saldo), 0)
-    const totalPagado = credits.reduce((sum, c) => sum + Number(c.total_pagado), 0)
+    // Totales calculados (excluyendo cancelados/rechazados)
+    const activeCredits = credits.filter(c => c.estado !== 'cancelado' && c.estado !== 'pendiente')
+    const totalCartera = activeCredits.reduce((sum, c) => sum + Number(c.monto_aprobado), 0)
+    const totalSaldo = activeCredits.reduce((sum, c) => sum + Number(c.saldo), 0)
+    const totalPagado = activeCredits.reduce((sum, c) => sum + Number(c.total_pagado), 0)
 
     return (
         <div className="mx-auto max-w-6xl space-y-6">
@@ -139,7 +257,7 @@ export default function VendedorCredito() {
                     <Filter className="h-4 w-4" />
                     <span>Filtrar por estado:</span>
                 </div>
-                {(['TODOS', 'APROBADO', 'PENDIENTES', 'PAGADOS', 'RECHAZADOS'] as FilterType[]).map((t) => (
+                {(['TODOS', 'SOLICITUDES', 'APROBADO', 'PENDIENTES', 'PAGADOS', 'RECHAZADOS'] as FilterType[]).map((t) => (
                     <button
                         key={t}
                         onClick={() => setFilter(t)}
@@ -180,7 +298,9 @@ export default function VendedorCredito() {
                                 <thead className="bg-neutral-50 border-b border-neutral-200 text-xs font-bold uppercase tracking-wider text-neutral-500">
                                     <tr>
                                         <th className="px-6 py-4">ID Pedido</th>
-                                        <th className="px-6 py-4">Fecha Venc.</th>
+                                        <th className="px-6 py-4">
+                                            {filter === 'SOLICITUDES' ? 'Fecha Solicitud' : 'Fecha Venc.'}
+                                        </th>
                                         <th className="px-6 py-4">Monto Aprob.</th>
                                         <th className="px-6 py-4">Saldo</th>
                                         <th className="px-6 py-4">Estado</th>
@@ -201,11 +321,11 @@ export default function VendedorCredito() {
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-2 text-neutral-600">
                                                     <Calendar className="h-4 w-4" />
-                                                    {new Date(credit.fecha_vencimiento).toLocaleDateString('es-EC', {
+                                                    {credit.fecha_vencimiento ? new Date(credit.fecha_vencimiento).toLocaleDateString('es-EC', {
                                                         day: '2-digit',
                                                         month: 'short',
                                                         year: 'numeric'
-                                                    })}
+                                                    }) : '-'}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 font-bold text-neutral-900">
@@ -223,7 +343,7 @@ export default function VendedorCredito() {
                                             </td>
                                             <td className="px-6 py-4 text-center">
                                                 <button
-                                                    onClick={() => handleViewDetail(credit.id)}
+                                                    onClick={() => handleViewDetail(credit.id, filter === 'SOLICITUDES')}
                                                     className="text-neutral-400 hover:text-brand-red transition-colors font-bold text-xs"
                                                 >
                                                     Ver detalle
@@ -243,6 +363,14 @@ export default function VendedorCredito() {
                 onClose={closeDetail}
                 detail={selectedDetail}
                 loading={loadingDetail}
+                onApprove={handleOpenApprove}
+                onReject={handleReject}
+            />
+
+            <AprobarCreditoModal
+                isOpen={isApproveOpen}
+                onClose={() => setIsApproveOpen(false)}
+                onConfirm={handleConfirmApprove}
             />
         </div>
     )

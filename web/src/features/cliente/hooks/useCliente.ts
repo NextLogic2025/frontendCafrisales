@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { Conversacion, Entrega, EstadoPedido, Factura, Notificacion, Pedido, PerfilCliente, Producto, SucursalCliente, Ticket } from '../types'
-import { getMyOrders, cancelOrder } from '../../vendedor/services/pedidosApi'
+import { getMyOrders, cancelOrder, getOrderById } from '../../vendedor/services/pedidosApi'
 
 
 type CrearPedidoDesdeCarritoOptions = any
@@ -46,7 +46,16 @@ export function useCliente() {
   }, [])
 
   const obtenerPedidoPorId = useCallback(async (id: string) => {
-    return null
+    try {
+      setCargando(true)
+      const data = await getOrderById(id)
+      return data as any as Pedido
+    } catch (e) {
+      console.error('Error fetching order by id:', e)
+      throw e
+    } finally {
+      setCargando(false)
+    }
   }, [])
 
   const fetchSucursales = useCallback(async () => {

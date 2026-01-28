@@ -380,7 +380,14 @@ export default function PedidosPage() {
                       <tr key={detalle.id} className="hover:bg-gray-50">
                         <td className="px-4 py-2 text-xs font-mono text-gray-600">{detalle.codigo_sku}</td>
                         <td className="px-4 py-2 text-sm text-gray-900">
-                          {detalle.nombre_producto}
+                          <div className="flex items-center gap-2">
+                            {detalle.nombre_producto}
+                            {detalle.origen_precio === 'negociado' && (
+                              <span className="bg-blue-100 text-blue-700 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                                NEGOCIADO
+                              </span>
+                            )}
+                          </div>
                           {detalle.motivo_descuento && (
                             <p className="text-xs text-green-600">🎁 {detalle.motivo_descuento}</p>
                           )}
@@ -399,7 +406,18 @@ export default function PedidosPage() {
                         <td className="px-4 py-2 text-sm text-right text-gray-900">
                           {Number(detalle.cantidad).toFixed(2)} {detalle.unidad_medida}
                         </td>
-                        <td className="px-4 py-2 text-sm text-right text-gray-900">{formatCurrency(detalle.precio_lista || 0)}</td>
+                        <td className="px-4 py-2 text-sm text-right text-gray-900">
+                          {detalle.descuento_item_valor ? (
+                            <div className="flex flex-col items-end">
+                              <span className="text-xs text-gray-400 line-through">{formatCurrency(detalle.precio_lista || 0)}</span>
+                              <span className="text-[10px] text-green-600 font-medium">
+                                -{detalle.descuento_item_valor}{detalle.descuento_item_tipo === 'porcentaje' ? '%' : '$'}
+                              </span>
+                            </div>
+                          ) : (
+                            formatCurrency(detalle.precio_lista || 0)
+                          )}
+                        </td>
                         <td className="px-4 py-2 text-sm text-right font-semibold text-gray-900">{formatCurrency(detalle.precio_final)}</td>
                         <td className="px-4 py-2 text-sm text-right font-semibold text-gray-900">{formatCurrency(detalle.subtotal_linea)}</td>
                       </tr>
@@ -417,8 +435,15 @@ export default function PedidosPage() {
                   <span className="font-semibold">{formatCurrency(pedidoDetalle.subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Descuentos:</span>
-                  <span className="font-semibold text-green-600">-{formatCurrency(pedidoDetalle.descuento_total || 0)}</span>
+                  <span className="text-gray-600">Descuentos Aplicados:</span>
+                  <span className="font-semibold text-green-600">
+                    {pedidoDetalle.descuento_pedido_valor ? (
+                      <span className="text-[10px] bg-green-50 px-1 py-0.5 rounded border border-green-200 mr-2">
+                        Global: {pedidoDetalle.descuento_pedido_tipo === 'porcentaje' ? `${pedidoDetalle.descuento_pedido_valor}%` : `$${pedidoDetalle.descuento_pedido_valor}`}
+                      </span>
+                    ) : null}
+                    -{formatCurrency(pedidoDetalle.descuento_total || 0)}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Impuestos:</span>

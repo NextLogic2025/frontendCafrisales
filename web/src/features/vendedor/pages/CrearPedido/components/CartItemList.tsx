@@ -6,10 +6,11 @@ import type { CartItem as CartItemType } from '../types'
 interface CartItemListProps {
     cart: CartItemType[]
     onUpdateQuantity: (id: string, quantity: number) => void
+    onUpdateNegotiation?: (id: string, updates: any) => void
     onRemove: (id: string) => void
 }
 
-export function CartItemList({ cart, onUpdateQuantity, onRemove }: CartItemListProps) {
+export function CartItemList({ cart, onUpdateQuantity, onUpdateNegotiation, onRemove }: CartItemListProps) {
     if (cart.length === 0) {
         return (
             <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-6 text-center text-sm text-neutral-600">
@@ -27,6 +28,7 @@ export function CartItemList({ cart, onUpdateQuantity, onRemove }: CartItemListP
                         key={itemId}
                         item={item}
                         onUpdateQuantity={(qty) => onUpdateQuantity(itemId, qty)}
+                        onUpdateNegotiation={(updates) => onUpdateNegotiation?.(itemId, updates)}
                         onRemove={() => onRemove(itemId)}
                     />
                 )
