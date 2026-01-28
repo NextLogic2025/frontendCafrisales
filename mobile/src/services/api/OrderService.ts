@@ -81,6 +81,21 @@ export type OrderListItem = OrderResponse & {
   items?: OrderItemDetail[]
 }
 
+export type OrderValidationItemResult = {
+  item_pedido_id: string
+  estado_resultado: 'aprobado' | 'aprobado_parcial' | 'sustituido' | 'rechazado'
+  sku_aprobado_id?: string
+  cantidad_aprobada?: number
+  motivo: string
+}
+
+export type OrderValidationPayload = {
+  pedido_id?: string
+  bodeguero_id: string
+  observaciones?: string
+  items_resultados: OrderValidationItemResult[]
+}
+
 const ORDER_BASE_URL = env.api.orderUrl
 const ORDER_API_URL = ORDER_BASE_URL.endsWith('/api') ? ORDER_BASE_URL : `${ORDER_BASE_URL}/api`
 
@@ -158,6 +173,26 @@ const rawService = {
       return true
     } catch (error) {
       logErrorForDebugging(error, 'OrderService.updatePaymentMethod', { orderId })
+      return false
+    }
+  },
+
+  async getPendingValidationOrders(limit?: number): Promise<OrderListItem[]> {
+    try {
+      const query = typeof limit === 'number' ? `?limit=${limit}` : ''
+      return await ApiService.get<OrderListItem[]>(`${ORDER_API_URL}/pedidos/pending-validation${query}`)
+    } catch (error) {
+      logErrorForDebugging(error, 'OrderService.getPendingValidationOrders')
+      return []
+    }
+  },
+
+  async validateOrder(orderId: string, payload: OrderValidationPayload): Promise<boolean> {
+    try {
+      await ApiService.post(`${ORDER_API_URL}/pedidos/${orderId}/validar`, payload)
+      return true
+    } catch (error) {
+      logErrorForDebugging(error, 'OrderService.validateOrder', { orderId })
       return false
     }
   },

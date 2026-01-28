@@ -1,5 +1,5 @@
 import React from 'react'
-import { ActivityIndicator, Alert, FlatList, Pressable, RefreshControl, Text, View } from 'react-native'
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, Text, View } from 'react-native'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -7,6 +7,7 @@ import { Header } from '../../../../components/ui/Header'
 import { SupervisorHeaderMenu } from '../../../../components/ui/SupervisorHeaderMenu'
 import { SearchBar } from '../../../../components/ui/SearchBar'
 import { PrimaryButton } from '../../../../components/ui/PrimaryButton'
+import { FeedbackModal } from '../../../../components/ui/FeedbackModal'
 import { BRAND_COLORS } from '../../../../shared/types'
 import { OrderListItem, OrderService } from '../../../../services/api/OrderService'
 import { UserClientService } from '../../../../services/api/UserClientService'
@@ -34,6 +35,8 @@ export function SupervisorPromosScreen() {
   const [clientNameMap, setClientNameMap] = React.useState<Record<string, string>>({})
   const [approvingOrderId, setApprovingOrderId] = React.useState<string | null>(null)
   const [rejectingOrderId, setRejectingOrderId] = React.useState<string | null>(null)
+  const [rejectModalVisible, setRejectModalVisible] = React.useState(false)
+  const [rejectTargetId, setRejectTargetId] = React.useState<string | null>(null)
 
   const loadPromos = React.useCallback(async () => {
     setLoading(true)
@@ -96,28 +99,22 @@ export function SupervisorPromosScreen() {
   }
 
   const handleRejectAll = (orderId: string) => {
-    Alert.alert(
-      'Rechazar promociones',
-      'Esto quitará los descuentos y volverá a precio catálogo. ¿Deseas continuar?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Rechazar',
-          style: 'destructive',
-          onPress: async () => {
-            setRejectingOrderId(orderId)
-            try {
-              const ok = await OrderService.rejectPromotions(orderId, { reject_all: true })
-              if (ok) {
-                await loadPromos()
-              }
-            } finally {
-              setRejectingOrderId(null)
-            }
-          },
-        },
-      ],
-    )
+    setRejectTargetId(orderId)
+    setRejectModalVisible(true)
+  }
+
+  const confirmRejectAll = async () => {
+    if (!rejectTargetId) return
+    setRejectingOrderId(rejectTargetId)
+    try {
+      const ok = await OrderService.rejectPromotions(rejectTargetId, { reject_all: true })
+      if (ok) {
+        await loadPromos()
+      }
+    } finally {
+      setRejectingOrderId(null)
+      setRejectTargetId(null)
+    }
   }
 
   const renderItem = ({ item }: { item: OrderListItem }) => {
@@ -270,6 +267,23 @@ export function SupervisorPromosScreen() {
           }
         />
       )}
+
+      <FeedbackModal
+        visible={rejectModalVisible}
+        type="warning"
+        title="Rechazar promociones"
+        message="Esto quitará los descuentos y volverá a precios catálogo. Se reflejará en el detalle del pedido."
+        confirmText={rejectingOrderId ? 'Rechazando...' : 'Rechazar'}
+        cancelText="Cancelar"
+        showCancel
+        onClose={() => {
+          if (!rejectingOrderId) {
+            setRejectModalVisible(false)
+            setRejectTargetId(null)
+          }
+        }}
+        onConfirm={confirmRejectAll}
+      />
     </View>
   )
 }
