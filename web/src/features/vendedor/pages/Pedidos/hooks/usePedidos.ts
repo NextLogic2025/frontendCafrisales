@@ -55,8 +55,16 @@ export const usePedidos = () => {
                     unitPrice: Number(item.precio_unitario_final || item.precio_unitario_base || 0),
                     subtotal: Number(item.subtotal || 0),
                     cantidad_solicitada: item.cantidad_solicitada,
-                    motivo_ajuste: item.motivo_ajuste
+                    motivo_ajuste: item.motivo_ajuste,
+                    // Negotiation fields
+                    descuento_item_valor: item.descuento_item_valor,
+                    descuento_item_tipo: item.descuento_item_tipo,
+                    origen_precio: item.origen_precio,
+                    precio_unitario_final: item.precio_unitario_final ? Number(item.precio_unitario_final) : undefined
                 })),
+                // Global discounts
+                descuento_pedido_valor: order.descuento_pedido_valor ? Number(order.descuento_pedido_valor) : undefined,
+                descuento_pedido_tipo: order.descuento_pedido_tipo,
                 // @ts-ignore - Extension temporal para filtro
                 creado_por_id: (order as any).creado_por_id || (order as any).created_by_id, // Necesitamos esto del backend
                 origen: (order as any).origen // 'app_cliente' | 'web_vendedor' etc

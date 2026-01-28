@@ -14,6 +14,10 @@ export interface DetallePedido {
     motivo_descuento?: string | null
     cantidad_solicitada?: number | null
     motivo_ajuste?: string | null
+    // Negotiation fields
+    descuento_item_valor?: number
+    descuento_item_tipo?: 'porcentaje' | 'monto' | 'fijo'
+    origen_precio?: 'catalogo' | 'negociado'
 }
 
 export interface Pedido {
@@ -35,6 +39,8 @@ export interface Pedido {
     subtotal: number
     impuestos_total?: number // Mobile: impuesto
     descuento_total?: number // Mobile: descuento_pedido_valor
+    descuento_pedido_tipo?: 'porcentaje' | 'monto' | 'fijo'
+    descuento_pedido_valor?: number
     created_at: string
     condicion_pago?: 'CONTADO' | 'CREDITO' | string // Mobile: metodo_pago
     detalles?: DetallePedido[] // Mobile: items
@@ -100,8 +106,13 @@ function mapMobileToWebPedido(raw: any): Pedido {
             precio_lista: Number(item.precio_unitario_base || 0),
             subtotal_linea: Number(item.subtotal || 0),
             cantidad_solicitada: item.cantidad_solicitada,
-            motivo_ajuste: item.motivo_ajuste
-        }))
+            motivo_ajuste: item.motivo_ajuste,
+            descuento_item_valor: item.descuento_item_valor,
+            descuento_item_tipo: item.descuento_item_tipo,
+            origen_precio: item.origen_precio
+        })),
+        descuento_pedido_tipo: raw.descuento_pedido_tipo,
+        descuento_pedido_valor: raw.descuento_pedido_valor
     }
 }
 

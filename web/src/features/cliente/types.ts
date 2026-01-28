@@ -103,6 +103,9 @@ export interface ItemPedido {
   subtotal: number
   cantidad_solicitada?: number | null
   motivo_ajuste?: string | null
+  descuento_item_valor?: number
+  descuento_item_tipo?: 'porcentaje' | 'monto' | 'fijo'
+  origen_precio?: 'catalogo' | 'negociado'
 }
 
 export interface Pedido {
@@ -116,6 +119,12 @@ export interface Pedido {
   status: EstadoPedido
   estado?: EstadoPedido | string
   items: ItemPedido[]
+  cliente_id?: string
+  zona_id?: string
+  metodo_pago?: string
+  // Global discount
+  descuento_pedido_valor?: number
+  descuento_pedido_tipo?: 'porcentaje' | 'monto' | 'fijo'
 }
 
 export enum TipoNotificacion {

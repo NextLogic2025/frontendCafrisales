@@ -1,4 +1,5 @@
 
+
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Cliente } from '../../../../supervisor/services/clientesApi'
@@ -23,6 +24,10 @@ export const useCrearPedido = () => {
     const [isCreditoModalOpen, setIsCreditoModalOpen] = useState(false)
     const [plazoDias, setPlazoDias] = useState(30)
     const [notasCredito, setNotasCredito] = useState('')
+
+    // Estado para Descuento Global
+    const [descuentoPedidoTipo, setDescuentoPedidoTipo] = useState<'porcentaje' | 'monto' | 'fijo'>('porcentaje')
+    const [descuentoPedidoValor, setDescuentoPedidoValor] = useState<number | undefined>(undefined)
 
     const handlePaymentChange = (value: 'CONTADO' | 'CREDITO') => {
         if (value === 'CREDITO') {
@@ -113,6 +118,21 @@ export const useCrearPedido = () => {
         ))
     }
 
+    const updateItemNegotiation = (
+        itemId: string,
+        updates: Partial<{
+            descuento_item_tipo: 'porcentaje' | 'monto' | 'fijo',
+            descuento_item_valor: number,
+            precio_unitario_final: number
+        }>
+    ) => {
+        setCart(prev => prev.map(item =>
+            getItemId(item) === itemId
+                ? { ...item, ...updates }
+                : item
+        ))
+    }
+
     const removeItem = async (itemId: string) => {
         // Siempre eliminamos del estado local
         setCart(prev => prev.filter(item => getItemId(item) !== itemId))
@@ -123,13 +143,25 @@ export const useCrearPedido = () => {
         setCart([])
         localStorage.removeItem('vendedor_cart')
         localStorage.removeItem('vendedor_cliente_seleccionado')
+        setDescuentoPedidoValor(undefined)
     }
 
     const goBackToProducts = () => {
         navigate('/vendedor/productos')
     }
 
-    const total = cart.reduce((sum, item) => sum + (item.producto.price * item.cantidad), 0)
+    // Calculo de total preliminar (sin descuentos globales ni impuestos precisos del backend)
+    // El backend calcula el total final, pero aquí aproximamos para mostrar en UI
+    const total = cart.reduce((sum, item) => {
+        let price = item.precio_unitario_final ?? item.producto.price
+        // Aplicar descuento item si existe (solo para visualización aproximada)
+        if (item.descuento_item_tipo === 'porcentaje' && item.descuento_item_valor) {
+            price = price * (1 - item.descuento_item_valor / 100)
+        } else if (item.descuento_item_tipo === 'monto' && item.descuento_item_valor) {
+            price = price - item.descuento_item_valor
+        }
+        return sum + (price * item.cantidad)
+    }, 0)
 
     const handleSubmitOrder = async () => {
         if (!clienteSeleccionado) {
@@ -152,12 +184,25 @@ export const useCrearPedido = () => {
                 notas: condicionPagoManual === 'CREDITO'
                     ? `[CREDITO: ${plazoDias} dias] ${notasCredito}`.trim()
                     : undefined,
-                items: cart.map(item => ({
-                    sku_id: (item.producto as any).selectedSkuId || item.producto.id,
-                    cantidad: item.cantidad,
-                    // Fix: Do not send precio_unitario_final if not negotiating, to avoid 400 Bad Request for clients
-                    // The backend will automatically resolve the price from the catalog if omitted
-                }))
+                // Global Discount
+                descuento_pedido_tipo: descuentoPedidoValor ? descuentoPedidoTipo : undefined,
+                descuento_pedido_valor: descuentoPedidoValor,
+
+                items: cart.map(item => {
+                    const hasDiscount = !!(item.descuento_item_tipo && item.descuento_item_valor)
+                    const hasPriceOverride = item.precio_unitario_final !== undefined
+
+                    return {
+                        sku_id: (item.producto as any).selectedSkuId || item.producto.id,
+                        cantidad: item.cantidad,
+                        origen_precio: hasDiscount && hasPriceOverride ? 'negociado' : (hasDiscount || hasPriceOverride ? 'negociado' : 'catalogo'),
+                        // Send discount fields only if present
+                        descuento_item_tipo: item.descuento_item_tipo,
+                        descuento_item_valor: item.descuento_item_valor,
+                        precio_unitario_final: item.precio_unitario_final,
+                        requiere_aprobacion: hasDiscount || hasPriceOverride || (descuentoPedidoValor ? true : false) // Simple logic, backend decides based on rules? No user said backend flags. We can set true if negotiation exists.
+                    }
+                })
             }
 
             const pedido = await createOrder(payload)
@@ -168,7 +213,7 @@ export const useCrearPedido = () => {
                     await approveCredit({
                         pedido_id: pedido.id,
                         cliente_id: clienteSeleccionado,
-                        monto_aprobado: total,
+                        monto_aprobado: pedido.total || total, // Use returned total if available
                         plazo_dias: plazoDias,
                         notas: notasCredito
                     })
@@ -189,6 +234,7 @@ export const useCrearPedido = () => {
             setCart([])
             localStorage.removeItem('vendedor_cart')
             localStorage.removeItem('vendedor_cliente_seleccionado')
+            setDescuentoPedidoValor(undefined)
 
             // Mostrar mensaje de éxito
             alert(`¡Pedido creado exitosamente! ID: ${pedido.id}`)
@@ -247,11 +293,16 @@ export const useCrearPedido = () => {
         plazoDias,
         notasCredito,
         updateQuantity,
+        updateItemNegotiation,
         removeItem,
         clearCart,
         goBackToProducts,
         handleSubmitOrder,
         total,
         totalItems,
+        descuentoPedidoTipo,
+        setDescuentoPedidoTipo,
+        descuentoPedidoValor,
+        setDescuentoPedidoValor,
     }
 }

@@ -35,6 +35,11 @@ export default function VendedorCrearPedido() {
     handleConfirmCredito,
     plazoDias,
     notasCredito,
+    updateItemNegotiation,
+    descuentoPedidoTipo,
+    setDescuentoPedidoTipo,
+    descuentoPedidoValor,
+    setDescuentoPedidoValor,
   } = useCrearPedido()
 
   return (
@@ -88,6 +93,7 @@ export default function VendedorCrearPedido() {
           <CartItemList
             cart={cart}
             onUpdateQuantity={updateQuantity}
+            onUpdateNegotiation={updateItemNegotiation}
             onRemove={removeItem}
           />
 
@@ -102,6 +108,10 @@ export default function VendedorCrearPedido() {
               onSubmit={handleSubmitOrder}
               isSubmitting={isSubmitting}
               isCartEmpty={cart.length === 0}
+              descuentoPedidoTipo={descuentoPedidoTipo}
+              setDescuentoPedidoTipo={setDescuentoPedidoTipo}
+              descuentoPedidoValor={descuentoPedidoValor}
+              setDescuentoPedidoValor={setDescuentoPedidoValor}
             />
           )}
         </div>

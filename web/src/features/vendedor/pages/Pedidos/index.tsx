@@ -289,7 +289,14 @@ export default function VendedorPedidos() {
                       <tr key={item.id}>
                         <td className="px-3 py-2">
                           <div>
-                            <p className="font-medium text-neutral-900">{item.productName}</p>
+                            <p className="font-medium text-neutral-900 flex items-center gap-2">
+                              {item.productName}
+                              {item.origen_precio === 'negociado' && (
+                                <span className="bg-blue-100 text-blue-700 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                                  NEGOCIADO
+                                </span>
+                              )}
+                            </p>
                             {item.cantidad_solicitada != null && item.cantidad_solicitada !== item.quantity && (
                               <div className="mt-1 flex flex-col gap-0.5">
                                 <p className="text-xs text-neutral-500 line-through">
@@ -307,15 +314,47 @@ export default function VendedorPedidos() {
                           {item.quantity}
                           <span className="text-xs text-neutral-400 block">{item.unit}</span>
                         </td>
-                        <td className="px-3 py-2 text-right align-top">${item.unitPrice.toFixed(2)}</td>
-                        <td className="px-3 py-2 text-right font-medium align-top">${item.subtotal.toFixed(2)}</td>
+                        <td className="px-3 py-2 text-right align-top">
+                          {item.descuento_item_valor ? (
+                            <div className="flex flex-col items-end">
+                              <span className="text-xs text-neutral-400 line-through">${Number(item.unitPrice).toFixed(2)}</span>
+                              <span className="text-sm font-semibold text-neutral-900">${Number(item.precio_unitario_final || item.unitPrice).toFixed(2)}</span>
+                              <span className="text-[10px] text-green-600 font-medium">
+                                -{item.descuento_item_valor}{item.descuento_item_tipo === 'porcentaje' ? '%' : '$'}
+                              </span>
+                            </div>
+                          ) : (
+                            <span>${Number(item.unitPrice).toFixed(2)}</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2 text-right font-medium align-top">${Number(item.subtotal).toFixed(2)}</td>
                       </tr>
                     ))}
                   </tbody>
-                  <tfoot className="bg-neutral-50 font-bold">
+                  <tfoot className="bg-neutral-50 text-sm">
                     <tr>
-                      <td colSpan={3} className="px-3 py-2 text-right">Total</td>
-                      <td className="px-3 py-2 text-right">${selectedPedido.totalAmount.toFixed(2)}</td>
+                      <td colSpan={3} className="px-3 py-2 text-right text-neutral-600">Subtotal</td>
+                      <td className="px-3 py-2 text-right text-neutral-600">
+                        {/* Calculate simplistic subtotal from items sum to show correct flow */}
+                        ${selectedPedido.items.reduce((sum, item) => sum + item.subtotal, 0).toFixed(2)}
+                      </td>
+                    </tr>
+                    {selectedPedido.descuento_pedido_valor && (
+                      <tr>
+                        <td colSpan={3} className="px-3 py-2 text-right text-green-600 font-medium">
+                          Descuento Global ({selectedPedido.descuento_pedido_tipo === 'porcentaje' ? `${selectedPedido.descuento_pedido_valor}%` : `$${selectedPedido.descuento_pedido_valor}`})
+                        </td>
+                        <td className="px-3 py-2 text-right text-green-600 font-medium">
+                          -${Number(selectedPedido.descuento_pedido_tipo === 'porcentaje'
+                            ? (selectedPedido.items.reduce((sum, i) => sum + Number(i.subtotal), 0) * (Number(selectedPedido.descuento_pedido_valor) / 100))
+                            : selectedPedido.descuento_pedido_valor
+                          ).toFixed(2)}
+                        </td>
+                      </tr>
+                    )}
+                    <tr className="border-t border-neutral-200 font-bold text-neutral-900 bg-neutral-100">
+                      <td colSpan={3} className="px-3 py-2 text-right">Total Final</td>
+                      <td className="px-3 py-2 text-right">${Number(selectedPedido.totalAmount).toFixed(2)}</td>
                     </tr>
                   </tfoot>
                 </table>
