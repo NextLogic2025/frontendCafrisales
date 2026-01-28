@@ -250,6 +250,33 @@ export function SellerCreditRequestDetailScreen() {
                     <Text className="text-xs text-neutral-500">Subtotal</Text>
                     <Text className="text-xs text-neutral-700">{formatMoney(item.subtotal)}</Text>
                   </View>
+                  {item.descuento_item_tipo && item.descuento_item_valor != null ? (
+                    <View className="mt-2 rounded-xl border border-red-100 bg-red-50 p-2">
+                      <View className="flex-row justify-between">
+                        <Text className="text-[11px] text-neutral-500">Precio base</Text>
+                        <Text className="text-[11px] text-neutral-700">{formatMoney(item.precio_unitario_base ?? 0)}</Text>
+                      </View>
+                      <View className="flex-row justify-between mt-1">
+                        <Text className="text-[11px] text-neutral-500">Descuento</Text>
+                        <Text className="text-[11px] text-amber-700">
+                          {item.descuento_item_tipo === 'porcentaje'
+                            ? `${item.descuento_item_valor}%`
+                            : `-${formatMoney(item.descuento_item_valor)}`}
+                        </Text>
+                      </View>
+                      <View className="flex-row justify-between mt-1">
+                        <Text className="text-[11px] text-neutral-500">Precio final</Text>
+                        <Text className="text-[11px] text-neutral-900 font-semibold">{formatMoney(item.precio_unitario_final ?? 0)}</Text>
+                      </View>
+                      <View className="flex-row justify-between mt-1">
+                        <Text className="text-[11px] text-neutral-500">Origen</Text>
+                        <Text className="text-[11px] text-neutral-700">
+                          {item.precio_origen === 'negociado' ? 'Negociado' : 'Catalogo'}
+                          {item.requiere_aprobacion ? ' · Requiere aprobacion' : ''}
+                        </Text>
+                      </View>
+                    </View>
+                  ) : null}
                 </View>
               )
             })

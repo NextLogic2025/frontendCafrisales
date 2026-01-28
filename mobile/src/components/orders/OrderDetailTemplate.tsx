@@ -73,6 +73,41 @@ const getOrderTotal = (pedido?: OrderResponse, items: OrderItemDetail[] = []) =>
   }, 0)
 }
 
+const getOrderSubtotal = (pedido?: OrderResponse, items: OrderItemDetail[] = []) => {
+  const subtotal = Number(pedido?.subtotal)
+  if (Number.isFinite(subtotal) && subtotal > 0) return subtotal
+  return items.reduce((sum, item) => {
+    const line = Number(item?.subtotal)
+    if (Number.isFinite(line) && line > 0) return sum + line
+    const unit = Number(item?.precio_unitario_final)
+    const qty = Number(item?.cantidad_solicitada)
+    if (Number.isFinite(unit) && Number.isFinite(qty)) return sum + unit * qty
+    return sum
+  }, 0)
+}
+
+const getOrderDiscountAmount = (pedido?: OrderResponse, items: OrderItemDetail[] = []) => {
+  const tipo = pedido?.descuento_pedido_tipo
+  const valor = Number(pedido?.descuento_pedido_valor)
+  if (!tipo || !Number.isFinite(valor) || valor <= 0) return 0
+  const subtotal = getOrderSubtotal(pedido, items)
+  if (!Number.isFinite(subtotal) || subtotal <= 0) return 0
+  if (tipo === 'porcentaje') {
+    return Number(((subtotal * valor) / 100).toFixed(2))
+  }
+  return Number(Math.min(subtotal, valor).toFixed(2))
+}
+
+const formatOrderDiscountLabel = (pedido?: OrderResponse) => {
+  const tipo = pedido?.descuento_pedido_tipo
+  const valor = Number(pedido?.descuento_pedido_valor)
+  if (!tipo || !Number.isFinite(valor) || valor <= 0) return null
+  if (tipo === 'porcentaje') {
+    return `${valor}%`
+  }
+  return `-${formatMoney(valor)}`
+}
+
 const formatDiscountLabel = (item: OrderItemDetail) => {
   if (!item.descuento_item_tipo || item.descuento_item_valor == null) return null
   if (item.descuento_item_tipo === 'porcentaje') {
@@ -104,6 +139,8 @@ export function OrderDetailTemplate({
   const estado = pedido?.estado || 'pendiente_validacion'
   const estadoColor = statusColor(estado)
   const total = getOrderTotal(pedido, items)
+  const orderDiscountAmount = getOrderDiscountAmount(pedido, items)
+  const orderDiscountLabel = formatOrderDiscountLabel(pedido)
 
   return (
     <View className="gap-4">
@@ -150,6 +187,16 @@ export function OrderDetailTemplate({
             <Text className="text-xs text-neutral-700">{formatMoney(pedido?.impuesto ?? 0)}</Text>
           </View>
         </View>
+
+        {orderDiscountAmount > 0 ? (
+          <View className="mt-2 flex-row justify-between">
+            <View>
+              <Text className="text-xs text-neutral-500">Descuento pedido</Text>
+              <Text className="text-xs text-amber-700">{orderDiscountLabel}</Text>
+            </View>
+            <Text className="text-xs text-amber-700">-{formatMoney(orderDiscountAmount)}</Text>
+          </View>
+        ) : null}
       </View>
 
       {showClient ? (

@@ -39,6 +39,10 @@ function getUserFriendlyApiMessage(status: number, backendMessage?: string): str
         }
 
         // Errores de crédito
+        if (msg.includes('no se encontro credito') || msg.includes('no se encontró crédito')) {
+            return 'No hay crédito aprobado para este pedido.'
+        }
+
         if (msg.includes('crédito') || msg.includes('credito') || msg.includes('credit') || msg.includes('límite')) {
             return 'Tu límite de crédito es insuficiente para realizar esta compra.'
         }

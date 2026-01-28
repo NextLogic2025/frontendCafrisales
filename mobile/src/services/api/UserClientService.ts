@@ -4,6 +4,7 @@ import { jwtDecode } from 'jwt-decode'
 import { ApiService } from './ApiService'
 import { createService } from './createService'
 import { logErrorForDebugging } from '../../utils/errorMessages'
+import { isApiError } from './ApiError'
 
 export type ClientStatusFilter = 'activo' | 'inactivo' | 'todos'
 
@@ -81,6 +82,9 @@ const rawService = {
       const client = await ApiService.get<UserClient>(`${USERS_API_URL}/clientes/${usuarioId}`)
       return normalizeClient(client)
     } catch (error) {
+      if (isApiError(error) && error.status === 403) {
+        return await rawService.getClientForVendedor(usuarioId)
+      }
       logErrorForDebugging(error, 'UserClientService.getClient', { usuarioId })
       return null
     }
