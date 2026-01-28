@@ -55,6 +55,21 @@ export function ValidationModal({ pedido, onClose, onSuccess }: ValidationModalP
         setResults(prev => new Map(prev).set(res.item_pedido_id, res))
     }
 
+    // Derived validation state
+    const itemsArray = Array.from(results.values())
+    const totalDetalles = pedido?.detalles?.length || 0
+    const missingItems = itemsArray.length !== totalDetalles
+    const missingReasons = itemsArray.some(i => i.estado_resultado !== EstadoItemResultado.APROBADO && !i.motivo.trim())
+    const missingSku = itemsArray.some(i => i.estado_resultado === EstadoItemResultado.SUSTITUIDO && !i.sku_aprobado_id)
+    const isFormValid = !missingItems && !missingReasons && !missingSku
+
+    const counts = itemsArray.reduce(
+        (acc, cur) => {
+            acc[cur.estado_resultado] = (acc[cur.estado_resultado] || 0) + 1
+            return acc
+        }, {} as Record<string, number>
+    )
+
     const handleSubmit = async () => {
         if (!pedido) return
         try {
@@ -105,7 +120,7 @@ export function ValidationModal({ pedido, onClose, onSuccess }: ValidationModalP
             title={`Validar Pedido #${pedido?.codigo_visual || ''}`}
             onClose={onClose}
             headerGradient="red"
-            maxWidth="3xl"
+                maxWidth="2xl"
         >
             <div className="space-y-6">
                 {error && <Alert type="error" message={error} />}
@@ -116,6 +131,20 @@ export function ValidationModal({ pedido, onClose, onSuccess }: ValidationModalP
                     </div>
                 ) : (
                     <>
+                        {/* Summary */}
+                        <div className="flex items-center gap-4">
+                            <div className="flex-1 text-sm text-gray-700">
+                                <strong>Ítems:</strong> {totalDetalles}
+                                {missingItems && <span className="ml-2 text-xs text-red-600">Faltan {totalDetalles - itemsArray.length} ítems por validar</span>}
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded">Aprobado {counts[EstadoItemResultado.APROBADO] ?? 0}</span>
+                                <span className="text-xs bg-yellow-50 text-yellow-700 px-2 py-1 rounded">Parcial {counts[EstadoItemResultado.APROBADO_PARCIAL] ?? 0}</span>
+                                <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">Sustituido {counts[EstadoItemResultado.SUSTITUIDO] ?? 0}</span>
+                                <span className="text-xs bg-red-50 text-red-700 px-2 py-1 rounded">Rechazado {counts[EstadoItemResultado.RECHAZADO] ?? 0}</span>
+                            </div>
+                        </div>
+
                         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
                             <div className="flex">
                                 <div className="ml-3">
@@ -127,7 +156,8 @@ export function ValidationModal({ pedido, onClose, onSuccess }: ValidationModalP
                         </div>
 
                         <div className="border border-gray-200 rounded-lg overflow-hidden">
-                            <table className="w-full">
+                            <div className="w-full max-h-[48vh] overflow-auto">
+                                <table className="w-full">
                                 <thead className="bg-gray-50 border-b border-gray-200">
                                     <tr>
                                         <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700 w-1/3">Producto Solicitado</th>
@@ -144,7 +174,8 @@ export function ValidationModal({ pedido, onClose, onSuccess }: ValidationModalP
                                         />
                                     ))}
                                 </tbody>
-                            </table>
+                                </table>
+                            </div>
                         </div>
 
                         <div className="space-y-2">
@@ -158,7 +189,7 @@ export function ValidationModal({ pedido, onClose, onSuccess }: ValidationModalP
                             />
                         </div>
 
-                        <div className="flex justify-end gap-3 border-t border-gray-200 pt-4">
+                        <div className="flex justify-end gap-3 border-t border-gray-200 pt-4 sticky bottom-0 bg-white">
                             <button
                                 onClick={onClose}
                                 disabled={isSubmitting}
@@ -168,7 +199,7 @@ export function ValidationModal({ pedido, onClose, onSuccess }: ValidationModalP
                             </button>
                             <button
                                 onClick={handleSubmit}
-                                disabled={isSubmitting}
+                                disabled={isSubmitting || !isFormValid}
                                 className="px-4 py-2 bg-brand-red text-white text-sm font-medium rounded-lg hover:bg-brand-red/90 transition-colors disabled:opacity-50 flex items-center gap-2"
                             >
                                 {isSubmitting && <LoadingSpinner className="w-4 h-4 text-white" />}
@@ -181,3 +212,4 @@ export function ValidationModal({ pedido, onClose, onSuccess }: ValidationModalP
         </Modal>
     )
 }
+
