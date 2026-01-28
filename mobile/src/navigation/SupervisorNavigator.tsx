@@ -33,6 +33,12 @@ import { SupervisorCreditDetailScreen } from '../features/supervisor/screens/Mod
 import { SupervisorOrdersScreen } from '../features/supervisor/screens/ModuloPedidos/SupervisorOrdersScreen'
 import { SupervisorOrderDetailScreen } from '../features/supervisor/screens/ModuloPedidos/SupervisorOrderDetailScreen'
 import { SupervisorPromosScreen } from '../features/supervisor/screens/ModuloPromociones/SupervisorPromosScreen'
+import { SupervisorVehiclesScreen } from '../features/supervisor/screens/ModuloVehiculos/SupervisorVehiclesScreen'
+import { SupervisorVehicleDetailScreen } from '../features/supervisor/screens/ModuloVehiculos/SupervisorVehicleDetailScreen'
+import { SupervisorVehicleFormScreen } from '../features/supervisor/screens/ModuloVehiculos/SupervisorVehicleFormScreen'
+import { SupervisorRoutesScreen } from '../features/supervisor/screens/ModuloRutero/SupervisorRoutesScreen'
+import { SupervisorRouteDetailScreen } from '../features/supervisor/screens/ModuloRutero/SupervisorRouteDetailScreen'
+import { SupervisorRouteFormScreen } from '../features/supervisor/screens/ModuloRutero/SupervisorRouteFormScreen'
 
 const Tab = createBottomTabNavigator()
 const Stack = createNativeStackNavigator()
@@ -81,6 +87,12 @@ export function SupervisorNavigator() {
             <Stack.Screen name="SupervisorPedidos" component={SupervisorOrdersScreen} />
             <Stack.Screen name="SupervisorPedidoDetalle" component={SupervisorOrderDetailScreen} />
             <Stack.Screen name="SupervisorPromociones" component={SupervisorPromosScreen} />
+            <Stack.Screen name="SupervisorVehiculos" component={SupervisorVehiclesScreen} />
+            <Stack.Screen name="SupervisorVehiculoDetalle" component={SupervisorVehicleDetailScreen} />
+            <Stack.Screen name="SupervisorVehiculoForm" component={SupervisorVehicleFormScreen} />
+            <Stack.Screen name="SupervisorRuteros" component={SupervisorRoutesScreen} />
+            <Stack.Screen name="SupervisorRuteroDetalle" component={SupervisorRouteDetailScreen} />
+            <Stack.Screen name="SupervisorRuteroForm" component={SupervisorRouteFormScreen} />
         </Stack.Navigator>
     )
 }

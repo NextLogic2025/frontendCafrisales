@@ -254,6 +254,20 @@ const rawService = {
     }
   },
 
+  async getOrdersByZoneDate(params: { zona_id: string; fecha_entrega: string; estado?: string; limit?: number }): Promise<OrderListItem[]> {
+    try {
+      const search = new URLSearchParams()
+      search.set('zona_id', params.zona_id)
+      search.set('fecha_entrega', params.fecha_entrega)
+      if (params.estado) search.set('estado', params.estado)
+      if (typeof params.limit === 'number') search.set('limit', String(params.limit))
+      return await ApiService.get<OrderListItem[]>(`${ORDER_API_URL}/pedidos/zona?${search.toString()}`)
+    } catch (error) {
+      logErrorForDebugging(error, 'OrderService.getOrdersByZoneDate')
+      return []
+    }
+  },
+
   async approvePromotions(orderId: string, payload: { approve_all?: boolean; item_ids?: string[] }): Promise<boolean> {
     try {
       await ApiService.patch(`${ORDER_API_URL}/pedidos/${orderId}/aprobar-promociones`, payload)

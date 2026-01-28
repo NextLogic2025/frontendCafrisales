@@ -1,13 +1,15 @@
 import React from 'react'
-import { ActivityIndicator, ScrollView, Text, View, Pressable } from 'react-native'
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native'
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native'
 import { jwtDecode } from 'jwt-decode'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Header } from '../../../../components/ui/Header'
+import { GenericModal } from '../../../../components/ui/GenericModal'
 import { TextField } from '../../../../components/ui/TextField'
 import { PrimaryButton } from '../../../../components/ui/PrimaryButton'
 import { showGlobalToast } from '../../../../utils/toastService'
 import { BRAND_COLORS } from '../../../../shared/types'
+import { CatalogSku, CatalogSkuService } from '../../../../services/api/CatalogSkuService'
 import { OrderDetail, OrderItemDetail, OrderService } from '../../../../services/api/OrderService'
 import { getValidToken } from '../../../../services/auth/authClient'
 
@@ -22,6 +24,8 @@ type ItemValidationState = {
   estado: EstadoResultado
   cantidadAprobada: string
   skuAprobadoId: string
+  skuAprobadoNombre?: string
+  skuAprobadoCodigo?: string
   motivo: string
 }
 
@@ -87,6 +91,11 @@ export function WarehouseValidateOrderScreen() {
   const [submitting, setSubmitting] = React.useState(false)
   const [bodegueroId, setBodegueroId] = React.useState<string | null>(null)
   const [filter, setFilter] = React.useState<'todos' | EstadoResultado>('todos')
+  const [skuModalOpen, setSkuModalOpen] = React.useState(false)
+  const [skuSearch, setSkuSearch] = React.useState('')
+  const [skuOptions, setSkuOptions] = React.useState<CatalogSku[]>([])
+  const [skuLoading, setSkuLoading] = React.useState(false)
+  const [skuTargetItemId, setSkuTargetItemId] = React.useState<string | null>(null)
   const pedidoEstado = orderDetail?.pedido?.estado || 'pendiente_validacion'
   const canValidate = pedidoEstado === 'pendiente_validacion'
   const totalItems = orderDetail?.items?.length || 0
@@ -153,6 +162,7 @@ export function WarehouseValidateOrderScreen() {
       updateItem(item.itemId, {
         estado,
         cantidadAprobada: String(qty),
+        skuAprobadoId: item.skuAprobadoId || '',
         motivo: defaultMotivoForEstado(estado),
       })
       return
@@ -239,6 +249,37 @@ export function WarehouseValidateOrderScreen() {
     }
     return true
   }
+
+  const openSkuPicker = async (itemId: string) => {
+    setSkuTargetItemId(itemId)
+    setSkuModalOpen(true)
+    if (skuOptions.length > 0 || skuLoading) return
+    setSkuLoading(true)
+    try {
+      const data = await CatalogSkuService.getSkus()
+      setSkuOptions(data)
+    } finally {
+      setSkuLoading(false)
+    }
+  }
+
+  const selectSkuForItem = (sku: CatalogSku) => {
+    if (!skuTargetItemId) return
+    updateItem(skuTargetItemId, {
+      skuAprobadoId: sku.id,
+      skuAprobadoNombre: sku.nombre,
+      skuAprobadoCodigo: sku.codigo_sku,
+    })
+  }
+
+  const filteredSkus = skuOptions.filter((sku) => {
+    if (!skuSearch.trim()) return true
+    const query = skuSearch.trim().toLowerCase()
+    return (
+      sku.nombre?.toLowerCase().includes(query) ||
+      sku.codigo_sku?.toLowerCase().includes(query)
+    )
+  })
 
   const submitValidation = async () => {
     if (!orderId) return
@@ -445,12 +486,22 @@ export function WarehouseValidateOrderScreen() {
 
                 {item.estado === 'sustituido' ? (
                   <View className="mt-3">
-                    <TextField
-                      label="SKU aprobado"
-                      value={item.skuAprobadoId}
-                      onChangeText={(value) => updateItem(item.itemId, { skuAprobadoId: value })}
-                      placeholder="UUID del SKU aprobado"
-                    />
+                    <Pressable
+                      onPress={() => openSkuPicker(item.itemId)}
+                      className="border border-neutral-200 rounded-2xl px-4 py-3 bg-neutral-50"
+                    >
+                      <Text className="text-xs text-neutral-500 font-semibold">SKU aprobado</Text>
+                      <Text className="text-sm text-neutral-900 mt-1">
+                        {item.skuAprobadoNombre
+                          ? `${item.skuAprobadoNombre} (${item.skuAprobadoCodigo || 'SIN-CODIGO'})`
+                          : 'Seleccionar SKU de sustitucion'}
+                      </Text>
+                      {item.skuAprobadoId ? (
+                        <Text className="text-[11px] text-neutral-500 mt-1">
+                          {item.skuAprobadoId}
+                        </Text>
+                      ) : null}
+                    </Pressable>
                   </View>
                 ) : null}
 
@@ -485,6 +536,63 @@ export function WarehouseValidateOrderScreen() {
         </ScrollView>
       )}
 
+      <GenericModal
+        visible={skuModalOpen}
+        title="Seleccionar SKU de sustitucion"
+        onClose={() => {
+          setSkuModalOpen(false)
+          setSkuSearch('')
+          setSkuTargetItemId(null)
+        }}
+      >
+        <View>
+          <TextField
+            label="Buscar SKU"
+            value={skuSearch}
+            onChangeText={setSkuSearch}
+            placeholder="Nombre o codigo"
+          />
+
+          {skuLoading ? (
+            <View className="items-center justify-center py-6">
+              <ActivityIndicator size="small" color={BRAND_COLORS.red} />
+              <Text className="text-xs text-neutral-500 mt-2">Cargando SKUs...</Text>
+            </View>
+          ) : (
+            <ScrollView className="mt-4" contentContainerStyle={{ gap: 10 }}>
+              {filteredSkus.map((sku) => {
+                const isSelected = sku.id === items.find((it) => it.itemId === skuTargetItemId)?.skuAprobadoId
+                return (
+                  <Pressable
+                    key={sku.id}
+                    onPress={() => selectSkuForItem(sku)}
+                    className={`rounded-2xl border px-4 py-3 ${isSelected ? 'border-brand-red bg-red-50' : 'border-neutral-200 bg-white'}`}
+                  >
+                    <Text className="text-sm font-semibold text-neutral-900">{sku.nombre}</Text>
+                    <Text className="text-xs text-neutral-500 mt-1">{sku.codigo_sku}</Text>
+                  </Pressable>
+                )
+              })}
+              {!filteredSkus.length ? (
+                <View className="py-6 items-center">
+                  <Text className="text-xs text-neutral-500">No hay SKUs para mostrar</Text>
+                </View>
+              ) : null}
+            </ScrollView>
+          )}
+
+          <View className="mt-5">
+            <PrimaryButton
+              title="Listo"
+              onPress={() => {
+                setSkuModalOpen(false)
+                setSkuSearch('')
+                setSkuTargetItemId(null)
+              }}
+            />
+          </View>
+        </View>
+      </GenericModal>
     </View>
   )
 }

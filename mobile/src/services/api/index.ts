@@ -14,6 +14,7 @@ export { CreditService } from './CreditService'
 export { ClientService } from './ClientService'
 export { InvoiceService } from './InvoiceService'
 export { NotificationService } from './NotificationService'
+export { DeliveryService } from './DeliveryService'
 export { OrderService } from './OrderService'
 export { PriceService } from './PriceService'
 export { ProductService } from './ProductService'
@@ -65,6 +66,7 @@ export type {
 export type { Invoice } from './InvoiceService'
 
 export type { Notification } from './NotificationService'
+export type { Delivery, DeliveryStatus } from './DeliveryService'
 
 export type {
     OrderStatus,
