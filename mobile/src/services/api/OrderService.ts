@@ -81,6 +81,35 @@ export type OrderListItem = OrderResponse & {
   items?: OrderItemDetail[]
 }
 
+export type OrderValidationItem = {
+  id?: string
+  item_pedido_id?: string
+  estado_resultado?: 'aprobado' | 'aprobado_parcial' | 'sustituido' | 'rechazado'
+  sku_aprobado_id?: string | null
+  sku_aprobado_nombre_snapshot?: string | null
+  sku_aprobado_codigo_snapshot?: string | null
+  cantidad_aprobada?: number | null
+  motivo?: string | null
+}
+
+export type OrderValidation = {
+  id: string
+  pedido_id: string
+  numero_version?: number
+  validado_por_id?: string
+  validado_en?: string
+  requiere_aceptacion_cliente?: boolean
+  items?: OrderValidationItem[]
+}
+
+export type OrderAdjustmentPayload = {
+  pedido_id: string
+  validacion_id: string
+  cliente_id: string
+  accion: 'acepta' | 'rechaza'
+  comentario?: string
+}
+
 export type OrderValidationItemResult = {
   item_pedido_id: string
   estado_resultado: 'aprobado' | 'aprobado_parcial' | 'sustituido' | 'rechazado'
@@ -193,6 +222,25 @@ const rawService = {
       return true
     } catch (error) {
       logErrorForDebugging(error, 'OrderService.validateOrder', { orderId })
+      return false
+    }
+  },
+
+  async getOrderValidations(orderId: string): Promise<OrderValidation[]> {
+    try {
+      return await ApiService.get<OrderValidation[]>(`${ORDER_API_URL}/validations/order/${orderId}`)
+    } catch (error) {
+      logErrorForDebugging(error, 'OrderService.getOrderValidations', { orderId })
+      return []
+    }
+  },
+
+  async respondToAdjustment(orderId: string, payload: OrderAdjustmentPayload): Promise<boolean> {
+    try {
+      await ApiService.post(`${ORDER_API_URL}/pedidos/${orderId}/responder-ajuste`, payload)
+      return true
+    } catch (error) {
+      logErrorForDebugging(error, 'OrderService.respondToAdjustment', { orderId })
       return false
     }
   },

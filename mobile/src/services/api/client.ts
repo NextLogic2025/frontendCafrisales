@@ -132,11 +132,13 @@ export async function apiRequest<T>(endpoint: string, options: ApiRequestOptions
 
             const userMessage = getUserFriendlyApiMessage(response.status, backendMessage)
 
-            logErrorForDebugging(
-                new Error(`API ${response.status}`),
-                'apiRequest.error',
-                { endpoint, status: response.status, backendMessage }
-            )
+            if (!options.silent) {
+                logErrorForDebugging(
+                    new Error(`API ${response.status}`),
+                    'apiRequest.error',
+                    { endpoint, status: response.status, backendMessage }
+                )
+            }
 
             throw new ApiError(userMessage, response.status, errorPayload ?? errorText)
         }

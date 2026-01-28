@@ -3,15 +3,10 @@ import { Pressable, Text, View } from 'react-native'
 import { BRAND_COLORS } from '../../shared/types'
 import { OrderDetail, OrderHistoryItem, OrderItemDetail, OrderResponse } from '../../services/api/OrderService'
 
-const currencyFormatter = new Intl.NumberFormat('es-EC', {
-  style: 'currency',
-  currency: 'USD',
-  minimumFractionDigits: 2,
-})
-
 const formatMoney = (value?: number | string | null) => {
   const amount = Number(value)
-  return currencyFormatter.format(Number.isFinite(amount) ? amount : 0)
+  const safe = Number.isFinite(amount) ? amount : 0
+  return `$${safe.toFixed(2)}`
 }
 
 const formatDate = (value?: string) => {

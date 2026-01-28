@@ -6,7 +6,6 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { Header } from '../../../../components/ui/Header'
 import { TextField } from '../../../../components/ui/TextField'
 import { PrimaryButton } from '../../../../components/ui/PrimaryButton'
-import { FeedbackModal } from '../../../../components/ui/FeedbackModal'
 import { showGlobalToast } from '../../../../utils/toastService'
 import { BRAND_COLORS } from '../../../../shared/types'
 import { OrderDetail, OrderItemDetail, OrderService } from '../../../../services/api/OrderService'
@@ -87,8 +86,7 @@ export function WarehouseValidateOrderScreen() {
   const [loading, setLoading] = React.useState(false)
   const [submitting, setSubmitting] = React.useState(false)
   const [bodegueroId, setBodegueroId] = React.useState<string | null>(null)
-  const [debugVisible, setDebugVisible] = React.useState(false)
-  const [debugPayload, setDebugPayload] = React.useState('')
+  const [filter, setFilter] = React.useState<'todos' | EstadoResultado>('todos')
   const pedidoEstado = orderDetail?.pedido?.estado || 'pendiente_validacion'
   const canValidate = pedidoEstado === 'pendiente_validacion'
   const totalItems = orderDetail?.items?.length || 0
@@ -260,12 +258,10 @@ export function WarehouseValidateOrderScreen() {
           motivo: item.motivo.trim(),
         })),
       }
-      setDebugPayload(JSON.stringify(payload, null, 2))
-      setDebugVisible(true)
       const ok = await OrderService.validateOrder(orderId, payload)
       if (ok) {
         showGlobalToast('Validación registrada', 'success')
-        navigation.navigate('Pedidos')
+        navigation.navigate('WarehouseTabs', { screen: 'Pedidos' })
       } else {
         showGlobalToast('No se pudo validar el pedido', 'error')
       }
@@ -284,6 +280,8 @@ export function WarehouseValidateOrderScreen() {
     }
     return false
   })
+
+  const visibleItems = filter === 'todos' ? items : items.filter((item) => item.estado === filter)
 
   return (
     <View className="flex-1 bg-neutral-50">
@@ -310,6 +308,21 @@ export function WarehouseValidateOrderScreen() {
             </Text>
           </LinearGradient>
 
+          <View className="flex-row items-center justify-between mt-4">
+            <View className="flex-row items-center">
+              <View className="h-6 w-6 rounded-full bg-brand-red/10 items-center justify-center mr-2">
+                <Text className="text-[11px] font-bold text-brand-red">1</Text>
+              </View>
+              <Text className="text-xs text-neutral-600">Selecciona resultado por ítem</Text>
+            </View>
+            <View className="flex-row items-center">
+              <View className="h-6 w-6 rounded-full bg-brand-red/10 items-center justify-center mr-2">
+                <Text className="text-[11px] font-bold text-brand-red">2</Text>
+              </View>
+              <Text className="text-xs text-neutral-600">Confirmar validación</Text>
+            </View>
+          </View>
+
           {!canValidate ? (
             <View className="mt-4 bg-red-50 border border-red-200 rounded-2xl p-3">
               <Text className="text-xs text-red-700">
@@ -329,13 +342,42 @@ export function WarehouseValidateOrderScreen() {
           {requiresCliente ? (
             <View className="mt-4 bg-amber-50 border border-amber-200 rounded-2xl p-3">
               <Text className="text-xs text-amber-800">
-                Hay ajustes en el pedido. El cliente deberá aceptar los cambios.
+                Hay ajustes en el pedido. Se notificará al cliente para aceptar o rechazar.
               </Text>
             </View>
           ) : null}
 
-          <View className="mt-6 space-y-4">
-            {items.map((item) => (
+          <View className="mt-6">
+            <View className="flex-row flex-wrap gap-2 mb-4">
+              {(['todos', 'aprobado', 'aprobado_parcial', 'sustituido', 'rechazado'] as const).map((estado) => {
+                const isActive = filter === estado
+                return (
+                  <Pressable
+                    key={estado}
+                    onPress={() => setFilter(estado as 'todos' | EstadoResultado)}
+                    className={`px-3 py-1.5 rounded-full border ${
+                      isActive ? 'bg-brand-red/10 border-brand-red' : 'border-neutral-200'
+                    }`}
+                  >
+                    <Text className={`text-xs font-semibold ${isActive ? 'text-brand-red' : 'text-neutral-600'}`}>
+                      {estado === 'todos'
+                        ? 'Todos'
+                        : estado === 'aprobado'
+                        ? 'Aprobados'
+                        : estado === 'aprobado_parcial'
+                        ? 'Parciales'
+                        : estado === 'sustituido'
+                        ? 'Sustituidos'
+                        : 'Rechazados'}
+                    </Text>
+                  </Pressable>
+                )
+              })}
+            </View>
+          </View>
+
+          <View className="space-y-4">
+            {visibleItems.map((item) => (
               <View key={item.itemId} className="bg-white rounded-3xl border border-neutral-100 p-4 shadow-sm">
                 <View className="flex-row items-start justify-between">
                   <View className="flex-1 pr-2">
@@ -443,18 +485,6 @@ export function WarehouseValidateOrderScreen() {
         </ScrollView>
       )}
 
-      <FeedbackModal
-        visible={debugVisible}
-        type="info"
-        title="Debug payload"
-        message="Copia este payload para revisar el error 400."
-        confirmText="Cerrar"
-        onClose={() => setDebugVisible(false)}
-      >
-        <View className="w-full bg-neutral-900 rounded-xl p-3">
-          <Text className="text-[11px] text-neutral-100">{debugPayload}</Text>
-        </View>
-      </FeedbackModal>
     </View>
   )
 }

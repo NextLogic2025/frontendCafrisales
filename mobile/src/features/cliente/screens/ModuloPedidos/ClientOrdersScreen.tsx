@@ -8,13 +8,17 @@ import { CategoryFilter } from '../../../../components/ui/CategoryFilter'
 import { BRAND_COLORS } from '../../../../shared/types'
 import { OrderListCard } from '../../../../components/orders/OrderListCard'
 import { OrderListItem, OrderService } from '../../../../services/api/OrderService'
+import { FloatingIconButton } from '../../../../components/ui/FloatingIconButton'
 
-type StatusTab = 'pendientes' | 'en_ruta' | 'entregados' | 'cancelados'
+type StatusTab = 'pendientes' | 'validados' | 'en_ruta' | 'entregados' | 'cancelados'
 
 const orderMatchesStatus = (order: OrderListItem, tab: StatusTab) => {
   const estado = order.estado || 'pendiente_validacion'
   if (tab === 'pendientes') {
     return ['pendiente_validacion', 'ajustado_bodega', 'aceptado_cliente', 'validado'].includes(estado)
+  }
+  if (tab === 'validados') {
+    return estado === 'validado'
   }
   if (tab === 'en_ruta') {
     return ['asignado_ruta', 'en_ruta'].includes(estado)
@@ -64,6 +68,7 @@ export function ClientOrdersScreen() {
       <CategoryFilter
         categories={[
           { id: 'pendientes', name: 'Pendientes' },
+          { id: 'validados', name: 'Validados' },
           { id: 'en_ruta', name: 'En ruta' },
           { id: 'entregados', name: 'Entregados' },
           { id: 'cancelados', name: 'Cancelados' },
@@ -105,6 +110,12 @@ export function ClientOrdersScreen() {
           }
         />
       )}
+
+      <FloatingIconButton
+        icon="alert-circle-outline"
+        accessibilityLabel="Ajustes de pedido"
+        onPress={() => navigation.navigate('ClienteAjustesPedido')}
+      />
     </View>
   )
 }

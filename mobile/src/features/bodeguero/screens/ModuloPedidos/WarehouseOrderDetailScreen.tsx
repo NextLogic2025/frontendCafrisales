@@ -16,6 +16,8 @@ export function WarehouseOrderDetailScreen() {
   const [orderDetail, setOrderDetail] = React.useState<OrderDetail | null>(null)
   const [clientLabel, setClientLabel] = React.useState<string>('')
   const [loading, setLoading] = React.useState(false)
+  const estado = orderDetail?.pedido?.estado || 'pendiente_validacion'
+  const canValidate = estado === 'pendiente_validacion'
 
   const loadDetail = React.useCallback(async () => {
     if (!orderId) return
@@ -50,11 +52,18 @@ export function WarehouseOrderDetailScreen() {
       ) : (
         <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 120 }}>
           <OrderDetailTemplate orderDetail={orderDetail} clientLabel={clientLabel} />
+          {!canValidate ? (
+            <View className="mt-4 bg-red-50 border border-red-200 rounded-2xl p-3">
+              <Text className="text-xs text-red-700">
+                Este pedido ya no está pendiente de validación.
+              </Text>
+            </View>
+          ) : null}
           <View className="mt-6">
             <PrimaryButton
               title="Validar pedido"
               onPress={() => navigation.navigate('WarehouseValidarPedido', { orderId })}
-              disabled={!orderDetail}
+              disabled={!orderDetail || !canValidate}
             />
           </View>
         </ScrollView>
