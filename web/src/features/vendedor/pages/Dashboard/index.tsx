@@ -3,7 +3,7 @@ import { AlertCircle, TrendingUp, Users, Package, Calendar } from 'lucide-react'
 
 export default function VendedorDashboard() {
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="space-y-6 w-full">
       <PageHero
         title="Panel de Vendedor"
         subtitle="Gestiona tu cartera de clientes y ventas"

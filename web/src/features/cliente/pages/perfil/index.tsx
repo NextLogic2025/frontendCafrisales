@@ -32,7 +32,7 @@ export default function PerfilCliente() {
   if (loading && !profile) return <LoadingSpinner text="Cargando perfil..." />
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="space-y-6 w-full">
       <PageHero
         title="Mi Perfil"
         subtitle="Administra tu información personal y de contacto"
