@@ -90,6 +90,17 @@ export enum EstadoPedido {
   IN_TRANSIT = 'IN_TRANSIT',
   DELIVERED = 'DELIVERED',
   CANCELLED = 'CANCELLED',
+  // Backend statuses
+  PENDIENTE = 'pendiente',
+  PENDIENTE_VALIDACION = 'pendiente_validacion',
+  VALIDADO = 'validado',
+  AJUSTADO_BODEGA = 'ajustado_bodega',
+  ACEPTADO_CLIENTE = 'aceptado_cliente',
+  RECHAZADO_CLIENTE = 'rechazado_cliente',
+  EN_PREPARACION = 'en_preparacion',
+  EN_RUTA = 'en_ruta',
+  ENTREGADO = 'entregado',
+  CANCELADO = 'cancelado',
 }
 
 export interface ItemPedido {
@@ -125,6 +136,30 @@ export interface Pedido {
   // Global discount
   descuento_pedido_valor?: number
   descuento_pedido_tipo?: 'porcentaje' | 'monto' | 'fijo'
+  validaciones?: ValidacionBodega[]
+}
+
+export interface ValidacionBodega {
+  id: string
+  pedido_id: string
+  bodeguero_id: string
+  items: ItemValidacion[]
+  observaciones?: string
+  estado_validacion?: string
+  requiere_aceptacion_cliente: boolean
+  creado_en: string
+}
+
+export interface ItemValidacion {
+  id: string
+  validacion_id: string
+  item_pedido_id: string
+  estado_resultado: 'aprobado' | 'aprobado_parcial' | 'sustituido' | 'rechazado'
+  sku_aprobado_id?: string
+  sku_aprobado_nombre_snapshot?: string
+  sku_aprobado_codigo_snapshot?: string
+  cantidad_aprobada?: number
+  motivo: string
 }
 
 export enum TipoNotificacion {

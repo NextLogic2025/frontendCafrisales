@@ -1,7 +1,7 @@
-
 import { useState, useEffect } from 'react'
-import { X } from 'lucide-react'
+import { X, AlertTriangle } from 'lucide-react'
 import { EstadoPedido, Pedido, COLORES_MARCA } from '../../../types'
+import { respondToAdjustment } from '../../../../vendedor/services/pedidosApi'
 import { formatEstadoPedido, getEstadoPedidoColor } from 'utils/statusHelpers'
 
 interface OrderDetailsModalProps {
@@ -53,15 +53,43 @@ export function OrderDetailsModal({
         }
     }, [pedido, fetchDetallePedido])
 
-    const puedeCancelar = detalle.status === EstadoPedido.PENDING || String(detalle.status).toUpperCase() === 'PENDIENTE'
+    const [responding, setResponding] = useState(false)
+
+    // Get latest validation
+    const latestValidation = detalle.validaciones?.sort((a, b) =>
+        new Date(b.creado_en).getTime() - new Date(a.creado_en).getTime()
+    )[0]
+
+    const isAjustado = detalle.status === EstadoPedido.AJUSTADO_BODEGA || detalle.estado === EstadoPedido.AJUSTADO_BODEGA
+
+    const handleResponse = async (accion: 'acepta' | 'rechaza') => {
+        if (!latestValidation) return
+        try {
+            setResponding(true)
+            await respondToAdjustment(detalle.id, latestValidation.id, accion)
+            onClose()
+            // Should verify if we need to refresh the list? 
+            // The list will likely auto-refresh or user will pull.
+            // Ideally call some callback but onClose is void.
+            // We'll rely on global refresh or user action.
+            window.dispatchEvent(new CustomEvent('pedidoCreado', { detail: { message: accion === 'acepta' ? 'Pedido confirmado' : 'Pedido rechazado' } }))
+        } catch (e: any) {
+            console.error(e)
+            alert(e.message || 'Error al responder')
+        } finally {
+            setResponding(false)
+        }
+    }
+
+    const puedeCancelar = (detalle.status === EstadoPedido.PENDING || String(detalle.status).toUpperCase() === 'PENDIENTE') && !isAjustado
     const estadoColor = getEstadoPedidoColor(detalle.status)
     const formattedDate = new Date(detalle.creado_en || detalle.createdAt || Date.now()).toLocaleDateString('es-ES')
     const totalLineas = detalle.items.reduce((acc: number, item: any) => acc + (item.cantidad || item.quantity || 0), 0)
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-            <div className="max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-3xl bg-white shadow-2xl">
-                <div className="flex items-start justify-between border-b border-neutral-200 px-8 py-6">
+            <div className="max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-3xl bg-white shadow-2xl flex flex-col">
+                <div className="flex items-start justify-between border-b border-neutral-200 px-8 py-6 flex-shrink-0">
                     <div>
                         <p className="text-sm font-semibold text-neutral-500">Detalles del Pedido</p>
                         <h2 className="text-2xl font-bold text-neutral-900">#{detalle.numero_pedido || detalle.orderNumber}</h2>
@@ -77,7 +105,22 @@ export function OrderDetailsModal({
                     </button>
                 </div>
 
-                <div className="space-y-8 px-8 py-6 overflow-y-auto">
+                <div className="space-y-8 px-8 py-6 overflow-y-auto flex-grow">
+                    {/* Adjustment Banner */}
+                    {isAjustado && (
+                        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 flex items-start gap-3">
+                            <div className="bg-orange-100 p-2 rounded-full text-orange-600">
+                                <AlertTriangle className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h4 className="font-semibold text-orange-800">Se realizaron ajustes en bodega</h4>
+                                <p className="text-sm text-orange-700 mt-1">
+                                    Algunos productos han sido modificados por disponibilidad. Por favor revisa los cambios marcados y confirma si aceptas el pedido actualizado o prefieres rechazarlo.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="grid gap-4 md:grid-cols-3">
                         <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3">
                             <p className="text-xs uppercase tracking-wide text-neutral-500">Fecha</p>
@@ -113,7 +156,7 @@ export function OrderDetailsModal({
                                     const isNegotiated = item.origen_precio === 'negociado'
 
                                     return (
-                                        <div key={item.id} className="grid gap-4 px-4 py-3 md:grid-cols-3">
+                                        <div key={item.id} className={`grid gap-4 px-4 py-3 md:grid-cols-3 ${wasAdjusted ? 'bg-orange-50/50' : ''}`}>
                                             <div className="md:col-span-2">
                                                 <p className="text-sm font-semibold text-neutral-900 flex items-center gap-2">
                                                     {item.productName}
@@ -187,10 +230,6 @@ export function OrderDetailsModal({
                                         ? (detalle.items.reduce((sum: number, i: any) => sum + Number(i.subtotal || 0), 0) * (Number(detalle.descuento_pedido_valor) / 100))
                                         : detalle.descuento_pedido_valor
                                     ).toFixed(2)}
-                                    {/* Note: The totalAmount in Pedido usually already reflects the discount. 
-                                        If we want to show the 'raw' vs 'discounted', we'd need more logic, 
-                                        but showing the global value is what's requested. 
-                                    */}
                                 </p>
                             </div>
                         )}
@@ -198,14 +237,32 @@ export function OrderDetailsModal({
 
                 </div>
 
-                <div className="flex flex-col gap-3 border-t border-neutral-200 px-8 py-6 md:flex-row">
+                <div className="flex flex-col gap-3 border-t border-neutral-200 px-8 py-6 md:flex-row flex-shrink-0">
                     <button
                         onClick={onClose}
-                        className="flex-1 rounded-xl border border-neutral-300 px-4 py-3 text-center text-sm font-semibold text-neutral-900 transition-colors hover:bg-neutral-50"
+                        disabled={responding}
+                        className="flex-1 rounded-xl border border-neutral-300 px-4 py-3 text-center text-sm font-semibold text-neutral-900 transition-colors hover:bg-neutral-50 disabled:opacity-50"
                     >
                         Cerrar
                     </button>
-                    {puedeCancelar && (
+                    {isAjustado && latestValidation ? (
+                        <>
+                            <button
+                                onClick={() => handleResponse('rechaza')}
+                                disabled={responding}
+                                className="flex-1 rounded-xl px-4 py-3 text-center text-sm font-semibold text-white transition-colors bg-red-600 hover:bg-red-700 disabled:opacity-50"
+                            >
+                                {responding ? 'Procesando...' : 'Rechazar Cambio'}
+                            </button>
+                            <button
+                                onClick={() => handleResponse('acepta')}
+                                disabled={responding}
+                                className="flex-1 rounded-xl px-4 py-3 text-center text-sm font-semibold text-white transition-colors bg-green-600 hover:bg-green-700 disabled:opacity-50"
+                            >
+                                {responding ? 'Procesando...' : 'Aceptar Cambio'}
+                            </button>
+                        </>
+                    ) : puedeCancelar && (
                         <button
                             onClick={onCancel}
                             className="flex-1 rounded-xl px-4 py-3 text-center text-sm font-semibold text-white transition-colors"

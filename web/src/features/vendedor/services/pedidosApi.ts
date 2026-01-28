@@ -169,3 +169,48 @@ export async function approvePromotions(
         throw new Error(errorData?.message || 'Error al aprobar promociones')
     }
 }
+
+export async function respondToAdjustment(
+    orderId: string,
+    validationId: string,
+    action: 'acepta' | 'rechaza',
+    comment?: string
+): Promise<void> {
+    const token = await getValidToken()
+    if (!token) throw new Error('No hay sesión activa')
+
+    const res = await fetch(`${ORDERS_API_URL}/pedidos/${orderId}/responder-ajuste`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+            pedido_id: orderId,
+            validacion_id: validationId,
+            accion: action,
+            comentario: comment,
+            cliente_id: (await parseJwt(token))?.sub // We need client ID, usually in token. But backend service checks if dto.cliente_id === clienteId from token.
+            // Wait, ActionsService checks dto.cliente_id.
+            // I should decode token here or hope backend extracts it from token?
+            // ActionsService: if (dto.cliente_id !== clienteId) throw Forbidden.
+            // So we MUST send it.
+        }),
+    })
+
+    if (!res.ok) {
+        const errorData = await res.json().catch(() => null)
+        throw new Error(errorData?.message || 'Error al responder al ajuste')
+    }
+}
+
+// Helper to minimal parse
+function parseJwt(token: string) {
+    var base64Url = token.split('.')[1];
+    var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+
+    return JSON.parse(jsonPayload);
+}

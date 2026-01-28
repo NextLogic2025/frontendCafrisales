@@ -76,24 +76,9 @@ export default function DashboardPage() {
               onClick={() => window.location.href = '/bodeguero/inventario'}
             />
             <QuickActionButton
-              label="Gestionar Lotes"
-              icon={<RefreshCw className="h-4 w-4" />}
-              onClick={() => window.location.href = '/bodeguero/lotes'}
-            />
-            <QuickActionButton
-              label="Preparar Pedidos"
-              icon={<ListChecks className="h-4 w-4" />}
-              onClick={() => window.location.href = '/bodeguero/pedidos'}
-            />
-            <QuickActionButton
               label="Nueva Recepción"
               icon={<Boxes className="h-4 w-4" />}
               onClick={() => window.location.href = '/bodeguero/recepciones'}
-            />
-            <QuickActionButton
-              label="Ver Reservas"
-              icon={<Archive className="h-4 w-4" />}
-              onClick={() => window.location.href = '/bodeguero/reservas'}
             />
           </div>
         </SectionCard>
