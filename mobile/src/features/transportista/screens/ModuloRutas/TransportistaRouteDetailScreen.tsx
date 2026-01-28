@@ -1,10 +1,11 @@
 import React from 'react'
-import { ActivityIndicator, ScrollView, Text, View } from 'react-native'
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native'
 import MapView, { Marker, Polygon, PROVIDER_GOOGLE } from 'react-native-maps'
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Header } from '../../../../components/ui/Header'
 import { PrimaryButton } from '../../../../components/ui/PrimaryButton'
+import { GenericModal } from '../../../../components/ui/GenericModal'
 import { BRAND_COLORS } from '../../../../shared/types'
 import { RouteService, LogisticRoute } from '../../../../services/api/RouteService'
 import { OrderService } from '../../../../services/api/OrderService'
@@ -19,6 +20,8 @@ type StopMarker = {
   longitude: number
   label: string
   orden: number
+  orderNumber?: string
+  address?: string
 }
 
 const FALLBACK_REGION = {
@@ -37,6 +40,8 @@ export function TransportistaRouteDetailScreen() {
   const [rutero, setRutero] = React.useState<LogisticRoute | null>(null)
   const [zonePolygon, setZonePolygon] = React.useState<MapPoint[] | null>(null)
   const [markers, setMarkers] = React.useState<StopMarker[]>([])
+  const [activeStopId, setActiveStopId] = React.useState<string | null>(null)
+  const [showMapModal, setShowMapModal] = React.useState(false)
   const [updating, setUpdating] = React.useState(false)
   const mapRef = React.useRef<MapView | null>(null)
 
@@ -80,6 +85,7 @@ export function TransportistaRouteDetailScreen() {
         rutero.paradas.map(async (stop) => {
           try {
             const detail = await OrderService.getOrderDetail(stop.pedido_id)
+            const orderNumber = detail?.pedido?.numero_pedido
             const clienteId = detail?.pedido?.cliente_id
             if (!clienteId) return null
             const client = await UserClientService.getClient(clienteId)
@@ -90,6 +96,8 @@ export function TransportistaRouteDetailScreen() {
               longitude: Number(client.longitud),
               label: client.nombre_comercial || stop.pedido_id.slice(0, 8),
               orden: stop.orden_entrega,
+              orderNumber,
+              address: client.direccion || '',
             }
           } catch {
             return null
@@ -112,6 +120,21 @@ export function TransportistaRouteDetailScreen() {
     if (!coords.length || !mapRef.current) return
     mapRef.current.fitToCoordinates(coords, { edgePadding: { top: 50, right: 50, bottom: 50, left: 50 }, animated: true })
   }, [zonePolygon, markers])
+
+  React.useEffect(() => {
+    if (!activeStopId || !mapRef.current) return
+    const marker = markers.find((item) => item.id === activeStopId)
+    if (!marker) return
+    mapRef.current.animateToRegion(
+      {
+        latitude: marker.latitude,
+        longitude: marker.longitude,
+        latitudeDelta: 0.02,
+        longitudeDelta: 0.02,
+      },
+      400,
+    )
+  }, [activeStopId, markers])
 
   const handleStart = async () => {
     if (!ruteroId) return
@@ -179,7 +202,12 @@ export function TransportistaRouteDetailScreen() {
           </LinearGradient>
 
           <View className="bg-white rounded-2xl border border-neutral-100 p-4 shadow-sm mt-4">
-            <Text className="text-sm font-semibold text-neutral-700">Mapa de ruta</Text>
+            <View className="flex-row items-center justify-between">
+              <Text className="text-sm font-semibold text-neutral-700">Mapa de ruta</Text>
+              <Pressable onPress={() => setShowMapModal(true)} className="px-3 py-1 rounded-full bg-red-50">
+                <Text className="text-xs font-semibold text-brand-red">Ampliar</Text>
+              </Pressable>
+            </View>
             <View
               className="mt-3 rounded-2xl overflow-hidden border border-neutral-200"
               style={{ height: 220 }}
@@ -208,7 +236,21 @@ export function TransportistaRouteDetailScreen() {
                     coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
                     title={`#${marker.orden} ${marker.label}`}
                     pinColor={BRAND_COLORS.red}
-                  />
+                  >
+                    <View className="items-center">
+                      <View className="w-7 h-7 rounded-full items-center justify-center border border-white" style={{ backgroundColor: BRAND_COLORS.red }}>
+                        <Text className="text-[11px] text-white font-bold">{marker.orden}</Text>
+                      </View>
+                      <View className="mt-1 px-2 py-0.5 rounded-full bg-white border border-neutral-200">
+                        <Text className="text-[10px] text-neutral-700">{marker.label}</Text>
+                      </View>
+                      {marker.address ? (
+                        <View className="mt-1 px-2 py-0.5 rounded-full bg-white border border-neutral-200">
+                          <Text className="text-[9px] text-neutral-500">{marker.address}</Text>
+                        </View>
+                      ) : null}
+                    </View>
+                  </Marker>
                 ))}
               </MapView>
             </View>
@@ -224,11 +266,27 @@ export function TransportistaRouteDetailScreen() {
             {rutero?.paradas?.length ? (
               <View className="mt-3 gap-3">
                 {rutero.paradas.map((stop) => (
-                  <View key={stop.pedido_id} className="rounded-2xl border border-neutral-200 p-3">
+                  <Pressable
+                    key={stop.pedido_id}
+                    onPress={() => setActiveStopId(stop.pedido_id)}
+                    className={`rounded-2xl border p-3 ${activeStopId === stop.pedido_id ? 'border-brand-red bg-red-50' : 'border-neutral-200 bg-white'}`}
+                  >
                     <Text className="text-xs text-neutral-500">Pedido</Text>
-                    <Text className="text-sm font-semibold text-neutral-900">{stop.pedido_id}</Text>
+                    <Text className="text-sm font-semibold text-neutral-900">
+                      {markers.find((m) => m.id === stop.pedido_id)?.orderNumber || `#${stop.pedido_id.slice(0, 8)}`}
+                    </Text>
+                    {markers.find((m) => m.id === stop.pedido_id)?.label ? (
+                      <Text className="text-xs text-neutral-500 mt-1">
+                        Cliente: {markers.find((m) => m.id === stop.pedido_id)?.label}
+                      </Text>
+                    ) : null}
+                    {markers.find((m) => m.id === stop.pedido_id)?.address ? (
+                      <Text className="text-xs text-neutral-500 mt-1">
+                        Direccion: {markers.find((m) => m.id === stop.pedido_id)?.address}
+                      </Text>
+                    ) : null}
                     <Text className="text-[11px] text-neutral-500 mt-1">Orden #{stop.orden_entrega}</Text>
-                  </View>
+                  </Pressable>
                 ))}
               </View>
             ) : (
@@ -246,6 +304,56 @@ export function TransportistaRouteDetailScreen() {
           </View>
         </ScrollView>
       )}
+
+      <GenericModal
+        visible={showMapModal}
+        title="Mapa de ruta"
+        onClose={() => setShowMapModal(false)}
+      >
+        <View className="rounded-2xl overflow-hidden border border-neutral-200" style={{ height: 360 }}>
+          <MapView
+            ref={(ref) => (mapRef.current = ref)}
+            provider={PROVIDER_GOOGLE}
+            style={{ flex: 1 }}
+            initialRegion={FALLBACK_REGION}
+            scrollEnabled
+            zoomEnabled
+            pitchEnabled={false}
+            rotateEnabled={false}
+          >
+            {zonePolygon && (
+              <Polygon
+                coordinates={zonePolygon}
+                strokeColor={BRAND_COLORS.red}
+                fillColor={`${BRAND_COLORS.red}22`}
+                strokeWidth={2}
+              />
+            )}
+            {markers.map((marker) => (
+              <Marker
+                key={marker.id}
+                coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
+                title={`#${marker.orden} ${marker.label}`}
+                pinColor={BRAND_COLORS.red}
+              >
+                <View className="items-center">
+                  <View className="w-7 h-7 rounded-full items-center justify-center border border-white" style={{ backgroundColor: BRAND_COLORS.red }}>
+                    <Text className="text-[11px] text-white font-bold">{marker.orden}</Text>
+                  </View>
+                  <View className="mt-1 px-2 py-0.5 rounded-full bg-white border border-neutral-200">
+                    <Text className="text-[10px] text-neutral-700">{marker.label}</Text>
+                  </View>
+                  {marker.address ? (
+                    <View className="mt-1 px-2 py-0.5 rounded-full bg-white border border-neutral-200">
+                      <Text className="text-[9px] text-neutral-500">{marker.address}</Text>
+                    </View>
+                  ) : null}
+                </View>
+              </Marker>
+            ))}
+          </MapView>
+        </View>
+      </GenericModal>
     </View>
   )
 }

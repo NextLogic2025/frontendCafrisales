@@ -8,7 +8,9 @@ import { SupervisorHeaderMenu } from '../../../../components/ui/SupervisorHeader
 import { PrimaryButton } from '../../../../components/ui/PrimaryButton'
 import { BRAND_COLORS } from '../../../../shared/types'
 import { RouteService, LogisticRoute } from '../../../../services/api/RouteService'
+import { OrderResponse, OrderService } from '../../../../services/api/OrderService'
 import { UserProfile, UserService } from '../../../../services/api/UserService'
+import { UserClientService } from '../../../../services/api/UserClientService'
 import { showGlobalToast } from '../../../../utils/toastService'
 import { Zone, ZoneService } from '../../../../services/api/ZoneService'
 import { MiniMapPreview } from '../../../../components/ui/MiniMapPreview'
@@ -25,6 +27,8 @@ export function SupervisorRouteDetailScreen() {
   const [zona, setZona] = React.useState<Zone | null>(null)
   const [zonePolygon, setZonePolygon] = React.useState<MapPoint[] | null>(null)
   const [updating, setUpdating] = React.useState(false)
+  const [orderSummaryMap, setOrderSummaryMap] = React.useState<Record<string, OrderResponse>>({})
+  const [clientNameMap, setClientNameMap] = React.useState<Record<string, string>>({})
 
   const loadRutero = React.useCallback(async () => {
     if (!ruteroId) return
@@ -64,6 +68,41 @@ export function SupervisorRouteDetailScreen() {
     loadZone()
   }, [rutero?.zona_id])
 
+  React.useEffect(() => {
+    const loadOrders = async () => {
+      const stops = rutero?.paradas || []
+      if (stops.length === 0) {
+        setOrderSummaryMap({})
+        setClientNameMap({})
+        return
+      }
+      const results = await Promise.all(
+        stops.map(async (stop) => {
+          const order = await OrderService.getOrderById(stop.pedido_id)
+          let clientName = ''
+          if (order?.cliente_id) {
+            const client = await UserClientService.getClient(order.cliente_id)
+            clientName = client?.nombre_comercial || client?.razon_social || client?.ruc || ''
+          }
+          return order ? { orderId: stop.pedido_id, order, clientName } : null
+        })
+      )
+      const next: Record<string, OrderResponse> = {}
+      const clientNext: Record<string, string> = {}
+      results.forEach((entry) => {
+        if (entry) {
+          next[entry.orderId] = entry.order
+          if (entry.clientName) {
+            clientNext[entry.orderId] = entry.clientName
+          }
+        }
+      })
+      setOrderSummaryMap(next)
+      setClientNameMap(clientNext)
+    }
+    loadOrders()
+  }, [rutero?.paradas])
+
   const transportista = transportistas.find((user) => user.id === rutero?.transportista_id)
 
   const handlePublish = async () => {
@@ -100,6 +139,8 @@ export function SupervisorRouteDetailScreen() {
 
   const estado = rutero?.estado || 'borrador'
   const paradas = rutero?.paradas || []
+  const vehiculoDisponible = rutero?.vehiculo?.estado ? rutero.vehiculo.estado === 'disponible' : true
+  const canPublish = estado === 'borrador' && paradas.length > 0 && vehiculoDisponible
 
   return (
     <View className="flex-1 bg-neutral-50">
@@ -192,7 +233,17 @@ export function SupervisorRouteDetailScreen() {
                       </View>
                     </View>
                     <Text className="text-sm font-semibold text-neutral-900 mt-1">
-                      {parada.pedido_id}
+                      {orderSummaryMap[parada.pedido_id]?.numero_pedido || `#${parada.pedido_id.slice(0, 8)}`}
+                    </Text>
+                    <Text className="text-xs text-neutral-500 mt-1">
+                      {clientNameMap[parada.pedido_id]
+                        ? `Cliente: ${clientNameMap[parada.pedido_id]}`
+                        : orderSummaryMap[parada.pedido_id]?.cliente_id
+                        ? `Cliente: ${orderSummaryMap[parada.pedido_id]?.cliente_id?.slice(0, 8)}`
+                        : `ID: ${parada.pedido_id.slice(0, 8)}`}
+                    </Text>
+                    <Text className="text-xs text-neutral-500 mt-1">
+                      Total: USD {Number(orderSummaryMap[parada.pedido_id]?.total ?? 0).toFixed(2)}
                     </Text>
                   </View>
                 ))}
@@ -205,8 +256,16 @@ export function SupervisorRouteDetailScreen() {
               <PrimaryButton
                 title={updating ? 'Publicando...' : 'Publicar rutero'}
                 onPress={handlePublish}
-                disabled={updating}
+                disabled={updating || !canPublish}
               />
+            ) : null}
+
+            {!canPublish && estado === 'borrador' ? (
+              <View className="rounded-2xl border border-amber-200 px-4 py-3" style={{ backgroundColor: '#FFFBEB' }}>
+                <Text className="text-xs text-amber-800">
+                  Para publicar necesitas: vehiculo disponible y al menos un pedido asignado.
+                </Text>
+              </View>
             ) : null}
 
             {estado !== 'completado' && estado !== 'cancelado' ? (
