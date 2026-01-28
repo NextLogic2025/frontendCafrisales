@@ -29,12 +29,7 @@ export const CLIENTE_NAV_ITEMS: SidebarItem[] = [
 // ========================================
 export const BODEGUERO_NAV_ITEMS: SidebarItem[] = [
   { id: 'dashboard', label: 'Inicio', to: '/bodeguero', icon: Home, end: true },
-
-  { id: 'picking', label: 'Picking', to: '/bodeguero/picking', icon: Boxes },
-  { id: 'almacenes', label: 'Almacenes', to: '/bodeguero/almacenes', icon: Package },
-  { id: 'ubicaciones', label: 'Ubicaciones', to: '/bodeguero/ubicaciones', icon: Map },
-  { id: 'lotes', label: 'Lotes y Vencimientos', to: '/bodeguero/lotes', icon: Boxes },
-  { id: 'stock', label: 'Stock', to: '/bodeguero/stock', icon: BarChart3 },
+  { id: 'pedidos', label: 'Pedidos', to: '/bodeguero/pedidos', icon: ClipboardList },
   { id: 'inventario', label: 'Inventario', to: '/bodeguero/inventario', icon: Package },
   { id: 'despachos', label: 'Despachos', to: '/bodeguero/despachos', icon: Truck },
   { id: 'devoluciones', label: 'Devoluciones', to: '/bodeguero/devoluciones', icon: RotateCcw },
@@ -50,7 +45,7 @@ export const BODEGUERO_NAV_ITEMS: SidebarItem[] = [
 export const SUPERVISOR_NAV_ITEMS: SidebarItem[] = [
   { id: 'dashboard', label: 'Inicio', to: '/supervisor', icon: Home, end: true },
   { id: 'clientes', label: 'Clientes', to: '/supervisor/clientes', icon: Users },
-  { id: 'conductores', label: 'Conductores', to: '/supervisor/conductores', icon: Truck },
+  { id: 'vehiculos', label: 'Vehículos', to: '/supervisor/vehiculos', icon: Truck },
   { id: 'equipo', label: 'Equipo', to: '/supervisor/equipo', icon: Users },
   { id: 'catalogo', label: 'Catálogo', to: '/supervisor/catalogo', icon: BookOpen },
   { id: 'zonas', label: 'Zonas', to: '/supervisor/zonas', icon: Map },

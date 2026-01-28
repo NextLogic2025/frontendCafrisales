@@ -52,25 +52,35 @@ const ORDERS_API_URL = ORDERS_BASE_URL.endsWith('/api') ? ORDERS_BASE_URL : `${O
 
 import { obtenerClientes } from './clientesApi'
 
-export async function obtenerPedidos(): Promise<Pedido[]> {
+export async function obtenerPedidos(options: { skipClients?: boolean } = {}): Promise<Pedido[]> {
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const [resPedidos, resClientes] = await Promise.all([
+    const requests: Promise<any>[] = [
         fetch(`${ORDERS_API_URL}/pedidos`, {
             headers: { Authorization: `Bearer ${token}` }
-        }),
-        obtenerClientes('todos').catch(() => [])
-    ])
+        })
+    ]
+
+    if (!options.skipClients) {
+        requests.push(obtenerClientes('todos').catch(() => []))
+    }
+
+    const [resPedidos, resClientes] = await Promise.all(requests)
 
     if (!resPedidos.ok) {
         throw new Error('Error al obtener pedidos')
     }
 
     const dataPedidos = await resPedidos.json()
-    const clientesMap = new Map(resClientes.map(c => [c.id, c]))
+    const clientesList = options.skipClients ? [] : (resClientes || [])
+    const clientesMap = new Map(clientesList.map((c: any) => [c.id, c]))
 
-    return Array.isArray(dataPedidos) ? dataPedidos.map(p => {
+    if (!resPedidos.ok) {
+        throw new Error('Error al obtener pedidos')
+    }
+
+    return Array.isArray(dataPedidos) ? dataPedidos.map((p: any) => {
         const mapped = mapMobileToWebPedido(p)
         const clienteInfo = clientesMap.get(p.cliente_id)
         if (clienteInfo) {

@@ -8,22 +8,16 @@ import BodegueroLayout from '../features/bodeguero/BodegueroPage'
 import {
   DashboardPage,
   InventarioPage,
-  LotesPage,
   RecepcionesPage,
-  // PedidosPage,
   DespachosPage,
   DevolucionesPage,
   TrazabilidadPage,
   ReportesPage,
   PerfilPage,
+  PedidosPage,
 } from '../features/bodeguero/pages'
 
 const NotificacionesBodegaPage = React.lazy(() => import('../features/bodeguero/pages/Notificaciones'))
-const AlmacenesPage = React.lazy(() => import('../features/bodeguero/pages/Almacenes'))
-const PickingPage = React.lazy(() => import('../features/bodeguero/pages/Picking'))
-const StockPage = React.lazy(() => import('../features/bodeguero/pages/Stock'))
-const UbicacionPage = React.lazy(() => import('../features/bodeguero/pages/Ubicacion'))
-const ReservasPage = React.lazy(() => import('../features/bodeguero/pages/Reservas'))
 
 import { RequireAuth } from './RequireAuth'
 
@@ -70,7 +64,7 @@ const TransportistaPerfil = React.lazy(() => import('../features/transportista/p
 
 const SupervisorDashboard = React.lazy(() => import('../features/supervisor/pages/Dashboard'))
 const SupervisorClientes = React.lazy(() => import('../features/supervisor/pages/Clientes'))
-const SupervisorConductores = React.lazy(() => import('../features/supervisor/pages/Conductores/conductores'))
+const SupervisorConductores = React.lazy(() => import('../features/supervisor/pages/vehiculos/vehiculos'))
 const SupervisorEquipo = React.lazy(() => import('../features/supervisor/pages/Equipo'))
 const SupervisorCatalogo = React.lazy(() => import('../features/supervisor/pages/Catalogo'))
 const SupervisorZonas = React.lazy(() => import('../features/supervisor/pages/Zonas'))
@@ -132,21 +126,15 @@ export default function AppRouter() {
           }
         >
           <Route index element={<DashboardPage />} />
+          <Route path="pedidos" element={<PedidosPage />} />
 
           <Route path="inventario" element={<InventarioPage />} />
-          <Route path="lotes" element={<LotesPage />} />
           <Route path="recepciones" element={<RecepcionesPage />} />
-          {/* <Route path="pedidos" element={<PedidosPage />} /> */}
           <Route path="despachos" element={<DespachosPage />} />
           <Route path="devoluciones" element={<DevolucionesPage />} />
           <Route path="trazabilidad" element={<TrazabilidadPage />} />
           <Route path="reportes" element={<ReportesPage />} />
           <Route path="notificaciones" element={<NotificacionesBodegaPage />} />
-          <Route path="almacenes" element={<AlmacenesPage />} />
-          <Route path="picking" element={<PickingPage />} />
-          <Route path="stock" element={<StockPage />} />
-          <Route path="ubicaciones" element={<UbicacionPage />} />
-          <Route path="reservas" element={<ReservasPage />} />
           <Route path="perfil" element={<PerfilPage />} />
         </Route>
 
@@ -208,7 +196,7 @@ export default function AppRouter() {
         >
           <Route index element={<SupervisorDashboard />} />
           <Route path="clientes" element={<SupervisorClientes />} />
-          <Route path="conductores" element={<SupervisorConductores />} />
+          <Route path="vehiculos" element={<SupervisorConductores />} />
           <Route path="equipo" element={<SupervisorEquipo />} />
           <Route path="catalogo" element={<SupervisorCatalogo />} />
           <Route path="zonas" element={<SupervisorZonas />} />
