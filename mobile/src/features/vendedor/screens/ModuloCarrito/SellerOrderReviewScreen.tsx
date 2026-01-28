@@ -8,8 +8,10 @@ import { CartSummary } from '../../../../components/ui/CartSummary'
 import { PrimaryButton } from '../../../../components/ui/PrimaryButton'
 import { TextField } from '../../../../components/ui/TextField'
 import { GenericModal } from '../../../../components/ui/GenericModal'
+import { DatePickerModal } from '../../../../components/ui/DatePickerModal'
 import { useCart } from '../../../../context/CartContext'
 import { showGlobalToast } from '../../../../utils/toastService'
+import { isUuid } from '../../../../utils/validators'
 import { OrderService } from '../../../../services/api/OrderService'
 import { CreditService } from '../../../../services/api/CreditService'
 import { UserClientService } from '../../../../services/api/UserClientService'
@@ -24,6 +26,22 @@ export function SellerOrderReviewScreen() {
   const [creditModalVisible, setCreditModalVisible] = React.useState(false)
   const [creditPlazo, setCreditPlazo] = React.useState('30')
   const [creditNotas, setCreditNotas] = React.useState('')
+  const [datePickerVisible, setDatePickerVisible] = React.useState(false)
+  const [deliveryDate, setDeliveryDate] = React.useState(() => {
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    const year = tomorrow.getFullYear()
+    const month = String(tomorrow.getMonth() + 1).padStart(2, '0')
+    const day = String(tomorrow.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  })
+
+  const formatDeliveryDate = (value?: string) => {
+    if (!value) return 'Seleccionar fecha'
+    const [year, month, day] = value.split('-')
+    if (!year || !month || !day) return 'Seleccionar fecha'
+    return `${day}/${month}/${year}`
+  }
   const [discountModalVisible, setDiscountModalVisible] = React.useState(false)
   const [selectedItemId, setSelectedItemId] = React.useState<string | null>(null)
   const [discountType, setDiscountType] = React.useState<'porcentaje' | 'monto_fijo'>('porcentaje')
@@ -88,6 +106,15 @@ export function SellerOrderReviewScreen() {
       showGlobalToast('Confirma que revisaste el pedido', 'warning')
       return
     }
+    const invalidItem = cart.items.find((item) => !isUuid(item.skuId))
+    if (invalidItem) {
+      showGlobalToast(`SKU invalido en carrito: ${invalidItem.skuCode || invalidItem.skuName}`, 'warning')
+      return
+    }
+    if (!deliveryDate) {
+      showGlobalToast('Selecciona una fecha de entrega', 'warning')
+      return
+    }
     if (orderDiscountAmount > 0 && hasItemDiscounts) {
       showGlobalToast('No se permite descuento por item y pedido al mismo tiempo', 'warning')
       return
@@ -109,6 +136,7 @@ export function SellerOrderReviewScreen() {
         cliente_id: cart.selectedClient.usuario_id,
         zona_id: cart.selectedClient.zona_id,
         metodo_pago: cart.paymentMethod,
+        fecha_entrega_sugerida: deliveryDate,
         descuento_pedido_tipo: orderDiscountAmount > 0 ? orderDiscountType : undefined,
         descuento_pedido_valor: orderDiscountAmount > 0 ? parsedOrderDiscount : undefined,
         items: cart.items.map((item) => ({
@@ -268,6 +296,17 @@ export function SellerOrderReviewScreen() {
           </Text>
           <Text className="text-xs text-neutral-500 mt-1">No se puede editar en esta pantalla.</Text>
         </View>
+
+        <Pressable
+          onPress={() => setDatePickerVisible(true)}
+          className="bg-white rounded-3xl border border-neutral-100 p-5 mt-4 shadow-sm"
+        >
+          <Text className="text-xs text-neutral-500 font-semibold">Fecha de entrega sugerida</Text>
+          <Text className="text-base font-bold text-neutral-900 mt-1">
+            {formatDeliveryDate(deliveryDate)}
+          </Text>
+          <Text className="text-xs text-neutral-500 mt-1">Toca para cambiar.</Text>
+        </Pressable>
 
         <View className="mt-6">
           <Text className="text-sm font-semibold text-neutral-700 mb-3">Detalle del pedido</Text>
@@ -458,6 +497,15 @@ export function SellerOrderReviewScreen() {
           <PrimaryButton title="Guardar descuento" onPress={applyDiscount} />
         </View>
       </GenericModal>
+
+      <DatePickerModal
+        visible={datePickerVisible}
+        title="Fecha de entrega"
+        infoText="Elige la fecha sugerida para la entrega."
+        initialDate={deliveryDate}
+        onSelectDate={setDeliveryDate}
+        onClose={() => setDatePickerVisible(false)}
+      />
 
       <GenericModal
         visible={orderDiscountModalVisible}

@@ -6,8 +6,10 @@ import { Header } from '../../../../components/ui/Header'
 import { CartSummary } from '../../../../components/ui/CartSummary'
 import { PrimaryButton } from '../../../../components/ui/PrimaryButton'
 import { GenericModal } from '../../../../components/ui/GenericModal'
+import { DatePickerModal } from '../../../../components/ui/DatePickerModal'
 import { useCart } from '../../../../context/CartContext'
 import { showGlobalToast } from '../../../../utils/toastService'
+import { isUuid } from '../../../../utils/validators'
 import { OrderService } from '../../../../services/api/OrderService'
 import { useStableInsets } from '../../../../hooks/useStableInsets'
 
@@ -18,6 +20,22 @@ export function ClientOrderReviewScreen() {
   const [submitting, setSubmitting] = React.useState(false)
   const [checked, setChecked] = React.useState(false)
   const [creditModalVisible, setCreditModalVisible] = React.useState(false)
+  const [datePickerVisible, setDatePickerVisible] = React.useState(false)
+  const [deliveryDate, setDeliveryDate] = React.useState(() => {
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    const year = tomorrow.getFullYear()
+    const month = String(tomorrow.getMonth() + 1).padStart(2, '0')
+    const day = String(tomorrow.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  })
+
+  const formatDeliveryDate = (value?: string) => {
+    if (!value) return 'Seleccionar fecha'
+    const [year, month, day] = value.split('-')
+    if (!year || !month || !day) return 'Seleccionar fecha'
+    return `${day}/${month}/${year}`
+  }
 
   const totals = cart.getTotals()
 
@@ -31,11 +49,21 @@ export function ClientOrderReviewScreen() {
       showGlobalToast('Confirma que revisaste el pedido', 'warning')
       return
     }
+    const invalidItem = cart.items.find((item) => !isUuid(item.skuId))
+    if (invalidItem) {
+      showGlobalToast(`SKU invalido en carrito: ${invalidItem.skuCode || invalidItem.skuName}`, 'warning')
+      return
+    }
+    if (!deliveryDate) {
+      showGlobalToast('Selecciona una fecha de entrega', 'warning')
+      return
+    }
 
     setSubmitting(true)
     try {
       const payload = {
         metodo_pago: cart.paymentMethod,
+        fecha_entrega_sugerida: deliveryDate,
         items: cart.items.map((item) => ({
           sku_id: item.skuId,
           cantidad: item.quantity,
@@ -81,6 +109,17 @@ export function ClientOrderReviewScreen() {
           </Text>
           <Text className="text-xs text-neutral-500 mt-1">No se puede editar en esta pantalla.</Text>
         </View>
+
+        <Pressable
+          onPress={() => setDatePickerVisible(true)}
+          className="bg-white rounded-3xl border border-neutral-100 p-5 mt-4 shadow-sm"
+        >
+          <Text className="text-xs text-neutral-500 font-semibold">Fecha de entrega sugerida</Text>
+          <Text className="text-base font-bold text-neutral-900 mt-1">
+            {formatDeliveryDate(deliveryDate)}
+          </Text>
+          <Text className="text-xs text-neutral-500 mt-1">Toca para cambiar.</Text>
+        </Pressable>
 
         <View className="mt-6">
           <Text className="text-sm font-semibold text-neutral-700 mb-3">Detalle del pedido</Text>
@@ -147,6 +186,15 @@ export function ClientOrderReviewScreen() {
           />
         </View>
       </GenericModal>
+
+      <DatePickerModal
+        visible={datePickerVisible}
+        title="Fecha de entrega"
+        infoText="Elige la fecha sugerida para la entrega."
+        initialDate={deliveryDate}
+        onSelectDate={setDeliveryDate}
+        onClose={() => setDatePickerVisible(false)}
+      />
     </View>
   )
 }

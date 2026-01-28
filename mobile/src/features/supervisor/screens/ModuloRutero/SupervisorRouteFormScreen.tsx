@@ -1,21 +1,41 @@
 import React from 'react'
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native'
+import MapView, { Marker, Polygon, PROVIDER_GOOGLE } from 'react-native-maps'
 import { useNavigation } from '@react-navigation/native'
 import { Header } from '../../../../components/ui/Header'
 import { SupervisorHeaderMenu } from '../../../../components/ui/SupervisorHeaderMenu'
 import { PrimaryButton } from '../../../../components/ui/PrimaryButton'
 import { PickerModal, PickerOption } from '../../../../components/ui/PickerModal'
 import { DatePickerModal } from '../../../../components/ui/DatePickerModal'
+import { GenericModal } from '../../../../components/ui/GenericModal'
 import { MiniMapPreview } from '../../../../components/ui/MiniMapPreview'
 import { BRAND_COLORS } from '../../../../shared/types'
 import { RouteService, Vehicle } from '../../../../services/api/RouteService'
 import { OrderListItem, OrderService } from '../../../../services/api/OrderService'
 import { Zone, ZoneService } from '../../../../services/api/ZoneService'
 import { UserProfile, UserService } from '../../../../services/api/UserService'
+import { UserClientService } from '../../../../services/api/UserClientService'
 import { showGlobalToast } from '../../../../utils/toastService'
 import { extractPolygons, MapPoint } from '../../../../utils/zoneGeometry'
+import { isUuid } from '../../../../utils/validators'
 
 type Option = PickerOption
+
+type StopMarker = {
+  id: string
+  latitude: number
+  longitude: number
+  label: string
+  orden: number
+  address?: string
+}
+
+const FALLBACK_REGION = {
+  latitude: -0.1807,
+  longitude: -78.4678,
+  latitudeDelta: 0.1,
+  longitudeDelta: 0.1,
+}
 
 export function SupervisorRouteFormScreen() {
   const navigation = useNavigation<any>()
@@ -25,12 +45,16 @@ export function SupervisorRouteFormScreen() {
   const [vehiculoId, setVehiculoId] = React.useState<string | null>(null)
   const [transportistaId, setTransportistaId] = React.useState<string | null>(null)
   const [selectedOrders, setSelectedOrders] = React.useState<string[]>([])
+  const [activeOrderId, setActiveOrderId] = React.useState<string | null>(null)
   const [zonePolygon, setZonePolygon] = React.useState<MapPoint[] | null>(null)
+  const [mapMarkers, setMapMarkers] = React.useState<StopMarker[]>([])
+  const mapRef = React.useRef<MapView | null>(null)
 
   const [zones, setZones] = React.useState<Zone[]>([])
   const [vehicles, setVehicles] = React.useState<Vehicle[]>([])
   const [transportistas, setTransportistas] = React.useState<UserProfile[]>([])
   const [orders, setOrders] = React.useState<OrderListItem[]>([])
+  const [orderClientMap, setOrderClientMap] = React.useState<Record<string, { name?: string; address?: string }>>({})
 
   const [loading, setLoading] = React.useState(false)
   const [loadingOrders, setLoadingOrders] = React.useState(false)
@@ -39,6 +63,7 @@ export function SupervisorRouteFormScreen() {
   const [showZonePicker, setShowZonePicker] = React.useState(false)
   const [showVehiclePicker, setShowVehiclePicker] = React.useState(false)
   const [showTransportistaPicker, setShowTransportistaPicker] = React.useState(false)
+  const [showMapModal, setShowMapModal] = React.useState(false)
 
   const loadData = React.useCallback(async () => {
     setLoading(true)
@@ -65,6 +90,7 @@ export function SupervisorRouteFormScreen() {
       if (!zonaId || !fecha) {
         setOrders([])
         setSelectedOrders([])
+        setOrderClientMap({})
         return
       }
       setLoadingOrders(true)
@@ -81,6 +107,37 @@ export function SupervisorRouteFormScreen() {
     }
     fetchOrders()
   }, [zonaId, fecha])
+
+  React.useEffect(() => {
+    const loadClientsForOrders = async () => {
+      if (orders.length === 0) {
+        setOrderClientMap({})
+        return
+      }
+      const entries = await Promise.all(
+        orders.map(async (order) => {
+          if (!order.cliente_id) return null
+          const client = await UserClientService.getClient(order.cliente_id)
+          if (!client) return null
+          return [
+            order.id,
+            {
+              name: client.nombre_comercial || client.razon_social || client.ruc || undefined,
+              address: client.direccion || undefined,
+            },
+          ] as const
+        }),
+      )
+      const next: Record<string, { name?: string; address?: string }> = {}
+      entries.forEach((entry) => {
+        if (entry) {
+          next[entry[0]] = entry[1]
+        }
+      })
+      setOrderClientMap(next)
+    }
+    loadClientsForOrders()
+  }, [orders])
 
   const zoneOptions: Option[] = zones.map((zone) => ({
     id: zone.id,
@@ -109,10 +166,41 @@ export function SupervisorRouteFormScreen() {
   const toggleOrder = (orderId: string) => {
     setSelectedOrders((prev) => {
       if (prev.includes(orderId)) {
-        return prev.filter((id) => id !== orderId)
+        const next = prev.filter((id) => id !== orderId)
+        if (activeOrderId === orderId) {
+          setActiveOrderId(next[0] || null)
+        }
+        return next
       }
-      return [...prev, orderId]
+      const next = [...prev, orderId]
+      setActiveOrderId(orderId)
+      return next
     })
+  }
+
+  const moveOrder = (orderId: string, direction: 'up' | 'down') => {
+    setSelectedOrders((prev) => {
+      const index = prev.indexOf(orderId)
+      if (index < 0) return prev
+      const target = direction === 'up' ? index - 1 : index + 1
+      if (target < 0 || target >= prev.length) return prev
+      const next = [...prev]
+      const [moved] = next.splice(index, 1)
+      next.splice(target, 0, moved)
+      return next
+    })
+  }
+
+  const orderById = React.useMemo(() => {
+    return orders.reduce<Record<string, OrderListItem>>((acc, order) => {
+      acc[order.id] = order
+      return acc
+    }, {})
+  }, [orders])
+
+  const formatOrderLabel = (order: OrderListItem | undefined, orderId: string) => {
+    if (order?.numero_pedido) return order.numero_pedido
+    return `#${orderId.slice(0, 8)}`
   }
 
   const handleCreate = async () => {
@@ -120,27 +208,45 @@ export function SupervisorRouteFormScreen() {
       showGlobalToast('Selecciona una fecha', 'warning')
       return
     }
+    const normalizedFecha = fecha.includes('T') ? fecha : `${fecha}T00:00:00.000Z`
     if (!zonaId) {
       showGlobalToast('Selecciona una zona', 'warning')
+      return
+    }
+    if (!isUuid(zonaId)) {
+      showGlobalToast('La zona seleccionada no es valida', 'warning')
       return
     }
     if (!vehiculoId) {
       showGlobalToast('Selecciona un vehiculo', 'warning')
       return
     }
+    if (!isUuid(vehiculoId)) {
+      showGlobalToast('El vehiculo seleccionado no es valido', 'warning')
+      return
+    }
     if (!transportistaId) {
       showGlobalToast('Selecciona un transportista', 'warning')
+      return
+    }
+    if (!isUuid(transportistaId)) {
+      showGlobalToast('El transportista seleccionado no es valido', 'warning')
       return
     }
     if (selectedOrders.length === 0) {
       showGlobalToast('Selecciona al menos un pedido', 'warning')
       return
     }
+    const invalidOrder = selectedOrders.find((orderId) => !isUuid(orderId))
+    if (invalidOrder) {
+      showGlobalToast('Hay pedidos seleccionados con ID invalido', 'warning')
+      return
+    }
 
     setLoading(true)
     try {
       const payload = {
-        fecha_rutero: fecha,
+        fecha_rutero: normalizedFecha,
         zona_id: zonaId,
         vehiculo_id: vehiculoId,
         transportista_id: transportistaId,
@@ -173,6 +279,69 @@ export function SupervisorRouteFormScreen() {
     const polygons = extractPolygons(selectedZone.zonaGeom ?? selectedZone.zona_geom ?? null)
     setZonePolygon(polygons[0] ?? null)
   }, [selectedZone])
+
+  React.useEffect(() => {
+    const loadMarkers = async () => {
+      if (!selectedOrders.length) {
+        setMapMarkers([])
+        return
+      }
+      const results = await Promise.all(
+        selectedOrders.map(async (orderId, index) => {
+          try {
+            const order = orderById[orderId] || (await OrderService.getOrderById(orderId))
+            const clienteId = order?.cliente_id
+            if (!clienteId) return null
+            const client = await UserClientService.getClient(clienteId)
+            if (!client?.latitud || !client?.longitud) return null
+            return {
+              id: orderId,
+              latitude: Number(client.latitud),
+              longitude: Number(client.longitud),
+              label: client.nombre_comercial || formatOrderLabel(order, orderId),
+              orden: index + 1,
+              address: client.direccion || '',
+            }
+          } catch {
+            return null
+          }
+        }),
+      )
+      setMapMarkers(results.filter((item): item is StopMarker => Boolean(item)))
+    }
+    loadMarkers()
+  }, [selectedOrders, orderById])
+
+  React.useEffect(() => {
+    if (!mapRef.current) return
+    const coords: { latitude: number; longitude: number }[] = []
+    if (zonePolygon?.length) {
+      coords.push(...zonePolygon)
+    }
+    if (mapMarkers.length) {
+      coords.push(...mapMarkers.map((m) => ({ latitude: m.latitude, longitude: m.longitude })))
+    }
+    if (!coords.length) return
+    mapRef.current.fitToCoordinates(coords, {
+      edgePadding: { top: 40, right: 40, bottom: 40, left: 40 },
+      animated: true,
+    })
+  }, [zonePolygon, mapMarkers])
+
+  React.useEffect(() => {
+    if (!activeOrderId || !mapRef.current) return
+    const marker = mapMarkers.find((item) => item.id === activeOrderId)
+    if (!marker) return
+    mapRef.current.animateToRegion(
+      {
+        latitude: marker.latitude,
+        longitude: marker.longitude,
+        latitudeDelta: 0.02,
+        longitudeDelta: 0.02,
+      },
+      400,
+    )
+  }, [activeOrderId, mapMarkers])
 
   return (
     <View className="flex-1 bg-neutral-50">
@@ -267,6 +436,8 @@ export function SupervisorRouteFormScreen() {
             <View className="mt-3 gap-3">
               {orders.map((order) => {
                 const isSelected = selectedOrders.includes(order.id)
+                const label = formatOrderLabel(order, order.id)
+                const clientInfo = orderClientMap[order.id]
                 return (
                   <Pressable
                     key={order.id}
@@ -275,8 +446,20 @@ export function SupervisorRouteFormScreen() {
                   >
                     <Text className="text-xs text-neutral-500">Pedido</Text>
                     <Text className="text-sm font-semibold text-neutral-900">
-                      #{order.numero_pedido || order.id.slice(0, 8)}
+                      {label}
                     </Text>
+                    {clientInfo?.name ? (
+                      <Text className="text-xs text-neutral-600 mt-1">Cliente: {clientInfo.name}</Text>
+                    ) : order.cliente_id ? (
+                      <Text className="text-xs text-neutral-500 mt-1">
+                        Cliente: {order.cliente_id.slice(0, 8)}
+                      </Text>
+                    ) : null}
+                    {clientInfo?.address ? (
+                      <Text className="text-xs text-neutral-500 mt-1">
+                        Direccion: {clientInfo.address}
+                      </Text>
+                    ) : null}
                     <Text className="text-xs text-neutral-500 mt-1">
                       Total: USD {(Number(order.total ?? 0)).toFixed(2)}
                     </Text>
@@ -288,6 +471,104 @@ export function SupervisorRouteFormScreen() {
               })}
             </View>
           )}
+        </View>
+
+        {selectedOrders.length > 0 ? (
+          <View className="bg-white rounded-2xl border border-neutral-100 p-4 shadow-sm mt-4">
+            <Text className="text-sm font-semibold text-neutral-700">Orden de entrega</Text>
+            <Text className="text-xs text-neutral-500 mt-1">
+              Usa subir/bajar para ajustar el orden. Este orden define la ruta.
+            </Text>
+            <View className="mt-3 gap-3">
+              {selectedOrders.map((orderId, index) => {
+                const order = orderById[orderId]
+                const label = formatOrderLabel(order, orderId)
+                return (
+                  <View key={orderId} className="rounded-2xl border border-neutral-200 px-3 py-2 bg-white">
+                    <View className="flex-row items-center justify-between">
+                      <View className="flex-1 pr-3">
+                        <Text className="text-xs text-neutral-500">#{index + 1}</Text>
+                        <Text className="text-sm font-semibold text-neutral-900">{label}</Text>
+                      </View>
+                      <View className="flex-row items-center">
+                        <Pressable
+                          onPress={() => moveOrder(orderId, 'up')}
+                          disabled={index === 0}
+                          className={`px-3 py-2 rounded-xl border ${index === 0 ? 'border-neutral-200' : 'border-amber-200 bg-amber-50'}`}
+                        >
+                          <Text className={`text-xs font-semibold ${index === 0 ? 'text-neutral-300' : 'text-amber-700'}`}>Subir</Text>
+                        </Pressable>
+                        <Pressable
+                          onPress={() => moveOrder(orderId, 'down')}
+                          disabled={index === selectedOrders.length - 1}
+                          className={`ml-2 px-3 py-2 rounded-xl border ${index === selectedOrders.length - 1 ? 'border-neutral-200' : 'border-amber-200 bg-amber-50'}`}
+                        >
+                          <Text className={`text-xs font-semibold ${index === selectedOrders.length - 1 ? 'text-neutral-300' : 'text-amber-700'}`}>Bajar</Text>
+                        </Pressable>
+                      </View>
+                    </View>
+                  </View>
+                )
+              })}
+            </View>
+          </View>
+        ) : null}
+
+        <View className="bg-white rounded-2xl border border-neutral-100 p-4 shadow-sm mt-4">
+          <View className="flex-row items-center justify-between">
+            <Text className="text-sm font-semibold text-neutral-700">Mapa de paradas</Text>
+            <Pressable onPress={() => setShowMapModal(true)} className="px-3 py-1 rounded-full bg-red-50">
+              <Text className="text-xs font-semibold text-brand-red">Ampliar</Text>
+            </Pressable>
+          </View>
+          <View className="mt-3 rounded-2xl overflow-hidden border border-neutral-200" style={{ height: 220 }}>
+            <MapView
+              ref={(ref) => (mapRef.current = ref)}
+              provider={PROVIDER_GOOGLE}
+              style={{ flex: 1 }}
+              initialRegion={FALLBACK_REGION}
+              scrollEnabled
+              zoomEnabled
+              pitchEnabled={false}
+              rotateEnabled={false}
+            >
+              {zonePolygon && (
+                <Polygon
+                  coordinates={zonePolygon}
+                  strokeColor={BRAND_COLORS.red}
+                  fillColor={`${BRAND_COLORS.red}22`}
+                  strokeWidth={2}
+                />
+              )}
+              {mapMarkers.map((marker) => (
+                <Marker
+                  key={marker.id}
+                  coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
+                  title={`#${marker.orden} ${marker.label}`}
+                  pinColor={BRAND_COLORS.red}
+                >
+                  <View className="items-center">
+                    <View className="w-7 h-7 rounded-full items-center justify-center border border-white" style={{ backgroundColor: BRAND_COLORS.red }}>
+                      <Text className="text-[11px] text-white font-bold">{marker.orden}</Text>
+                    </View>
+                    <View className="mt-1 px-2 py-0.5 rounded-full bg-white border border-neutral-200">
+                      <Text className="text-[10px] text-neutral-700">{marker.label}</Text>
+                    </View>
+                    {marker.address ? (
+                      <View className="mt-1 px-2 py-0.5 rounded-full bg-white border border-neutral-200">
+                        <Text className="text-[9px] text-neutral-500">{marker.address}</Text>
+                      </View>
+                    ) : null}
+                  </View>
+                </Marker>
+              ))}
+            </MapView>
+          </View>
+          {mapMarkers.length === 0 ? (
+            <Text className="text-xs text-neutral-500 mt-3">
+              Selecciona pedidos con coordenadas para ver el mapa.
+            </Text>
+          ) : null}
         </View>
 
         <View className="mt-6">
@@ -348,6 +629,56 @@ export function SupervisorRouteFormScreen() {
         infoIcon="person-outline"
         infoColor={BRAND_COLORS.red}
       />
+
+      <GenericModal
+        visible={showMapModal}
+        title="Mapa de paradas"
+        onClose={() => setShowMapModal(false)}
+      >
+        <View className="rounded-2xl overflow-hidden border border-neutral-200" style={{ height: 360 }}>
+          <MapView
+            ref={(ref) => (mapRef.current = ref)}
+            provider={PROVIDER_GOOGLE}
+            style={{ flex: 1 }}
+            initialRegion={FALLBACK_REGION}
+            scrollEnabled
+            zoomEnabled
+            pitchEnabled={false}
+            rotateEnabled={false}
+          >
+            {zonePolygon && (
+              <Polygon
+                coordinates={zonePolygon}
+                strokeColor={BRAND_COLORS.red}
+                fillColor={`${BRAND_COLORS.red}22`}
+                strokeWidth={2}
+              />
+            )}
+            {mapMarkers.map((marker) => (
+              <Marker
+                key={marker.id}
+                coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
+                title={`#${marker.orden} ${marker.label}`}
+                pinColor={BRAND_COLORS.red}
+              >
+                <View className="items-center">
+                  <View className="w-7 h-7 rounded-full items-center justify-center border border-white" style={{ backgroundColor: BRAND_COLORS.red }}>
+                    <Text className="text-[11px] text-white font-bold">{marker.orden}</Text>
+                  </View>
+                  <View className="mt-1 px-2 py-0.5 rounded-full bg-white border border-neutral-200">
+                    <Text className="text-[10px] text-neutral-700">{marker.label}</Text>
+                  </View>
+                  {marker.address ? (
+                    <View className="mt-1 px-2 py-0.5 rounded-full bg-white border border-neutral-200">
+                      <Text className="text-[9px] text-neutral-500">{marker.address}</Text>
+                    </View>
+                  ) : null}
+                </View>
+              </Marker>
+            ))}
+          </MapView>
+        </View>
+      </GenericModal>
     </View>
   )
 }
