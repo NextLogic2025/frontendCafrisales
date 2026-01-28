@@ -1,4 +1,6 @@
 import { env } from '../../config/env'
+import { getValidToken } from '../auth/authClient'
+import { jwtDecode } from 'jwt-decode'
 import { ApiService } from './ApiService'
 import { createService } from './createService'
 import { logErrorForDebugging } from '../../utils/errorMessages'
@@ -36,6 +38,12 @@ export type UpdateUserClientPayload = Partial<{
   longitud?: number | null
   vendedor_asignado_id?: string | null
 }>
+
+type ClientConditions = {
+  permite_negociacion?: boolean | null
+  max_descuento_porcentaje?: number | null
+  requiere_aprobacion_supervisor?: boolean | null
+}
 
 const USERS_BASE_URL = env.api.usersUrl
 const USERS_API_URL = USERS_BASE_URL.endsWith('/api') ? USERS_BASE_URL : `${USERS_BASE_URL}/api`
@@ -93,6 +101,30 @@ const rawService = {
       return await ApiService.put(`${USERS_API_URL}/clientes/${usuarioId}/condiciones-comerciales`, payload)
     } catch (error) {
       logErrorForDebugging(error, 'UserClientService.updateCondiciones', { usuarioId })
+      return null
+    }
+  },
+
+  async getClientConditions(usuarioId: string): Promise<ClientConditions | null> {
+    try {
+      return await ApiService.get<ClientConditions>(`${USERS_API_URL}/clientes/${usuarioId}/condiciones`, { silent: true })
+    } catch (error) {
+      logErrorForDebugging(error, 'UserClientService.getClientConditions', { usuarioId })
+      return null
+    }
+  },
+
+  async getClientForVendedor(clienteId: string): Promise<UserClient | null> {
+    try {
+      const token = await getValidToken()
+      if (!token) return null
+      const decoded = jwtDecode<{ sub?: string; userId?: string }>(token)
+      const vendedorId = decoded.sub || decoded.userId
+      if (!vendedorId) return null
+      const clients = await rawService.getClientsByVendedor(vendedorId)
+      return clients.find((client) => client.usuario_id === clienteId) || null
+    } catch (error) {
+      logErrorForDebugging(error, 'UserClientService.getClientForVendedor', { clienteId })
       return null
     }
   },

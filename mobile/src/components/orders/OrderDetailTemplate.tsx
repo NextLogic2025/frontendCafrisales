@@ -73,6 +73,14 @@ const getOrderTotal = (pedido?: OrderResponse, items: OrderItemDetail[] = []) =>
   }, 0)
 }
 
+const formatDiscountLabel = (item: OrderItemDetail) => {
+  if (!item.descuento_item_tipo || item.descuento_item_valor == null) return null
+  if (item.descuento_item_tipo === 'porcentaje') {
+    return `${item.descuento_item_valor}%`
+  }
+  return `-${formatMoney(item.descuento_item_valor)}`
+}
+
 type Props = {
   orderDetail: OrderDetail | null
   clientLabel?: string
@@ -177,6 +185,30 @@ export function OrderDetailTemplate({
                 <Text className="text-xs text-neutral-500">Cantidad: {item.cantidad_solicitada ?? 0}</Text>
                 <Text className="text-xs text-neutral-700">{formatMoney(item.subtotal ?? 0)}</Text>
               </View>
+
+              {item.descuento_item_tipo && item.descuento_item_valor != null ? (
+                <View className="mt-2 bg-red-50 border border-red-100 rounded-xl p-2">
+                  <View className="flex-row justify-between">
+                    <Text className="text-[11px] text-neutral-500">Precio base</Text>
+                    <Text className="text-[11px] text-neutral-700">{formatMoney(item.precio_unitario_base ?? 0)}</Text>
+                  </View>
+                  <View className="flex-row justify-between mt-1">
+                    <Text className="text-[11px] text-neutral-500">Descuento</Text>
+                    <Text className="text-[11px] text-amber-700">{formatDiscountLabel(item) || '-'}</Text>
+                  </View>
+                  <View className="flex-row justify-between mt-1">
+                    <Text className="text-[11px] text-neutral-500">Precio final</Text>
+                    <Text className="text-[11px] text-neutral-900 font-semibold">{formatMoney(item.precio_unitario_final ?? 0)}</Text>
+                  </View>
+                  <View className="flex-row justify-between mt-1">
+                    <Text className="text-[11px] text-neutral-500">Origen</Text>
+                    <Text className="text-[11px] text-neutral-700">
+                      {item.precio_origen === 'negociado' ? 'Negociado' : 'Catalogo'}
+                      {item.requiere_aprobacion ? ' · Requiere aprobacion' : ''}
+                    </Text>
+                  </View>
+                </View>
+              ) : null}
             </View>
           ))
         )}

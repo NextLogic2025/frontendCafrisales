@@ -7,7 +7,7 @@ export type OrderItemPayload = {
   sku_id: string
   cantidad: number
   precio_unitario_final?: number
-  descuento_item_tipo?: 'porcentaje' | 'monto' | 'fijo'
+  descuento_item_tipo?: 'porcentaje' | 'monto_fijo'
   descuento_item_valor?: number
   requiere_aprobacion?: boolean
   origen_precio?: 'catalogo' | 'negociado'
@@ -17,7 +17,7 @@ export type CreateOrderPayload = {
   cliente_id?: string
   zona_id?: string
   metodo_pago: 'contado' | 'credito'
-  descuento_pedido_tipo?: 'porcentaje' | 'monto' | 'fijo'
+  descuento_pedido_tipo?: 'porcentaje' | 'monto_fijo'
   descuento_pedido_valor?: number
   fecha_entrega_sugerida?: string
   notas?: string
@@ -49,7 +49,12 @@ export type OrderItemDetail = {
   sku_peso_gramos_snapshot?: number
   sku_tipo_empaque_snapshot?: string
   cantidad_solicitada?: number
+  precio_unitario_base?: number
   precio_unitario_final?: number
+  descuento_item_tipo?: 'porcentaje' | 'monto_fijo'
+  descuento_item_valor?: number
+  precio_origen?: 'catalogo' | 'negociado'
+  requiere_aprobacion?: boolean
   subtotal?: number
 }
 

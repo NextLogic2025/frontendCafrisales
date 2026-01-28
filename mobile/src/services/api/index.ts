@@ -17,7 +17,6 @@ export { NotificationService } from './NotificationService'
 export { OrderService } from './OrderService'
 export { PriceService } from './PriceService'
 export { ProductService } from './ProductService'
-export { PromotionService } from './PromotionService'
 export { ReturnsService } from './ReturnsService'
 export { RouteService } from './RouteService'
 export { SellerService } from './SellerService'
@@ -85,7 +84,6 @@ export type {
     Lot
 } from './ProductService'
 
-export type { PromotionCampaign, PromotionProduct, PromotionClient } from './PromotionService'
 
 export type { ReturnRequest } from './ReturnsService'
 

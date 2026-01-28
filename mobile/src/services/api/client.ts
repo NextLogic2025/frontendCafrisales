@@ -56,6 +56,12 @@ function getUserFriendlyApiMessage(status: number, backendMessage?: string): str
         if (msg.includes('zona') || msg.includes('canal') || msg.includes('vendedor') || msg.includes('comercial')) {
             return backendMessage
         }
+        if (msg.includes('no permite negociacion') || msg.includes('no permite negociaciones')) {
+            return backendMessage
+        }
+        if (msg.includes('descuento supera') || msg.includes('descuento no puede')) {
+            return backendMessage
+        }
     }
 
     switch (status) {
@@ -108,7 +114,7 @@ export async function apiRequest<T>(endpoint: string, options: ApiRequestOptions
                 throw new Error('SESSION_EXPIRED')
             }
 
-            if (response.status === 403) {
+            if (response.status === 403 && !options.silent) {
                 logErrorForDebugging(new Error('403 Forbidden'), 'apiRequest.permissions', { endpoint })
             }
 
