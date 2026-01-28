@@ -31,6 +31,9 @@ export type OrderResponse = {
     descuento_pedido_valor?: number
     estado?: string
     cliente_id?: string
+    created_at?: string
+    creado_en?: string
+    items?: OrderItemPayload[] | any[] // items from backend
 }
 
 const ORDERS_BASE_URL = env.api.orders

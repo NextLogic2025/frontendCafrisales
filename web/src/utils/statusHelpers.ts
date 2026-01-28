@@ -21,7 +21,7 @@ export function formatEstadoPedido(estado: EstadoPedido | string): string {
     'CANCELADO': 'Cancelado',
   }
 
-  return labels[status] || estado.toString().replace(/_/g, ' ')
+  return labels[status] || status.replace(/_/g, ' ')
 }
 
 // Colores para estados de pedido
