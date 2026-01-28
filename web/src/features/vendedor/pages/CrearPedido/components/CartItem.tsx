@@ -9,9 +9,10 @@ interface CartItemProps {
     onUpdateQuantity: (quantity: number) => void
     onUpdateNegotiation?: (updates: any) => void
     onRemove: () => void
+    isBlocked?: boolean
 }
 
-export function CartItem({ item, onUpdateQuantity, onUpdateNegotiation, onRemove }: CartItemProps) {
+export function CartItem({ item, onUpdateQuantity, onUpdateNegotiation, onRemove, isBlocked }: CartItemProps) {
     const [showDiscount, setShowDiscount] = useState(false)
 
     // Helper to calculate subtotal with current discounts
@@ -20,7 +21,7 @@ export function CartItem({ item, onUpdateQuantity, onUpdateNegotiation, onRemove
         if (item.precio_unitario_final === undefined) {
             if (item.descuento_item_tipo === 'porcentaje' && item.descuento_item_valor) {
                 price = price * (1 - item.descuento_item_valor / 100)
-            } else if (item.descuento_item_tipo === 'monto' && item.descuento_item_valor) {
+            } else if (item.descuento_item_tipo === 'monto_fijo' && item.descuento_item_valor) {
                 price = price - item.descuento_item_valor
             }
         }
@@ -84,7 +85,11 @@ export function CartItem({ item, onUpdateQuantity, onUpdateNegotiation, onRemove
             {/* Negotiation Section */}
             {onUpdateNegotiation && (
                 <div className="border-t border-neutral-100 pt-2">
-                    {!showDiscount && !item.descuento_item_valor ? (
+                    {isBlocked ? (
+                        <p className="text-[10px] text-neutral-400 italic flex items-center gap-1">
+                            <Tag className="w-2.5 h-2.5" /> Descuentos bloqueados por promoción general
+                        </p>
+                    ) : !showDiscount && !item.descuento_item_valor ? (
                         <button
                             onClick={() => setShowDiscount(true)}
                             className="text-xs text-brand-red font-medium flex items-center gap-1 hover:underline"
@@ -104,7 +109,7 @@ export function CartItem({ item, onUpdateQuantity, onUpdateNegotiation, onRemove
                                     onChange={(e) => handleDiscountChange(e.target.value, String(item.descuento_item_valor || ''))}
                                 >
                                     <option value="porcentaje">% Porcentaje</option>
-                                    <option value="monto">$ Monto Fijo</option>
+                                    <option value="monto_fijo">$ Monto Fijo</option>
                                 </select>
                                 <input
                                     type="number"

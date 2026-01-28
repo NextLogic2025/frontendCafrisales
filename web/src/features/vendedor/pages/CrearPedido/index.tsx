@@ -40,6 +40,8 @@ export default function VendedorCrearPedido() {
     setDescuentoPedidoTipo,
     descuentoPedidoValor,
     setDescuentoPedidoValor,
+    hasItemDiscounts,
+    hasGlobalDiscount,
   } = useCrearPedido()
 
   return (
@@ -95,6 +97,7 @@ export default function VendedorCrearPedido() {
             onUpdateQuantity={updateQuantity}
             onUpdateNegotiation={updateItemNegotiation}
             onRemove={removeItem}
+            hasGlobalDiscount={hasGlobalDiscount}
           />
 
           {cart.length > 0 && (
@@ -112,6 +115,7 @@ export default function VendedorCrearPedido() {
               setDescuentoPedidoTipo={setDescuentoPedidoTipo}
               descuentoPedidoValor={descuentoPedidoValor}
               setDescuentoPedidoValor={setDescuentoPedidoValor}
+              hasItemDiscounts={hasItemDiscounts}
             />
           )}
         </div>

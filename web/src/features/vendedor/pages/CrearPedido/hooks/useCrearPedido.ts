@@ -26,7 +26,7 @@ export const useCrearPedido = () => {
     const [notasCredito, setNotasCredito] = useState('')
 
     // Estado para Descuento Global
-    const [descuentoPedidoTipo, setDescuentoPedidoTipo] = useState<'porcentaje' | 'monto' | 'fijo'>('porcentaje')
+    const [descuentoPedidoTipo, setDescuentoPedidoTipo] = useState<'porcentaje' | 'monto_fijo'>('porcentaje')
     const [descuentoPedidoValor, setDescuentoPedidoValor] = useState<number | undefined>(undefined)
 
     const handlePaymentChange = (value: 'CONTADO' | 'CREDITO') => {
@@ -121,7 +121,7 @@ export const useCrearPedido = () => {
     const updateItemNegotiation = (
         itemId: string,
         updates: Partial<{
-            descuento_item_tipo: 'porcentaje' | 'monto' | 'fijo',
+            descuento_item_tipo: 'porcentaje' | 'monto_fijo',
             descuento_item_valor: number,
             precio_unitario_final: number
         }>
@@ -157,11 +157,17 @@ export const useCrearPedido = () => {
         // Aplicar descuento item si existe (solo para visualización aproximada)
         if (item.descuento_item_tipo === 'porcentaje' && item.descuento_item_valor) {
             price = price * (1 - item.descuento_item_valor / 100)
-        } else if (item.descuento_item_tipo === 'monto' && item.descuento_item_valor) {
+        } else if (item.descuento_item_tipo === 'monto_fijo' && item.descuento_item_valor) {
             price = price - item.descuento_item_valor
         }
         return sum + (price * item.cantidad)
     }, 0)
+
+    const hasItemDiscounts = useMemo(() =>
+        cart.some(item => (item.descuento_item_valor ?? 0) > 0 || item.precio_unitario_final !== undefined),
+        [cart])
+
+    const hasGlobalDiscount = useMemo(() => (descuentoPedidoValor ?? 0) > 0, [descuentoPedidoValor])
 
     const handleSubmitOrder = async () => {
         if (!clienteSeleccionado) {
@@ -195,7 +201,7 @@ export const useCrearPedido = () => {
                     return {
                         sku_id: (item.producto as any).selectedSkuId || item.producto.id,
                         cantidad: item.cantidad,
-                        origen_precio: hasDiscount && hasPriceOverride ? 'negociado' : (hasDiscount || hasPriceOverride ? 'negociado' : 'catalogo'),
+                        origen_precio: hasDiscount || hasPriceOverride ? 'negociado' : 'catalogo',
                         // Send discount fields only if present
                         descuento_item_tipo: item.descuento_item_tipo,
                         descuento_item_valor: item.descuento_item_valor,
@@ -264,7 +270,7 @@ export const useCrearPedido = () => {
 
     const clientesFiltrados = useMemo(() => {
         const query = busquedaCliente.toLowerCase().trim()
-        if (!query) return clientes.slice(0, 5) // Mostrar los primeros 5 como sugerencia
+        if (!query) return [] // No mostrar sugerencias hasta que empiece a buscar
         return clientes.filter(c =>
             (c.razon_social || '').toLowerCase().includes(query) ||
             (c.identificacion || '').includes(query) ||
@@ -304,5 +310,7 @@ export const useCrearPedido = () => {
         setDescuentoPedidoTipo,
         descuentoPedidoValor,
         setDescuentoPedidoValor,
+        hasItemDiscounts,
+        hasGlobalDiscount,
     }
 }

@@ -1,5 +1,7 @@
 import * as React from 'react'
 import { UserService } from '../services/api/UserService'
+import { obtenerClientePorId, obtenerClientes } from '../features/supervisor/services/clientesApi'
+import { obtenerVendedores } from '../features/supervisor/services/usuariosApi'
 
 export interface UserProfile {
   id: string
@@ -35,8 +37,9 @@ export function useProfile() {
     setError(null)
     try {
       const data = await UserService.getProfile()
+      console.log('useProfile: Raw UserService.getProfile result:', data)
       if (data) {
-        setProfile({
+        const mapped = {
           id: data.id,
           email: data.email,
           nombre: data.name,
@@ -44,18 +47,61 @@ export function useProfile() {
           avatarUrl: data.photoUrl,
           rol: { id: 0, nombre: data.role },
           activo: data.active,
-          // These fields are not returned by the mobile service logic currently
           emailVerificado: false,
           createdAt: undefined
-        })
+        }
+        console.log('useProfile: Mapped user profile:', mapped)
+        setProfile(mapped)
       } else {
         setProfile(null)
       }
     } catch (e) {
+      console.error('useProfile: Profile load error:', e)
       const message = e instanceof Error ? e.message : 'No se pudo obtener el perfil'
       setError(message)
     } finally {
       setLoading(false)
+    }
+  }, [])
+
+  const loadClient = React.useCallback(async (id: string) => {
+    console.log('useProfile: Attempting to load client for ID:', id)
+    setClientLoading(true)
+    setClientError(null)
+    try {
+      let data = await obtenerClientePorId(id)
+      console.log('useProfile: obtenerClientePorId result:', data)
+
+      // Fallback: Si no lo encuentra por ID, intentar listar (para el rol cliente esto debería devolver solo su registro)
+      if (!data) {
+        console.log('useProfile: ID lookup failed, trying fallback (obtenerClientes)...')
+        const all = await obtenerClientes()
+        console.log('useProfile: obtenerClientes result length:', all.length)
+        if (all.length > 0) {
+          data = all[0]
+          console.log('useProfile: Fallback client selected:', data)
+        }
+      }
+
+      setClient(data)
+    } catch (e) {
+      console.error('useProfile: Client load error:', e)
+      setClientError(e instanceof Error ? e.message : 'Error al cargar datos del cliente')
+    } finally {
+      setClientLoading(false)
+    }
+  }, [])
+
+  const loadVendedores = React.useCallback(async () => {
+    try {
+      const vendors = await obtenerVendedores()
+      const map: Record<string, { id: string; nombre: string }> = {}
+      vendors.forEach(v => {
+        map[v.id] = v
+      })
+      setVendedorMap(map)
+    } catch (e) {
+      console.error('Error loading vendors map:', e)
     }
   }, [])
 
@@ -79,14 +125,24 @@ export function useProfile() {
     }
   }, [profile])
 
-  // Stub functions for compatibility
-  const loadClient = React.useCallback(async () => { }, [])
-  const loadVendedores = React.useCallback(async () => { }, [])
-  const updateClient = React.useCallback(async () => { }, [])
+  const updateClient = React.useCallback(async (_data: any) => { }, [])
 
   React.useEffect(() => {
-    loadProfile()
+    loadProfile().then(() => {
+      // Optional: if profile is loaded and is client, load additional data
+    })
   }, [loadProfile])
+
+  React.useEffect(() => {
+    if (profile?.rol?.nombre) {
+      const roleName = profile.rol.nombre.trim().toUpperCase()
+      console.log('useProfile: Checking role for data load. Role:', roleName)
+      if (roleName === 'CLIENTE') {
+        loadClient(profile.id)
+        loadVendedores()
+      }
+    }
+  }, [profile, loadClient, loadVendedores])
 
   return {
     profile,

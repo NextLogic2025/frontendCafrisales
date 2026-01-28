@@ -85,6 +85,7 @@ const SupervisorReportes = React.lazy(() => import('../features/supervisor/pages
 const SupervisorAlertas = React.lazy(() => import('../features/supervisor/pages/Alertas'))
 const SupervisorNotificaciones = React.lazy(() => import('../features/supervisor/pages/Notificaciones')) // User created this file
 const SupervisorPerfil = React.lazy(() => import('../features/supervisor/pages/Perfil'))
+const SupervisorPromociones = React.lazy(() => import('../features/supervisor/pages/Pedidos/PromocionesSupervisor'))
 
 export default function AppRouter() {
   return (
@@ -219,6 +220,7 @@ export default function AppRouter() {
             </Route>
           </Route>
           <Route path="pedidos" element={<SupervisorPedidos />} />
+          <Route path="promociones" element={<SupervisorPromociones />} />
           <Route path="bodega" element={<SupervisorBodega />} />
           <Route path="entregas" element={<SupervisorEntregas />} />
           <Route path="devoluciones" element={<SupervisorDevoluciones />} />

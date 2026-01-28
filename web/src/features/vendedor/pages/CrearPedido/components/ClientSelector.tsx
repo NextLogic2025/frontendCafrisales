@@ -57,11 +57,6 @@ export function ClientSelector({
 
                     {clientesFiltrados.length > 0 && (
                         <div className="absolute left-0 right-0 mt-2 max-h-60 overflow-y-auto rounded-lg border border-neutral-200 bg-white shadow-xl z-50">
-                            {!busqueda.trim() && (
-                                <div className="px-4 py-2 bg-neutral-50 border-b border-neutral-100 text-xs font-bold text-neutral-400 uppercase tracking-wider">
-                                    Sugerencias
-                                </div>
-                            )}
                             <div className="py-2">
                                 {clientesFiltrados.map((cliente) => (
                                     <button
