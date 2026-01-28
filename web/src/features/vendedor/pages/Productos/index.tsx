@@ -125,6 +125,15 @@ export default function VendedorProductos() {
           onConfirm={(sku) => confirmSkuSelection(productForSkuSelection, sku)}
         />
       )}
+
+      <CartToast
+        showToast={showToast}
+        lastAddedProduct={lastAddedProduct}
+        cart={cart}
+        setCart={setCart}
+        setShowToast={setShowToast}
+        goToCrearPedido={goToCrearPedido}
+      />
     </div>
   )
 }
