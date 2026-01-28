@@ -38,6 +38,8 @@ export type OrderResponse = {
   creado_por_id?: string
   creado_por?: string
   actualizado_por?: string
+  creado_en?: string
+  actualizado_en?: string
   fecha_entrega_sugerida?: string
 }
 
@@ -55,6 +57,8 @@ export type OrderItemDetail = {
   descuento_item_valor?: number
   precio_origen?: 'catalogo' | 'negociado'
   requiere_aprobacion?: boolean
+  aprobado_por?: string
+  aprobado_en?: string
   subtotal?: number
 }
 
@@ -154,6 +158,35 @@ const rawService = {
       return true
     } catch (error) {
       logErrorForDebugging(error, 'OrderService.updatePaymentMethod', { orderId })
+      return false
+    }
+  },
+
+  async getPendingPromoApprovals(): Promise<OrderListItem[]> {
+    try {
+      return await ApiService.get<OrderListItem[]>(`${ORDER_API_URL}/pedidos/promociones-pendientes`)
+    } catch (error) {
+      logErrorForDebugging(error, 'OrderService.getPendingPromoApprovals')
+      return []
+    }
+  },
+
+  async approvePromotions(orderId: string, payload: { approve_all?: boolean; item_ids?: string[] }): Promise<boolean> {
+    try {
+      await ApiService.patch(`${ORDER_API_URL}/pedidos/${orderId}/aprobar-promociones`, payload)
+      return true
+    } catch (error) {
+      logErrorForDebugging(error, 'OrderService.approvePromotions', { orderId })
+      return false
+    }
+  },
+
+  async rejectPromotions(orderId: string, payload: { reject_all?: boolean; item_ids?: string[] }): Promise<boolean> {
+    try {
+      await ApiService.patch(`${ORDER_API_URL}/pedidos/${orderId}/rechazar-promociones`, payload)
+      return true
+    } catch (error) {
+      logErrorForDebugging(error, 'OrderService.rejectPromotions', { orderId })
       return false
     }
   },

@@ -29,6 +29,9 @@ export function SellerOrderReviewScreen() {
   const [discountType, setDiscountType] = React.useState<'porcentaje' | 'monto_fijo'>('porcentaje')
   const [discountValue, setDiscountValue] = React.useState('')
   const [discountRequiresApproval, setDiscountRequiresApproval] = React.useState(false)
+  const [orderDiscountModalVisible, setOrderDiscountModalVisible] = React.useState(false)
+  const [orderDiscountType, setOrderDiscountType] = React.useState<'porcentaje' | 'monto_fijo'>('porcentaje')
+  const [orderDiscountValue, setOrderDiscountValue] = React.useState('')
   const [clientConditions, setClientConditions] = React.useState<{
     permite_negociacion?: boolean | null
     max_descuento_porcentaje?: number | null
@@ -37,6 +40,18 @@ export function SellerOrderReviewScreen() {
   const [loadingConditions, setLoadingConditions] = React.useState(false)
 
   const totals = cart.getTotals()
+  const subtotal = totals.subtotal
+  const parsedOrderDiscount = Number(orderDiscountValue)
+  const orderDiscountIsValid = Number.isFinite(parsedOrderDiscount) && parsedOrderDiscount > 0
+  const hasItemDiscounts = cart.items.some((item) => item.discountType && item.discountValue)
+  const orderDiscountAmount =
+    orderDiscountIsValid
+      ? orderDiscountType === 'porcentaje'
+        ? Number(((subtotal * parsedOrderDiscount) / 100).toFixed(2))
+        : Number(Math.min(subtotal, parsedOrderDiscount).toFixed(2))
+      : 0
+  const discountedBase = Number(Math.max(0, subtotal - orderDiscountAmount).toFixed(2))
+  const discountTax = Number((discountedBase * 0.15).toFixed(2))
 
   React.useEffect(() => {
     const clientId = cart.selectedClient?.usuario_id
@@ -69,24 +84,23 @@ export function SellerOrderReviewScreen() {
       navigation.navigate('SellerTabs', { screen: 'Carrito' })
       return
     }
-    const hasNegotiatedItems = cart.items.some((item) => item.discountType && item.discountValue)
-    if (clientConditions?.permite_negociacion === false && hasNegotiatedItems) {
-      showGlobalToast('El cliente no permite negociaciones', 'warning')
-      return
-    }
-    const maxDescuento = clientConditions?.max_descuento_porcentaje
-    if (maxDescuento != null) {
-      const exceeds = cart.items.some(
-        (item) => item.discountType === 'porcentaje' && (item.discountValue ?? 0) > maxDescuento,
-      )
-      if (exceeds) {
-        showGlobalToast(`El descuento maximo permitido es ${maxDescuento}%`, 'warning')
-        return
-      }
-    }
     if (!checked) {
       showGlobalToast('Confirma que revisaste el pedido', 'warning')
       return
+    }
+    if (orderDiscountAmount > 0 && hasItemDiscounts) {
+      showGlobalToast('No se permite descuento por item y pedido al mismo tiempo', 'warning')
+      return
+    }
+    if (orderDiscountAmount > 0) {
+      if (orderDiscountType === 'porcentaje' && parsedOrderDiscount > 100) {
+        showGlobalToast('El porcentaje no puede ser mayor a 100%', 'warning')
+        return
+      }
+      if (orderDiscountType === 'monto_fijo' && parsedOrderDiscount > subtotal) {
+        showGlobalToast('El descuento no puede ser mayor al subtotal', 'warning')
+        return
+      }
     }
 
     setSubmitting(true)
@@ -95,6 +109,8 @@ export function SellerOrderReviewScreen() {
         cliente_id: cart.selectedClient.usuario_id,
         zona_id: cart.selectedClient.zona_id,
         metodo_pago: cart.paymentMethod,
+        descuento_pedido_tipo: orderDiscountAmount > 0 ? orderDiscountType : undefined,
+        descuento_pedido_valor: orderDiscountAmount > 0 ? parsedOrderDiscount : undefined,
         items: cart.items.map((item) => ({
           sku_id: item.skuId,
           cantidad: item.quantity,
@@ -130,6 +146,8 @@ export function SellerOrderReviewScreen() {
       cart.clear()
       setCreditNotas('')
       setCreditPlazo('30')
+      setOrderDiscountValue('')
+      setOrderDiscountType('porcentaje')
       showGlobalToast('Pedido creado correctamente', 'success')
       navigation.navigate('SellerTabs', { screen: 'Carrito' })
     } finally {
@@ -151,8 +169,8 @@ export function SellerOrderReviewScreen() {
       showGlobalToast('Cargando condiciones del cliente...', 'warning')
       return
     }
-    if (clientConditions && clientConditions.permite_negociacion === false) {
-      showGlobalToast('El cliente no permite negociaciones', 'warning')
+    if (orderDiscountAmount > 0) {
+      showGlobalToast('No se permite descuento por item y pedido al mismo tiempo', 'warning')
       return
     }
     const item = cart.items.find((entry) => entry.skuId === itemId)
@@ -196,6 +214,28 @@ export function SellerOrderReviewScreen() {
       requiresApproval: discountRequiresApproval,
     })
     setDiscountModalVisible(false)
+  }
+
+  const applyOrderDiscount = () => {
+    const value = Number(orderDiscountValue)
+    if (!Number.isFinite(value) || value <= 0) {
+      setOrderDiscountValue('')
+      setOrderDiscountModalVisible(false)
+      return
+    }
+    if (hasItemDiscounts) {
+      showGlobalToast('Quita los descuentos por item para aplicar descuento al pedido', 'warning')
+      return
+    }
+    if (orderDiscountType === 'porcentaje' && value > 100) {
+      showGlobalToast('El porcentaje no puede ser mayor a 100%', 'warning')
+      return
+    }
+    if (orderDiscountType === 'monto_fijo' && value > subtotal) {
+      showGlobalToast('El descuento no puede ser mayor al subtotal', 'warning')
+      return
+    }
+    setOrderDiscountModalVisible(false)
   }
 
   return (
@@ -271,6 +311,36 @@ export function SellerOrderReviewScreen() {
           </View>
         </View>
 
+        <View className="bg-white rounded-3xl border border-neutral-100 p-4 mt-6 shadow-sm">
+          <View className="flex-row items-center justify-between">
+            <View>
+              <Text className="text-xs text-neutral-500">Descuento del pedido</Text>
+              {orderDiscountAmount > 0 ? (
+                <Text className="text-sm font-semibold text-amber-600 mt-1">
+                  {orderDiscountType === 'porcentaje'
+                    ? `${parsedOrderDiscount}%`
+                    : `-$${parsedOrderDiscount.toFixed(2)}`} · -${orderDiscountAmount.toFixed(2)}
+                </Text>
+              ) : (
+                <Text className="text-sm text-neutral-500 mt-1">Sin descuento aplicado</Text>
+              )}
+            </View>
+            <Pressable
+              onPress={() => setOrderDiscountModalVisible(true)}
+              className="px-3 py-1 rounded-full bg-amber-50"
+            >
+              <Text className="text-xs font-semibold text-amber-700">
+                {orderDiscountAmount > 0 ? 'Editar' : 'Agregar'}
+              </Text>
+            </Pressable>
+          </View>
+          {hasItemDiscounts ? (
+            <Text className="text-[11px] text-amber-700 mt-2">
+              No se permite descuento por item y pedido al mismo tiempo.
+            </Text>
+          ) : null}
+        </View>
+
         <Pressable
           onPress={() => setChecked((prev) => !prev)}
           className="mt-6 flex-row items-start bg-white border border-neutral-100 rounded-2xl px-4 py-4"
@@ -288,7 +358,12 @@ export function SellerOrderReviewScreen() {
         </Pressable>
 
         <View className="bg-white rounded-3xl border border-neutral-100 p-4 mt-6 shadow-sm">
-          <CartSummary totalItems={cart.getItemCount()} subtotal={totals.subtotal} tax={totals.tax} />
+          <CartSummary
+            totalItems={cart.getItemCount()}
+            subtotal={subtotal}
+            discount={orderDiscountAmount}
+            tax={discountTax}
+          />
           <View className="mt-4">
             <PrimaryButton
               title={submitting ? 'Confirmando...' : 'Confirmar pedido'}
@@ -381,6 +456,48 @@ export function SellerOrderReviewScreen() {
             <Text className="text-sm text-neutral-700">Requiere aprobacion</Text>
           </Pressable>
           <PrimaryButton title="Guardar descuento" onPress={applyDiscount} />
+        </View>
+      </GenericModal>
+
+      <GenericModal
+        visible={orderDiscountModalVisible}
+        title="Descuento del pedido"
+        onClose={() => setOrderDiscountModalVisible(false)}
+      >
+        <View className="gap-4">
+          <Text className="text-sm text-neutral-600">
+            Aplica un descuento general al pedido completo.
+          </Text>
+          <View className="flex-row gap-3">
+            <Pressable
+              onPress={() => setOrderDiscountType('porcentaje')}
+              className={`flex-1 rounded-xl px-4 py-2 border ${
+                orderDiscountType === 'porcentaje' ? 'bg-amber-50 border-amber-200' : 'border-neutral-200'
+              }`}
+            >
+              <Text className={`text-center text-sm font-semibold ${
+                orderDiscountType === 'porcentaje' ? 'text-amber-700' : 'text-neutral-700'
+              }`}>Porcentaje</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setOrderDiscountType('monto_fijo')}
+              className={`flex-1 rounded-xl px-4 py-2 border ${
+                orderDiscountType === 'monto_fijo' ? 'bg-amber-50 border-amber-200' : 'border-neutral-200'
+              }`}
+            >
+              <Text className={`text-center text-sm font-semibold ${
+                orderDiscountType === 'monto_fijo' ? 'text-amber-700' : 'text-neutral-700'
+              }`}>Monto fijo</Text>
+            </Pressable>
+          </View>
+          <TextField
+            label={orderDiscountType === 'porcentaje' ? 'Valor (%)' : 'Valor ($)'}
+            keyboardType="numeric"
+            value={orderDiscountValue}
+            onChangeText={setOrderDiscountValue}
+            placeholder={orderDiscountType === 'porcentaje' ? '5' : '10.00'}
+          />
+          <PrimaryButton title="Guardar descuento" onPress={applyOrderDiscount} />
         </View>
       </GenericModal>
     </View>

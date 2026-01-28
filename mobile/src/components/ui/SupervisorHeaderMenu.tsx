@@ -15,6 +15,7 @@ export function SupervisorHeaderMenu({ extraActions = [] }: Props) {
     { label: 'Catalogo', icon: 'cube-outline', onPress: () => navigation.navigate('SupervisorProducts') },
     { label: 'Precios', icon: 'cash-outline', onPress: () => navigation.navigate('SupervisorPrices') },
     { label: 'Pedidos', icon: 'receipt-outline', onPress: () => navigation.navigate('SupervisorPedidos') },
+    { label: 'Promociones', icon: 'sparkles-outline', onPress: () => navigation.navigate('SupervisorPromociones') },
     { label: 'Creditos', icon: 'card-outline', onPress: () => navigation.navigate('SupervisorCreditos') },
   ]
 

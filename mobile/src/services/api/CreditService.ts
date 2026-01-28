@@ -130,7 +130,10 @@ const rawService = {
 
   async getCreditByOrder(pedidoId: string): Promise<CreditDetailResponse | null> {
     try {
-      const data = await ApiService.get<CreditDetailResponse>(`${CREDIT_API_URL}/creditos?pedido_id=${encodeURIComponent(pedidoId)}`)
+      const data = await ApiService.get<CreditDetailResponse>(
+        `${CREDIT_API_URL}/creditos?pedido_id=${encodeURIComponent(pedidoId)}`,
+        { silent: true },
+      )
       if (!data) return null
       const credito = data.credito ? normalizeCredit(data.credito as CreditListItem) : data.credito
       const pagos = (data.pagos || []).map((p) => ({
@@ -144,7 +147,10 @@ const rawService = {
           }
         : undefined
       return { ...data, credito, pagos, totales }
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.name === 'ApiError' && error?.status === 404) {
+        return null
+      }
       logErrorForDebugging(error, 'CreditService.getCreditByOrder', { pedidoId })
       return null
     }
