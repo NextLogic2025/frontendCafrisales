@@ -55,6 +55,16 @@ export type LogisticRoute = {
   vehiculo?: Vehicle | null
 }
 
+export type RouteHistoryEntry = {
+  id: number
+  tipo: string
+  rutero_id: string
+  estado: string
+  cambiado_por_id: string
+  motivo?: string | null
+  creado_en: string
+}
+
 export type CreateLogisticRoutePayload = {
   fecha_rutero: string
   zona_id: string
@@ -128,6 +138,43 @@ const rawService = {
       return await ApiService.post<LogisticRoute>(`${ROUTE_API_URL}/ruteros-logisticos`, payload)
     } catch (error) {
       logErrorForDebugging(error, 'RouteService.createLogisticsRoute')
+      return null
+    }
+  },
+
+  async getLogisticsRouteHistory(id: string): Promise<RouteHistoryEntry[]> {
+    try {
+      return await ApiService.get<RouteHistoryEntry[]>(`${ROUTE_API_URL}/ruteros-logisticos/${id}/historial`)
+    } catch (error) {
+      logErrorForDebugging(error, 'RouteService.getLogisticsRouteHistory', { id })
+      return []
+    }
+  },
+
+  async addLogisticsRouteOrder(id: string, payload: { pedido_id: string; orden_entrega: number }): Promise<LogisticStop | null> {
+    try {
+      return await ApiService.post<LogisticStop>(`${ROUTE_API_URL}/ruteros-logisticos/${id}/orders`, payload)
+    } catch (error) {
+      logErrorForDebugging(error, 'RouteService.addLogisticsRouteOrder', { id })
+      return null
+    }
+  },
+
+  async removeLogisticsRouteOrder(id: string, pedidoId: string): Promise<boolean> {
+    try {
+      await ApiService.delete(`${ROUTE_API_URL}/ruteros-logisticos/${id}/orders/${pedidoId}`)
+      return true
+    } catch (error) {
+      logErrorForDebugging(error, 'RouteService.removeLogisticsRouteOrder', { id, pedidoId })
+      return false
+    }
+  },
+
+  async updateLogisticsRouteVehicle(id: string, vehiculo_id: string): Promise<LogisticRoute | null> {
+    try {
+      return await ApiService.put<LogisticRoute>(`${ROUTE_API_URL}/ruteros-logisticos/${id}/vehiculo`, { vehiculo_id })
+    } catch (error) {
+      logErrorForDebugging(error, 'RouteService.updateLogisticsRouteVehicle', { id })
       return null
     }
   },

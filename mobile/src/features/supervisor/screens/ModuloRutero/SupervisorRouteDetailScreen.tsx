@@ -141,6 +141,17 @@ export function SupervisorRouteDetailScreen() {
   const paradas = rutero?.paradas || []
   const vehiculoDisponible = rutero?.vehiculo?.estado ? rutero.vehiculo.estado === 'disponible' : true
   const canPublish = estado === 'borrador' && paradas.length > 0 && vehiculoDisponible
+  const canEdit = estado === 'borrador'
+
+  const openHistory = () => {
+    if (!ruteroId) return
+    navigation.navigate('SupervisorRuteroHistorial', { ruteroId })
+  }
+
+  const openEdit = () => {
+    if (!ruteroId) return
+    navigation.navigate('SupervisorRuteroEdit', { ruteroId })
+  }
 
   return (
     <View className="flex-1 bg-neutral-50">
@@ -252,6 +263,24 @@ export function SupervisorRouteDetailScreen() {
           </View>
 
           <View className="mt-6 gap-3">
+            <View className="flex-row items-center gap-3">
+              <Pressable
+                onPress={openHistory}
+                className="flex-1 rounded-2xl border border-neutral-200 px-4 py-3 items-center bg-white"
+              >
+                <Text className="text-sm font-semibold text-neutral-700">Ver historial</Text>
+              </Pressable>
+              <Pressable
+                onPress={openEdit}
+                disabled={!canEdit}
+                className={`flex-1 rounded-2xl border px-4 py-3 items-center ${canEdit ? 'border-amber-200 bg-amber-50' : 'border-neutral-200 bg-neutral-50'}`}
+              >
+                <Text className={`text-sm font-semibold ${canEdit ? 'text-amber-700' : 'text-neutral-300'}`}>
+                  Editar rutero
+                </Text>
+              </Pressable>
+            </View>
+
             {estado === 'borrador' ? (
               <PrimaryButton
                 title={updating ? 'Publicando...' : 'Publicar rutero'}

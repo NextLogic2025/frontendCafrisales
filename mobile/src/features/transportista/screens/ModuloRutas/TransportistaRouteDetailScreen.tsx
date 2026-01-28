@@ -1,5 +1,5 @@
 import React from 'react'
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native'
+import { ActivityIndicator, Pressable, ScrollView, Text, View, TextInput } from 'react-native'
 import MapView, { Marker, Polygon, PROVIDER_GOOGLE } from 'react-native-maps'
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -9,6 +9,7 @@ import { GenericModal } from '../../../../components/ui/GenericModal'
 import { BRAND_COLORS } from '../../../../shared/types'
 import { RouteService, LogisticRoute } from '../../../../services/api/RouteService'
 import { OrderService } from '../../../../services/api/OrderService'
+import { Delivery, DeliveryService } from '../../../../services/api/DeliveryService'
 import { UserClientService } from '../../../../services/api/UserClientService'
 import { ZoneService } from '../../../../services/api/ZoneService'
 import { extractPolygons, MapPoint } from '../../../../utils/zoneGeometry'
@@ -43,7 +44,14 @@ export function TransportistaRouteDetailScreen() {
   const [activeStopId, setActiveStopId] = React.useState<string | null>(null)
   const [showMapModal, setShowMapModal] = React.useState(false)
   const [updating, setUpdating] = React.useState(false)
+  const [deliveries, setDeliveries] = React.useState<Delivery[]>([])
+  const [deliveryModalOpen, setDeliveryModalOpen] = React.useState(false)
+  const [deliveryMode, setDeliveryMode] = React.useState<'complete' | 'no' | null>(null)
+  const [deliveryTarget, setDeliveryTarget] = React.useState<Delivery | null>(null)
+  const [deliveryNote, setDeliveryNote] = React.useState('')
+  const [deliveryReason, setDeliveryReason] = React.useState('')
   const mapRef = React.useRef<MapView | null>(null)
+  const modalMapRef = React.useRef<MapView | null>(null)
 
   const loadRutero = React.useCallback(async () => {
     if (!ruteroId) return
@@ -61,6 +69,18 @@ export function TransportistaRouteDetailScreen() {
       loadRutero()
     }, [loadRutero]),
   )
+
+  React.useEffect(() => {
+    const loadDeliveries = async () => {
+      if (!ruteroId) {
+        setDeliveries([])
+        return
+      }
+      const data = await DeliveryService.getDeliveries({ rutero_logistico_id: ruteroId })
+      setDeliveries(data)
+    }
+    loadDeliveries()
+  }, [ruteroId])
 
   React.useEffect(() => {
     const loadZone = async () => {
@@ -136,6 +156,22 @@ export function TransportistaRouteDetailScreen() {
     )
   }, [activeStopId, markers])
 
+  React.useEffect(() => {
+    if (!showMapModal || !modalMapRef.current) return
+    const coords: { latitude: number; longitude: number }[] = []
+    if (zonePolygon?.length) {
+      coords.push(...zonePolygon)
+    }
+    if (markers.length) {
+      coords.push(...markers.map((m) => ({ latitude: m.latitude, longitude: m.longitude })))
+    }
+    if (!coords.length) return
+    modalMapRef.current.fitToCoordinates(coords, {
+      edgePadding: { top: 60, right: 60, bottom: 60, left: 60 },
+      animated: true,
+    })
+  }, [showMapModal, zonePolygon, markers])
+
   const handleStart = async () => {
     if (!ruteroId) return
     setUpdating(true)
@@ -146,6 +182,8 @@ export function TransportistaRouteDetailScreen() {
         return
       }
       setRutero(updated)
+      const refresh = await DeliveryService.getDeliveries({ rutero_logistico_id: ruteroId })
+      setDeliveries(refresh)
       showGlobalToast('Rutero iniciado', 'success')
     } finally {
       setUpdating(false)
@@ -169,6 +207,70 @@ export function TransportistaRouteDetailScreen() {
   }
 
   const estado = rutero?.estado || 'publicado'
+  const deliveriesByOrder = React.useMemo(() => {
+    return deliveries.reduce<Record<string, Delivery>>((acc, item) => {
+      acc[item.pedido_id] = item
+      return acc
+    }, {})
+  }, [deliveries])
+
+  const statusStyle = (status?: string) => {
+    switch (status) {
+      case 'entregado_completo':
+        return { label: 'Entregado', bg: '#DCFCE7', color: '#166534' }
+      case 'entregado_parcial':
+        return { label: 'Parcial', bg: '#FEF3C7', color: '#92400E' }
+      case 'no_entregado':
+        return { label: 'No entregado', bg: '#FEE2E2', color: '#991B1B' }
+      case 'en_ruta':
+        return { label: 'En ruta', bg: '#FFE8D6', color: '#B45309' }
+      default:
+        return { label: 'Pendiente', bg: '#E5E7EB', color: '#4B5563' }
+    }
+  }
+
+  const openDeliveryModal = (mode: 'complete' | 'no', delivery: Delivery) => {
+    setDeliveryMode(mode)
+    setDeliveryTarget(delivery)
+    setDeliveryNote('')
+    setDeliveryReason('')
+    setDeliveryModalOpen(true)
+  }
+
+  const handleDeliverySubmit = async () => {
+    if (!deliveryTarget || !deliveryMode) return
+    if (deliveryMode === 'no' && !deliveryReason.trim()) {
+      showGlobalToast('Ingresa el motivo de no entrega', 'warning')
+      return
+    }
+    setUpdating(true)
+    try {
+      if (deliveryMode === 'complete') {
+        const updated = await DeliveryService.completeDelivery(deliveryTarget.id, {
+          observaciones: deliveryNote.trim() || undefined,
+        })
+        if (!updated) {
+          showGlobalToast('No se pudo marcar la entrega', 'error')
+          return
+        }
+      } else {
+        const updated = await DeliveryService.markNoDelivery(deliveryTarget.id, {
+          motivo_no_entrega: deliveryReason.trim(),
+          observaciones: deliveryNote.trim() || undefined,
+        })
+        if (!updated) {
+          showGlobalToast('No se pudo marcar la no entrega', 'error')
+          return
+        }
+      }
+      const refresh = await DeliveryService.getDeliveries({ rutero_logistico_id: ruteroId })
+      setDeliveries(refresh)
+      setDeliveryModalOpen(false)
+      showGlobalToast('Entrega actualizada', 'success')
+    } finally {
+      setUpdating(false)
+    }
+  }
 
   return (
     <View className="flex-1 bg-neutral-50">
@@ -238,17 +340,9 @@ export function TransportistaRouteDetailScreen() {
                     pinColor={BRAND_COLORS.red}
                   >
                     <View className="items-center">
-                      <View className="w-7 h-7 rounded-full items-center justify-center border border-white" style={{ backgroundColor: BRAND_COLORS.red }}>
+                      <View className="w-8 h-8 rounded-full items-center justify-center border-2 border-white" style={{ backgroundColor: BRAND_COLORS.red }}>
                         <Text className="text-[11px] text-white font-bold">{marker.orden}</Text>
                       </View>
-                      <View className="mt-1 px-2 py-0.5 rounded-full bg-white border border-neutral-200">
-                        <Text className="text-[10px] text-neutral-700">{marker.label}</Text>
-                      </View>
-                      {marker.address ? (
-                        <View className="mt-1 px-2 py-0.5 rounded-full bg-white border border-neutral-200">
-                          <Text className="text-[9px] text-neutral-500">{marker.address}</Text>
-                        </View>
-                      ) : null}
                     </View>
                   </Marker>
                 ))}
@@ -286,6 +380,31 @@ export function TransportistaRouteDetailScreen() {
                       </Text>
                     ) : null}
                     <Text className="text-[11px] text-neutral-500 mt-1">Orden #{stop.orden_entrega}</Text>
+                    <View className="mt-2 flex-row items-center justify-between">
+                      <View className="px-2.5 py-1 rounded-full" style={{ backgroundColor: statusStyle(deliveriesByOrder[stop.pedido_id]?.estado).bg }}>
+                        <Text className="text-[10px] font-semibold" style={{ color: statusStyle(deliveriesByOrder[stop.pedido_id]?.estado).color }}>
+                          {statusStyle(deliveriesByOrder[stop.pedido_id]?.estado).label}
+                        </Text>
+                      </View>
+                      {estado === 'en_curso' && deliveriesByOrder[stop.pedido_id] ? (
+                        <View className="flex-row items-center gap-2">
+                          <Pressable
+                            onPress={() => openDeliveryModal('complete', deliveriesByOrder[stop.pedido_id])}
+                            className="px-3 py-1 rounded-full border border-emerald-200"
+                            style={{ backgroundColor: '#ECFDF3' }}
+                          >
+                            <Text className="text-[10px] font-semibold text-emerald-700">Entregado</Text>
+                          </Pressable>
+                          <Pressable
+                            onPress={() => openDeliveryModal('no', deliveriesByOrder[stop.pedido_id])}
+                            className="px-3 py-1 rounded-full border border-red-200"
+                            style={{ backgroundColor: '#FEE2E2' }}
+                          >
+                            <Text className="text-[10px] font-semibold text-red-700">No entregado</Text>
+                          </Pressable>
+                        </View>
+                      ) : null}
+                    </View>
                   </Pressable>
                 ))}
               </View>
@@ -312,7 +431,7 @@ export function TransportistaRouteDetailScreen() {
       >
         <View className="rounded-2xl overflow-hidden border border-neutral-200" style={{ height: 360 }}>
           <MapView
-            ref={(ref) => (mapRef.current = ref)}
+            ref={(ref) => (modalMapRef.current = ref)}
             provider={PROVIDER_GOOGLE}
             style={{ flex: 1 }}
             initialRegion={FALLBACK_REGION}
@@ -337,21 +456,47 @@ export function TransportistaRouteDetailScreen() {
                 pinColor={BRAND_COLORS.red}
               >
                 <View className="items-center">
-                  <View className="w-7 h-7 rounded-full items-center justify-center border border-white" style={{ backgroundColor: BRAND_COLORS.red }}>
+                  <View className="w-8 h-8 rounded-full items-center justify-center border-2 border-white" style={{ backgroundColor: BRAND_COLORS.red }}>
                     <Text className="text-[11px] text-white font-bold">{marker.orden}</Text>
                   </View>
-                  <View className="mt-1 px-2 py-0.5 rounded-full bg-white border border-neutral-200">
-                    <Text className="text-[10px] text-neutral-700">{marker.label}</Text>
-                  </View>
-                  {marker.address ? (
-                    <View className="mt-1 px-2 py-0.5 rounded-full bg-white border border-neutral-200">
-                      <Text className="text-[9px] text-neutral-500">{marker.address}</Text>
-                    </View>
-                  ) : null}
                 </View>
               </Marker>
             ))}
           </MapView>
+        </View>
+      </GenericModal>
+
+      <GenericModal
+        visible={deliveryModalOpen}
+        title={deliveryMode === 'no' ? 'Marcar no entregado' : 'Confirmar entrega'}
+        onClose={() => setDeliveryModalOpen(false)}
+      >
+        <View className="gap-3">
+          {deliveryMode === 'no' ? (
+            <View>
+              <Text className="text-xs text-neutral-500 mb-1">Motivo</Text>
+              <TextInput
+                value={deliveryReason}
+                onChangeText={setDeliveryReason}
+                placeholder="Ej: Cliente no estaba"
+                className="border border-neutral-200 rounded-2xl px-4 py-3 text-sm text-neutral-900 bg-neutral-50"
+              />
+            </View>
+          ) : null}
+          <View>
+            <Text className="text-xs text-neutral-500 mb-1">Observaciones (opcional)</Text>
+            <TextInput
+              value={deliveryNote}
+              onChangeText={setDeliveryNote}
+              placeholder="Notas de la entrega"
+              className="border border-neutral-200 rounded-2xl px-4 py-3 text-sm text-neutral-900 bg-neutral-50"
+            />
+          </View>
+          <PrimaryButton
+            title={updating ? 'Guardando...' : 'Confirmar'}
+            onPress={handleDeliverySubmit}
+            disabled={updating}
+          />
         </View>
       </GenericModal>
     </View>

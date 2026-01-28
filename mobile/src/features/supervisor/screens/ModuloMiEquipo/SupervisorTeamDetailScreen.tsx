@@ -45,6 +45,16 @@ function hasFullName(value: string) {
   return value.trim().split(/\s+/).filter(Boolean).length >= 2
 }
 
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
+}
+
+function isValidPhone(value: string) {
+  const cleaned = value.trim()
+  if (!cleaned) return true
+  return /^\+?\d{7,15}$/.test(cleaned.replace(/\s+/g, ''))
+}
+
 function getInitials(value: string) {
   const parts = value.trim().split(/\s+/).filter(Boolean)
   if (parts.length === 0) return '?'
@@ -77,6 +87,20 @@ export function SupervisorTeamDetailScreen() {
   const requiresCodigo = ['vendedor', 'bodeguero', 'transportista'].includes(role)
   const isTransportista = role === 'transportista'
 
+  React.useEffect(() => {
+    const loadDetail = async () => {
+      if (!user?.id) return
+      const detail = await UserService.getUserDetail(user.id)
+      if (!detail) return
+      setNombre(detail.name || user?.name || '')
+      setEmail(detail.email || user?.email || '')
+      setTelefono(detail.phone || user?.phone || '')
+    }
+    if (isEditing) {
+      loadDetail()
+    }
+  }, [isEditing, user?.id])
+
   const validateCreate = () => {
     const nextErrors: Record<string, string> = {}
     if (!nombre.trim()) {
@@ -85,6 +109,8 @@ export function SupervisorTeamDetailScreen() {
       nextErrors.nombre = 'Ingresa nombres y apellidos'
     }
     if (!email.trim()) nextErrors.email = 'Email requerido'
+    if (email.trim() && !isValidEmail(email)) nextErrors.email = 'Email no valido'
+    if (telefono.trim() && !isValidPhone(telefono)) nextErrors.telefono = 'Telefono no valido'
     if (!password.trim()) nextErrors.password = 'Contrasena requerida'
     if (!role) nextErrors.role = 'Rol requerido'
     if (requiresCodigo && !codigoEmpleadoSuffix.trim()) nextErrors.codigoEmpleado = 'Codigo requerido'
@@ -95,6 +121,14 @@ export function SupervisorTeamDetailScreen() {
 
   const validateUpdate = () => {
     const nextErrors: Record<string, string> = {}
+    if (!nombre.trim()) {
+      nextErrors.nombre = 'Nombre requerido'
+    } else if (!hasFullName(nombre)) {
+      nextErrors.nombre = 'Ingresa nombres y apellidos'
+    }
+    if (!email.trim()) nextErrors.email = 'Email requerido'
+    if (email.trim() && !isValidEmail(email)) nextErrors.email = 'Email no valido'
+    if (telefono.trim() && !isValidPhone(telefono)) nextErrors.telefono = 'Telefono no valido'
     if (!role) nextErrors.role = 'Rol requerido'
     if (requiresCodigo && !codigoEmpleadoSuffix.trim()) nextErrors.codigoEmpleado = 'Codigo requerido'
     if (isTransportista && !numeroLicencia.trim()) nextErrors.numeroLicencia = 'Numero de licencia requerido'
@@ -147,6 +181,10 @@ export function SupervisorTeamDetailScreen() {
         ? `${EMPLOYEE_CODE_PREFIX}${codigoEmpleadoSuffix.trim()}`
         : ''
       const result = await UserService.updateUser(user.id, {
+        nombre: nombre.trim(),
+        email: email.trim(),
+        telefono: telefono.trim(),
+        password: password.trim() ? password.trim() : undefined,
         activo,
         rol: role,
         codigoEmpleado,
@@ -208,6 +246,53 @@ export function SupervisorTeamDetailScreen() {
                 </View>
 
                 <View className="bg-white rounded-3xl border border-neutral-200 p-5 gap-4">
+                  <Text className="text-sm font-semibold text-neutral-600">Datos del empleado</Text>
+
+                  <TextField
+                    label="Nombre completo"
+                    placeholder="Ej. Ana Gomez"
+                    value={nombre}
+                    onChangeText={setNombre}
+                    autoCapitalize="words"
+                    error={errors.nombre}
+                  />
+                  <TextField
+                    label="Email"
+                    placeholder="correo@empresa.com"
+                    value={email}
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    textContentType="emailAddress"
+                    error={errors.email}
+                  />
+                  <TextField
+                    label="Telefono"
+                    placeholder="+59170000000"
+                    value={telefono}
+                    onChangeText={setTelefono}
+                    keyboardType="default"
+                    error={errors.telefono}
+                  />
+                  <TextField
+                    label="Contrasena (opcional)"
+                    placeholder="********"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                    textContentType="password"
+                    right={
+                      <TouchableOpacity
+                        onPress={() => setShowPassword((prev) => !prev)}
+                        accessibilityLabel={showPassword ? 'Ocultar contrasena' : 'Mostrar contrasena'}
+                      >
+                        <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={18} color="#6b7280" />
+                      </TouchableOpacity>
+                    }
+                  />
+
+                  <View className="h-px bg-neutral-100" />
+
                   <Text className="text-sm font-semibold text-neutral-600">Rol y credenciales</Text>
 
                   <View>
@@ -288,6 +373,7 @@ export function SupervisorTeamDetailScreen() {
                   value={telefono}
                   onChangeText={setTelefono}
                   keyboardType="default"
+                  error={errors.telefono}
                 />
                 <TextField
                   label="Contrasena"

@@ -39,6 +39,8 @@ import { SupervisorVehicleFormScreen } from '../features/supervisor/screens/Modu
 import { SupervisorRoutesScreen } from '../features/supervisor/screens/ModuloRutero/SupervisorRoutesScreen'
 import { SupervisorRouteDetailScreen } from '../features/supervisor/screens/ModuloRutero/SupervisorRouteDetailScreen'
 import { SupervisorRouteFormScreen } from '../features/supervisor/screens/ModuloRutero/SupervisorRouteFormScreen'
+import { SupervisorRouteHistoryScreen } from '../features/supervisor/screens/ModuloRutero/SupervisorRouteHistoryScreen'
+import { SupervisorRouteEditScreen } from '../features/supervisor/screens/ModuloRutero/SupervisorRouteEditScreen'
 
 const Tab = createBottomTabNavigator()
 const Stack = createNativeStackNavigator()
@@ -93,6 +95,8 @@ export function SupervisorNavigator() {
             <Stack.Screen name="SupervisorRuteros" component={SupervisorRoutesScreen} />
             <Stack.Screen name="SupervisorRuteroDetalle" component={SupervisorRouteDetailScreen} />
             <Stack.Screen name="SupervisorRuteroForm" component={SupervisorRouteFormScreen} />
+            <Stack.Screen name="SupervisorRuteroHistorial" component={SupervisorRouteHistoryScreen} />
+            <Stack.Screen name="SupervisorRuteroEdit" component={SupervisorRouteEditScreen} />
         </Stack.Navigator>
     )
 }
