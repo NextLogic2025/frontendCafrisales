@@ -20,6 +20,15 @@ export default function PerfilCliente() {
     handleSaveUser, handleSaveClient, formatGps
   } = usePerfilPage()
 
+  console.log('PerfilCliente: State:', {
+    activeStep,
+    role,
+    hasProfile: !!profile,
+    hasClient: !!client,
+    loading,
+    clientLoading
+  })
+
   if (loading && !profile) return <LoadingSpinner text="Cargando perfil..." />
 
   return (
@@ -33,11 +42,22 @@ export default function PerfilCliente() {
       <Steps
         steps={[
           { id: 'usuario', title: 'Usuario', caption: 'Datos de usuario' },
-          { id: 'cliente', title: 'Cliente', caption: 'Datos del cliente' },
+          { id: 'cliente', title: 'Cliente', caption: role.toUpperCase() === 'CLIENTE' ? 'Datos del cliente' : 'No disponible para tu rol' },
         ]}
         active={activeStep}
-        onSelect={(i) => setActiveStep(i)}
+        onSelect={(i) => {
+          if (i === 1 && role.toUpperCase() !== 'CLIENTE') {
+            console.warn('PerfilCliente: Attempted to access Client tab without proper role')
+            return
+          }
+          setActiveStep(i)
+        }}
       />
+
+      <div className="flex gap-2">
+        {loading && <span className="text-[10px] bg-blue-100 px-2 py-0.5 rounded text-blue-600">Actualizando perfil...</span>}
+        {clientLoading && <span className="text-[10px] bg-emerald-100 px-2 py-0.5 rounded text-emerald-600">Cargando datos extendidos...</span>}
+      </div>
 
       <ProfileHeader
         name={name}

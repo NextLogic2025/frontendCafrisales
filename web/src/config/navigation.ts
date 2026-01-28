@@ -56,6 +56,7 @@ export const SUPERVISOR_NAV_ITEMS: SidebarItem[] = [
   { id: 'zonas', label: 'Zonas', to: '/supervisor/zonas', icon: Map },
   { id: 'rutas', label: 'Rutas', to: '/supervisor/rutas', icon: Route },
   { id: 'pedidos', label: 'Pedidos', to: '/supervisor/pedidos', icon: ClipboardList },
+  { id: 'aprobacion-promociones', label: 'Aprobación Promociones', to: '/supervisor/promociones', icon: ListChecks },
   { id: 'bodega', label: 'Bodega', to: '/supervisor/bodega', icon: Package },
   { id: 'entregas', label: 'Entregas', to: '/supervisor/entregas', icon: Truck },
   { id: 'devoluciones', label: 'Devoluciones', to: '/supervisor/devoluciones', icon: RotateCcw },

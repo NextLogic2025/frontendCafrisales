@@ -5,7 +5,7 @@ export type OrderItemPayload = {
     sku_id: string
     cantidad: number
     precio_unitario_final?: number
-    descuento_item_tipo?: 'porcentaje' | 'monto' | 'fijo'
+    descuento_item_tipo?: 'porcentaje' | 'monto_fijo'
     descuento_item_valor?: number
     requiere_aprobacion?: boolean
     origen_precio?: 'catalogo' | 'negociado'
@@ -15,7 +15,7 @@ export type CreateOrderPayload = {
     cliente_id?: string
     zona_id?: string
     metodo_pago: 'contado' | 'credito'
-    descuento_pedido_tipo?: 'porcentaje' | 'monto' | 'fijo'
+    descuento_pedido_tipo?: 'porcentaje' | 'monto_fijo'
     descuento_pedido_valor?: number
     fecha_entrega_sugerida?: string
     notas?: string
@@ -29,12 +29,14 @@ export type OrderResponse = {
     subtotal?: number
     impuesto?: number
     descuento_pedido_valor?: number
-    descuento_pedido_tipo?: 'porcentaje' | 'monto' | 'fijo'
+    descuento_pedido_tipo?: 'porcentaje' | 'monto_fijo'
     estado?: string
     cliente_id?: string
     created_at?: string
     creado_en?: string
-    items?: OrderItemPayload[] | any[] // items from backend
+    items?: any[]
+    cliente_nombre?: string
+    vendedor_nombre?: string
 }
 
 const ORDERS_BASE_URL = env.api.orders
@@ -114,4 +116,56 @@ export async function getOrderById(id: string): Promise<OrderResponse> {
     }
 
     return await res.json()
+}
+
+// Supervisor Promotion Endpoints
+// Import necessary services
+import { obtenerClientes } from '../../supervisor/services/clientesApi' // Assuming path correction if needed, or check existing imports
+
+export async function getPendingPromotions(): Promise<OrderResponse[]> {
+    const token = await getValidToken()
+    if (!token) throw new Error('No hay sesión activa')
+
+    const [resPromos, resClientes] = await Promise.all([
+        fetch(`${ORDERS_API_URL}/pedidos/promociones-pendientes`, {
+            headers: { Authorization: `Bearer ${token}` }
+        }),
+        obtenerClientes('todos').catch(() => [])
+    ])
+
+    if (!resPromos.ok) return []
+
+    const dataPromos = await resPromos.json()
+    const clientesMap = new Map(resClientes.map(c => [c.id, c]))
+
+    return Array.isArray(dataPromos) ? dataPromos.map((p: any) => {
+        const clienteInfo = clientesMap.get(p.cliente_id)
+        return {
+            ...p,
+            cliente_nombre: clienteInfo?.razon_social || p.cliente_nombre || 'Cliente sin nombre',
+            vendedor_nombre: p.vendedor_nombre || '---', // Backend might provide this or we might need another fetch, but priority is client name
+        }
+    }) : []
+}
+
+export async function approvePromotions(
+    orderId: string,
+    options: { approve_all?: boolean; item_ids?: string[] }
+): Promise<void> {
+    const token = await getValidToken()
+    if (!token) throw new Error('No hay sesión activa')
+
+    const res = await fetch(`${ORDERS_API_URL}/pedidos/${orderId}/aprobar-promociones`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(options),
+    })
+
+    if (!res.ok) {
+        const errorData = await res.json().catch(() => null)
+        throw new Error(errorData?.message || 'Error al aprobar promociones')
+    }
 }

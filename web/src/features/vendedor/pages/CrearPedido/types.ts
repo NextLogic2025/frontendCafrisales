@@ -8,7 +8,7 @@ export interface CartItem {
     producto: Producto
     cantidad: number
     // Negotiation fields
-    descuento_item_tipo?: 'porcentaje' | 'monto' | 'fijo'
+    descuento_item_tipo?: 'porcentaje' | 'monto_fijo'
     descuento_item_valor?: number
     precio_unitario_final?: number
 }

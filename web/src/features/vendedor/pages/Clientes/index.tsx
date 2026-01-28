@@ -11,7 +11,8 @@ import { LoadingSpinner } from '../../../../components/ui/LoadingSpinner'
 import { QuickActionButton } from '../../../../components/ui/Cards'
 import { ClienteDetailModal, getClienteDisplayName, getClienteSecondaryName } from './ClienteDetailModal'
 import type { Cliente } from '../../../supervisor/services/clientesApi'
-import { obtenerMisClientes } from '../../../supervisor/services/clientesApi'
+import { obtenerMisClientes, obtenerZonas as obtenerZonasLegacy } from '../../../supervisor/services/clientesApi'
+import { obtenerZonas, type ZonaComercial } from '../../../supervisor/services/zonasApi'
 
 const ESTADOS = [
   { value: '', label: 'Todos' },
@@ -29,6 +30,7 @@ export default function VendedorClientes() {
   const [estadoFiltro, setEstadoFiltro] = useState('')
   const [detalleCliente, setDetalleCliente] = useState<Cliente | null>(null)
   const [isDetalleOpen, setIsDetalleOpen] = useState(false)
+  const [zonas, setZonas] = useState<ZonaComercial[]>([])
 
   useEffect(() => {
     let isMounted = true
@@ -36,8 +38,14 @@ export default function VendedorClientes() {
       setIsLoading(true)
       setError(null)
       try {
-        const data = await obtenerMisClientes()
-        if (isMounted) setClientes(data)
+        const [dataClientes, dataZonas] = await Promise.all([
+          obtenerMisClientes(),
+          obtenerZonas('activo')
+        ])
+        if (isMounted) {
+          setClientes(dataClientes)
+          setZonas(dataZonas)
+        }
       } catch (err: any) {
         console.error('Error cargando clientes:', err)
         if (isMounted) setError(err?.message || 'Error al cargar clientes')
@@ -52,21 +60,18 @@ export default function VendedorClientes() {
   }, [])
 
   const zonaOptions = useMemo(() => {
-    const map = new Map<string, string>()
-    clientes.forEach((cliente) => {
-      const id = cliente.zona_comercial?.id ?? cliente.zona_comercial_id
-      if (id != null) {
-        const key = String(id)
-        if (!map.has(key)) {
-          const nombre = cliente.zona_comercial?.nombre?.trim()
-          map.set(key, nombre && nombre.length > 0 ? nombre : `Zona ${key}`)
-        }
-      } else if (!map.has('sin-zona')) {
-        map.set('sin-zona', 'Sin zona asignada')
-      }
-    })
-    return Array.from(map.entries()).map(([value, label]) => ({ value, label }))
-  }, [clientes])
+    const options = zonas.map(z => ({
+      value: String(z.id),
+      label: z.nombre
+    }))
+
+    // Add "Sin zona asignada" if there are clients without zone
+    if (clientes.some(c => !c.zona_comercial_id && !c.zona_comercial)) {
+      options.push({ value: 'sin-zona', label: 'Sin zona asignada' })
+    }
+
+    return options
+  }, [zonas, clientes])
 
   const clientesFiltrados = useMemo(() => {
     const term = filtroBusqueda.trim().toLowerCase()
@@ -199,7 +204,12 @@ export default function VendedorClientes() {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {clientesFiltrados.map((cliente) => (
-              <ClienteAsignadoCard key={cliente.id} cliente={cliente} onView={handleVerDetalle} />
+              <ClienteAsignadoCard
+                key={cliente.id}
+                cliente={cliente}
+                onView={handleVerDetalle}
+                zonaNombreProp={zonas.find(z => String(z.id) === String(cliente.zona_comercial?.id ?? cliente.zona_comercial_id))?.nombre}
+              />
             ))}
           </div>
         )}
@@ -224,12 +234,20 @@ export default function VendedorClientes() {
   )
 }
 
-function ClienteAsignadoCard({ cliente, onView }: { cliente: Cliente; onView?: (cliente: Cliente) => void }) {
+function ClienteAsignadoCard({
+  cliente,
+  onView,
+  zonaNombreProp
+}: {
+  cliente: Cliente;
+  onView?: (cliente: Cliente) => void;
+  zonaNombreProp?: string
+}) {
   const navigate = useNavigate()
   const estado = cliente.bloqueado ? 'bloqueado' : cliente.deleted_at ? 'inactivo' : 'activo'
   const estadoVariant = estado === 'activo' ? 'success' : estado === 'bloqueado' ? 'error' : 'neutral'
   const estadoLabel = estado === 'bloqueado' ? 'Bloqueado' : estado === 'inactivo' ? 'Inactivo' : 'Activo'
-  const zonaNombre = cliente.zona_comercial?.nombre ?? (cliente.zona_comercial_id != null ? `Zona ${cliente.zona_comercial_id}` : 'Sin zona asignada')
+  const zonaNombre = zonaNombreProp ?? cliente.zona_comercial?.nombre ?? (cliente.zona_comercial_id != null ? `Zona ${cliente.zona_comercial_id}` : 'Sin zona asignada')
   const listaNombre = cliente.lista_precios?.nombre ?? (cliente.lista_precios_id != null ? `Lista ${cliente.lista_precios_id}` : null)
   const coords = getClienteCoords(cliente)
   const displayName = getClienteDisplayName(cliente)

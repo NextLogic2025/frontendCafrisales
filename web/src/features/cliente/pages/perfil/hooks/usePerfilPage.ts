@@ -60,8 +60,10 @@ export function usePerfilPage() {
     const name = profile?.nombre || (profile as any)?.nombreCompleto || client?.nombre_comercial || client?.razon_social || profile?.email || 'Cliente'
     const email = profile?.email || 'Sin correo'
     const phone = profile?.telefono || 'Sin teléfono'
-    const role = profile?.rol?.nombre || 'Sin rol'
-    const created = profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString('es-PE') : '---'
+    const normalizedRole = (profile?.rol?.nombre || '').trim().toUpperCase()
+    console.log('usePerfilPage: Normalized role for UI:', normalizedRole)
+    const role = normalizedRole || 'Sin rol'
+    const created = (profile?.createdAt || client?.created_at) ? new Date(profile?.createdAt || client?.created_at).toLocaleDateString('es-PE') : '---'
 
     async function handleSaveUser() {
         try {

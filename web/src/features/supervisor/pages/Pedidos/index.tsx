@@ -234,9 +234,6 @@ export default function PedidosPage() {
                     Cliente
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                    Vendedor
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                     Estado
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -258,9 +255,6 @@ export default function PedidosPage() {
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900">
                       {pedido.cliente?.razon_social || 'Sin cliente'}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-900">
-                      {pedido.vendedor?.nombreCompleto || pedido.vendedor?.email || 'Sin vendedor'}
                     </td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getEstadoBadgeColor(pedido.estado_actual || '')}`}>
@@ -335,17 +329,11 @@ export default function PedidosPage() {
         {pedidoDetalle && (
           <div className="space-y-6">
             {/* Información del Pedido */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
               <div>
                 <p className="text-xs text-gray-600">Cliente</p>
                 <p className="text-sm font-semibold text-gray-900">
                   {pedidoDetalle.cliente?.razon_social || 'Sin cliente'}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-600">Vendedor</p>
-                <p className="text-sm font-semibold text-gray-900">
-                  {pedidoDetalle.vendedor?.nombreCompleto || pedidoDetalle.vendedor?.email || 'Sin vendedor'}
                 </p>
               </div>
               <div>

@@ -50,21 +50,40 @@ export interface Pedido {
 const ORDERS_BASE_URL = env.api.orders
 const ORDERS_API_URL = ORDERS_BASE_URL.endsWith('/api') ? ORDERS_BASE_URL : `${ORDERS_BASE_URL}/api`
 
+import { obtenerClientes } from './clientesApi'
+
 export async function obtenerPedidos(): Promise<Pedido[]> {
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const res = await fetch(`${ORDERS_API_URL}/pedidos`, {
-        headers: { Authorization: `Bearer ${token}` }
-    })
+    const [resPedidos, resClientes] = await Promise.all([
+        fetch(`${ORDERS_API_URL}/pedidos`, {
+            headers: { Authorization: `Bearer ${token}` }
+        }),
+        obtenerClientes('todos').catch(() => [])
+    ])
 
-    if (!res.ok) {
+    if (!resPedidos.ok) {
         throw new Error('Error al obtener pedidos')
     }
 
-    const data = await res.json()
-    return Array.isArray(data) ? data.map(mapMobileToWebPedido) : []
+    const dataPedidos = await resPedidos.json()
+    const clientesMap = new Map(resClientes.map(c => [c.id, c]))
+
+    return Array.isArray(dataPedidos) ? dataPedidos.map(p => {
+        const mapped = mapMobileToWebPedido(p)
+        const clienteInfo = clientesMap.get(p.cliente_id)
+        if (clienteInfo) {
+            mapped.cliente = {
+                razon_social: clienteInfo.razon_social,
+                identificacion: clienteInfo.identificacion
+            }
+        }
+        return mapped
+    }) : []
 }
+
+import { obtenerClientePorId } from './clientesApi'
 
 export async function obtenerPedidoPorId(id: string): Promise<Pedido | null> {
     const token = await getValidToken()
@@ -76,7 +95,24 @@ export async function obtenerPedidoPorId(id: string): Promise<Pedido | null> {
 
     if (!res.ok) return null
     const data = await res.json()
-    return mapMobileToWebPedido(data.pedido || data)
+    const rawPedido = data.pedido || data
+
+    // Hydrate client if missing
+    if (rawPedido.cliente_id) {
+        try {
+            const clienteInfo = await obtenerClientePorId(rawPedido.cliente_id)
+            if (clienteInfo) {
+                rawPedido.cliente = {
+                    razon_social: clienteInfo.razon_social,
+                    identificacion: clienteInfo.identificacion
+                }
+            }
+        } catch (e) {
+            console.warn('Could not hydrate client for order detail', e)
+        }
+    }
+
+    return mapMobileToWebPedido(rawPedido)
 }
 
 // Mapper to adapt Mobile/Backend response to the Web UI expected structure
