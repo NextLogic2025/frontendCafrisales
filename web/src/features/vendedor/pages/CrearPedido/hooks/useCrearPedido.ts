@@ -216,13 +216,19 @@ export const useCrearPedido = () => {
             // Si es crédito, registrar la aprobación de crédito inmediatamente
             if (condicionPagoManual === 'CREDITO') {
                 try {
-                    await approveCredit({
+                    // Ensure monto_aprobado is a finite number
+                    const montoFromPedido = Number((pedido as any)?.total)
+                    const monto = Number.isFinite(montoFromPedido) && montoFromPedido > 0 ? montoFromPedido : Number(total)
+                    const creditPayload = {
                         pedido_id: pedido.id,
                         cliente_id: clienteSeleccionado,
-                        monto_aprobado: pedido.total || total, // Use returned total if available
+                        monto_aprobado: monto,
                         plazo_dias: plazoDias,
                         notas: notasCredito
-                    })
+                    }
+                    // Log payload for debugging network issues
+                    console.log('Aprobación de crédito - payload:', creditPayload)
+                    await approveCredit(creditPayload)
                 } catch (creditErr) {
                     console.error('Error al registrar aprobación de crédito:', creditErr)
                     // REQUISITO: Si falla la aprobación de crédito, NO debe crearse el pedido.

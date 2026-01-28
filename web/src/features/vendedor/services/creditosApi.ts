@@ -51,8 +51,20 @@ export async function approveCredit(payload: ApproveCreditPayload): Promise<Cred
     })
 
     if (!res.ok) {
-        const errorData = await res.json().catch(() => null)
-        throw new Error(errorData?.message || 'Error al aprobar el crédito')
+        // Try to parse JSON error, otherwise read text for better debugging
+        let errorMessage: string | null = null
+        try {
+            const errorData = await res.json()
+            errorMessage = errorData?.message || JSON.stringify(errorData)
+        } catch (e) {
+            try {
+                errorMessage = await res.text()
+            } catch (_) {
+                errorMessage = null
+            }
+        }
+        const statusText = res.statusText || ''
+        throw new Error(errorMessage ? `${statusText}: ${errorMessage}` : `Error al aprobar el crédito (${res.status})`)
     }
 
     return await res.json()

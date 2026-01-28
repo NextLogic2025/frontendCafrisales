@@ -202,7 +202,7 @@ export default function VendedorCredito() {
     const totalPagado = activeCredits.reduce((sum, c) => sum + Number(c.total_pagado), 0)
 
     return (
-        <div className="mx-auto max-w-6xl space-y-6">
+        <div className="space-y-6 w-full">
             <PageHero
                 title="Gestión de Crédito"
                 subtitle="Monitorea el estado crediticio y límites de tu cartera"
