@@ -7,54 +7,43 @@ import { Pedido, EstadoPedido } from '../../../cliente/types'
 import { LoadingSpinner } from '../../../../components/ui/LoadingSpinner'
 import { Modal } from '../../../../components/ui/Modal'
 
+import { formatEstadoPedido } from '../../../../utils/statusHelpers'
+
 // Componente auxiliar para estado
-const EstadoBadge = ({ estado }: { estado: EstadoPedido }) => {
-  const getVariant = (est: EstadoPedido) => {
-    switch (est) {
-      case EstadoPedido.PENDING: return 'warning'
-      case EstadoPedido.APPROVED: return 'success'
-      case EstadoPedido.CANCELLED: return 'error'
-      case EstadoPedido.IN_TRANSIT: return 'info'
-      case EstadoPedido.DELIVERED: return 'success'
-      case EstadoPedido.IN_PREPARATION: return 'neutral'
-      default: return 'neutral'
-    }
+const EstadoBadge = ({ estado }: { estado: EstadoPedido | string }) => {
+  const getVariant = (est: string) => {
+    const normalized = String(est).toUpperCase()
+    if (normalized.includes('PENDING') || normalized.includes('PENDIENTE')) return 'warning'
+    if (normalized.includes('APPROVED') || normalized.includes('APROBADO')) return 'success'
+    if (normalized.includes('CANCELLED') || normalized.includes('CANCELADO') || normalized.includes('ANULADO')) return 'error'
+    if (normalized.includes('TRANSIT') || normalized.includes('RUTA')) return 'info'
+    if (normalized.includes('DELIVERED') || normalized.includes('ENTREGADO')) return 'success'
+    if (normalized.includes('PREPARATION') || normalized.includes('PREPARACION')) return 'neutral'
+    return 'neutral'
   }
 
-  const getLabel = (est: EstadoPedido) => {
-    switch (est) {
-      case EstadoPedido.PENDING: return 'Pendiente'
-      case EstadoPedido.APPROVED: return 'Aprobado'
-      case EstadoPedido.CANCELLED: return 'Anulado'
-      case EstadoPedido.IN_TRANSIT: return 'En Ruta'
-      case EstadoPedido.DELIVERED: return 'Entregado'
-      case EstadoPedido.IN_PREPARATION: return 'En Preparación'
-      default: return est
-    }
-  }
-
-  return <StatusBadge variant={getVariant(estado)}>{getLabel(estado)}</StatusBadge>
+  return <StatusBadge variant={getVariant(estado)}>{formatEstadoPedido(estado)}</StatusBadge>
 }
 
+import { usePedidos, FilterOrigin } from './hooks/usePedidos'
+
 export default function VendedorPedidos() {
-  const [pedidos, setPedidos] = useState<Pedido[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
+  const {
+    pedidos: filteredPedidos,
+    isLoading,
+    searchTerm,
+    setSearchTerm,
+    fetchPedidos,
+    filterOrigin,
+    setFilterOrigin,
+    page,
+    setPage,
+    totalPages,
+    totalPedidos,
+    itemsPerPage
+  } = usePedidos()
+
   const [selectedPedido, setSelectedPedido] = useState<Pedido | null>(null)
-
-  const fetchPedidos = async () => {
-    setIsLoading(false)
-    setPedidos([])
-  }
-
-  useEffect(() => {
-    fetchPedidos()
-  }, [])
-
-  const filteredPedidos = pedidos.filter(p =>
-    p.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.id.toLowerCase().includes(searchTerm.toLowerCase())
-  )
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-EC', {
@@ -79,26 +68,66 @@ export default function VendedorPedidos() {
 
       {/* Filtros */}
       <section className="rounded-xl border border-neutral-200 bg-white p-6">
-        <div className="flex flex-wrap gap-4 items-end">
-          <div className="flex-1 min-w-[200px]">
-            <label className="block text-sm font-medium text-neutral-700 mb-2">
-              Buscar Pedido
-            </label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                placeholder="Número de pedido..."
-                className="w-full pl-10 pr-4 py-2 rounded-lg border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent"
-              />
+        <div className="flex flex-col md:flex-row gap-6 items-end justify-between">
+          <div className="flex-1 w-full md:w-auto space-y-4">
+            {/* Buscador */}
+            <div className="max-w-md">
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
+                Buscar Pedido
+              </label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  placeholder="Número de pedido..."
+                  className="w-full pl-10 pr-4 py-2 rounded-lg border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            {/* Filtros de Origen */}
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
+                Filtrar por Creador
+              </label>
+              <div className="inline-flex rounded-lg border border-neutral-200 p-1 bg-neutral-50">
+                <button
+                  onClick={() => setFilterOrigin('all')}
+                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${filterOrigin === 'all'
+                    ? 'bg-white text-neutral-900 shadow-sm'
+                    : 'text-neutral-500 hover:text-neutral-700'
+                    }`}
+                >
+                  Todos
+                </button>
+                <button
+                  onClick={() => setFilterOrigin('me')}
+                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${filterOrigin === 'me'
+                    ? 'bg-white text-neutral-900 shadow-sm'
+                    : 'text-neutral-500 hover:text-neutral-700'
+                    }`}
+                >
+                  Creados por mí
+                </button>
+                <button
+                  onClick={() => setFilterOrigin('client')}
+                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${filterOrigin === 'client'
+                    ? 'bg-white text-neutral-900 shadow-sm'
+                    : 'text-neutral-500 hover:text-neutral-700'
+                    }`}
+                >
+                  Del Cliente
+                </button>
+              </div>
             </div>
           </div>
+
           <button
             onClick={fetchPedidos}
             disabled={isLoading}
-            className="px-4 py-2 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors flex items-center gap-2 h-10"
           >
             <RefreshCcw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             Actualizar
@@ -108,60 +137,120 @@ export default function VendedorPedidos() {
 
       {/* Lista de Pedidos */}
       <section className="rounded-xl border border-neutral-200 bg-white p-6">
-        <h3 className="text-lg font-bold text-neutral-950 mb-4">Lista de Pedidos ({filteredPedidos.length})</h3>
+        <h3 className="text-lg font-bold text-neutral-950 mb-4">Lista de Pedidos ({totalPedidos})</h3>
 
-        {isLoading ? (
-          <div className="flex justify-center py-12">
-            <LoadingSpinner />
-          </div>
-        ) : filteredPedidos.length === 0 ? (
-          <EmptyContent
-            icon={<ClipboardList className="h-16 w-16" />}
-            title="No hay pedidos registrados"
-            description="Los pedidos que crees o que tus clientes generen aparecerán aquí"
-          />
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-neutral-50 border-b border-neutral-200">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-neutral-600 uppercase">ID</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-neutral-600 uppercase">Fecha</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-neutral-600 uppercase">Estado</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-neutral-600 uppercase">Total</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-neutral-600 uppercase">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-200">
-                {filteredPedidos.map(pedido => (
-                  <tr key={pedido.id} className="hover:bg-neutral-50">
-                    <td className="px-4 py-3 text-sm font-mono text-neutral-900">{pedido.orderNumber}</td>
-                    <td className="px-4 py-3 text-sm text-neutral-600">{formatDate(pedido.createdAt)}</td>
-                    <td className="px-4 py-3">
-                      <EstadoBadge estado={pedido.status} />
-                    </td>
-                    <td className="px-4 py-3 text-sm font-bold text-neutral-900 text-right">
-                      ${pedido.totalAmount.toFixed(2)}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <button
-                        onClick={() => setSelectedPedido(pedido)}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-neutral-100 text-neutral-700 text-xs font-medium rounded-lg hover:bg-neutral-200 transition-colors"
-                      >
-                        <Eye className="h-3 w-3" /> Ver
-                      </button>
-                    </td>
+        {
+          isLoading ? (
+            <div className="flex justify-center py-12">
+              <LoadingSpinner />
+            </div>
+          ) : filteredPedidos.length === 0 ? (
+            <EmptyContent
+              icon={<ClipboardList className="h-16 w-16" />}
+              title="No hay pedidos registrados"
+              description="Los pedidos que crees o que tus clientes generen aparecerán aquí"
+            />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-neutral-50 border-b border-neutral-200">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-neutral-600 uppercase">ID</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-neutral-600 uppercase">Fecha</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-neutral-600 uppercase">Estado</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-neutral-600 uppercase">Total</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-neutral-600 uppercase">Acciones</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                </thead>
+                <tbody className="divide-y divide-neutral-200">
+                  {filteredPedidos.map(pedido => (
+                    <tr key={pedido.id} className="hover:bg-neutral-50">
+                      <td className="px-4 py-3 text-sm font-mono text-neutral-900">{pedido.orderNumber}</td>
+                      <td className="px-4 py-3 text-sm text-neutral-600">{formatDate(pedido.createdAt)}</td>
+                      <td className="px-4 py-3">
+                        <EstadoBadge estado={pedido.status} />
+                      </td>
+                      <td className="px-4 py-3 text-sm font-bold text-neutral-900 text-right">
+                        ${pedido.totalAmount.toFixed(2)}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={() => setSelectedPedido(pedido)}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-neutral-100 text-neutral-700 text-xs font-medium rounded-lg hover:bg-neutral-200 transition-colors"
+                        >
+                          <Eye className="h-3 w-3" /> Ver
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
+        }
       </section>
 
+      {/* Paginación */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between border-t border-neutral-200 bg-white px-4 py-3 sm:px-6 rounded-xl">
+          <div className="flex flex-1 justify-between sm:hidden">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="relative inline-flex items-center rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50"
+            >
+              Anterior
+            </button>
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="relative ml-3 inline-flex items-center rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50"
+            >
+              Siguiente
+            </button>
+          </div>
+          <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm text-neutral-700">
+                Mostrando <span className="font-medium">{(page - 1) * itemsPerPage + 1}</span> a <span className="font-medium">{Math.min(page * itemsPerPage, totalPedidos)}</span> de <span className="font-medium">{totalPedidos}</span> resultados
+              </p>
+            </div>
+            <div>
+              <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="relative inline-flex items-center rounded-l-md px-2 py-2 text-neutral-400 ring-1 ring-inset ring-neutral-300 hover:bg-neutral-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                >
+                  <span className="sr-only">Anterior</span>
+                  <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                  </svg>
+                </button>
+                {/* Simple pagination logic: Show current page */}
+                <span className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-neutral-900 ring-1 ring-inset ring-neutral-300 focus:outline-offset-0">
+                  Página {page} de {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="relative inline-flex items-center rounded-r-md px-2 py-2 text-neutral-400 ring-1 ring-inset ring-neutral-300 hover:bg-neutral-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                >
+                  <span className="sr-only">Siguiente</span>
+                  <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </nav>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal Detalle */}
-      <Modal
-        isOpen={!!selectedPedido}
+      < Modal
+        isOpen={!!selectedPedido
+        }
         onClose={() => setSelectedPedido(null)}
         title={`Detalle Pedido #${selectedPedido?.orderNumber}`}
         maxWidth="2xl"
@@ -234,18 +323,9 @@ export default function VendedorPedidos() {
             </div>
           </div>
         )}
-      </Modal>
+      </Modal >
 
-      {/* Leyenda de Estados */}
-      <section className="rounded-xl border border-neutral-200 bg-white p-6">
-        <h4 className="font-semibold text-neutral-950 mb-3">Estados del Pedido</h4>
-        <div className="flex flex-wrap gap-3">
-          <StatusBadge variant="warning">Pendiente</StatusBadge>
-          <StatusBadge variant="success">Aprobado</StatusBadge>
-          <StatusBadge variant="error">Anulado</StatusBadge>
-          <StatusBadge variant="info">En Ruta</StatusBadge>
-        </div>
-      </section>
-    </div>
+
+    </div >
   )
 }

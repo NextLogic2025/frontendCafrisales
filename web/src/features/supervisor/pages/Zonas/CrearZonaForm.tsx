@@ -165,6 +165,16 @@ export function CrearZonaForm({
           Cancelar
         </button>
 
+        {step === 2 && (
+          <button
+            type="button"
+            onClick={() => setStep(1)}
+            className="inline-flex items-center justify-center rounded-xl px-4 py-3 font-extrabold transition bg-gray-200 text-gray-800 hover:bg-gray-300"
+          >
+            Atrás
+          </button>
+        )}
+
         {step === 1 ? (
           <button
             type="button"

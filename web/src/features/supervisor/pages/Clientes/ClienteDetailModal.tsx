@@ -86,6 +86,12 @@ export function ClienteDetailModal({ isOpen, onClose, cliente, zonas, listasPrec
             <div className="space-y-1">
               <p className="text-lg font-bold text-gray-900">{cliente.razon_social}</p>
               {cliente.nombre_comercial && <p className="text-sm text-gray-600">{cliente.nombre_comercial}</p>}
+              {(cliente.nombres || cliente.apellidos) && (
+                <p className="text-sm text-gray-700">
+                  Contacto: {[cliente.nombres, cliente.apellidos].filter(Boolean).join(' ')}
+                </p>
+              )}
+              {cliente.email && <p className="text-sm text-gray-700">Email: {cliente.email}</p>}
               <p className="text-sm text-gray-700">{cliente.tipo_identificacion}: {cliente.identificacion}</p>
               {cliente.direccion_texto && <p className="text-sm text-gray-700">Dirección: {cliente.direccion_texto}</p>}
               {zonaNombre && <p className="text-sm text-gray-700">Zona: {zonaNombre}</p>}

@@ -180,6 +180,16 @@ const rawService = {
       return false
     }
   },
+
+  async rejectPromotions(orderId: string, payload: { reject_all?: boolean; item_ids?: string[] }): Promise<boolean> {
+    try {
+      await ApiService.patch(`${ORDER_API_URL}/pedidos/${orderId}/rechazar-promociones`, payload)
+      return true
+    } catch (error) {
+      logErrorForDebugging(error, 'OrderService.rejectPromotions', { orderId })
+      return false
+    }
+  },
 }
 
 export const OrderService = createService('OrderService', rawService)

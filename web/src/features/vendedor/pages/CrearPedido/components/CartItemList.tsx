@@ -26,7 +26,7 @@ export function CartItemList({ cart, onUpdateQuantity, onRemove }: CartItemListP
                     <CartItem
                         key={itemId}
                         item={item}
-                        onUpdateQuantity={() => onUpdateQuantity(itemId, item.cantidad)}
+                        onUpdateQuantity={(qty) => onUpdateQuantity(itemId, qty)}
                         onRemove={() => onRemove(itemId)}
                     />
                 )

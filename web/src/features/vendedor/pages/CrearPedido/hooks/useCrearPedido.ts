@@ -155,8 +155,8 @@ export const useCrearPedido = () => {
                 items: cart.map(item => ({
                     sku_id: (item.producto as any).selectedSkuId || item.producto.id,
                     cantidad: item.cantidad,
-                    precio_unitario_final: item.producto.price,
-                    origen_precio: 'catalogo'
+                    // Fix: Do not send precio_unitario_final if not negotiating, to avoid 400 Bad Request for clients
+                    // The backend will automatically resolve the price from the catalog if omitted
                 }))
             }
 

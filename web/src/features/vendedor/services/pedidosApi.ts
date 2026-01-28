@@ -31,6 +31,9 @@ export type OrderResponse = {
     descuento_pedido_valor?: number
     estado?: string
     cliente_id?: string
+    created_at?: string
+    creado_en?: string
+    items?: OrderItemPayload[] | any[] // items from backend
 }
 
 const ORDERS_BASE_URL = env.api.orders
@@ -62,6 +65,17 @@ export async function getOrders(): Promise<OrderResponse[]> {
     if (!token) throw new Error('No hay sesión activa')
 
     const res = await fetch(`${ORDERS_API_URL}/pedidos`, {
+        headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!res.ok) return []
+    return await res.json()
+}
+
+export async function getMyOrders(): Promise<OrderResponse[]> {
+    const token = await getValidToken()
+    if (!token) throw new Error('No hay sesión activa')
+
+    const res = await fetch(`${ORDERS_API_URL}/pedidos/my-orders`, {
         headers: { Authorization: `Bearer ${token}` },
     })
     if (!res.ok) return []

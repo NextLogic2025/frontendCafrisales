@@ -5,7 +5,7 @@ import { PageHero } from 'components/ui/PageHero'
 import { LoadingSpinner } from 'components/ui/LoadingSpinner'
 import { Alert } from 'components/ui/Alert'
 import { Modal } from 'components/ui/Modal'
-import { type Pedido } from '../../services/pedidosApi'
+import { obtenerPedidos, cambiarEstadoPedido, type Pedido, type DetallePedido } from '../../services/pedidosApi'
 
 type EstadoFiltro = 'TODOS' | 'PENDIENTE' | 'APROBADO' | 'ANULADO' | 'EN_PREPARACION' | 'FACTURADO' | 'EN_RUTA' | 'ENTREGADO'
 
@@ -18,17 +18,29 @@ export default function PedidosPage() {
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const [pedidoDetalle, setPedidoDetalle] = useState<Pedido | null>(null)
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
+
   useEffect(() => {
     cargarPedidos()
   }, [])
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [filtroEstado, searchTerm])
 
   const cargarPedidos = async () => {
     try {
       setIsLoading(true)
       setError(null)
-      // Mock data
-      setPedidos([])
+      const data = await obtenerPedidos()
+      // Sort by most recent
+      const sorted = data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      setPedidos(sorted)
     } catch (err: any) {
+      console.error(err)
       setError(err?.message || 'Error al cargar los pedidos')
     } finally {
       setIsLoading(false)
@@ -37,13 +49,15 @@ export default function PedidosPage() {
 
   const handleCambiarEstado = async (pedidoId: string, nuevoEstado: 'APROBADO' | 'ANULADO') => {
     try {
-      // Mock success
+      await cambiarEstadoPedido(pedidoId, nuevoEstado)
       setToast({
         type: 'success',
         message: `Pedido ${nuevoEstado === 'APROBADO' ? 'aprobado' : 'anulado'} exitosamente`
       })
+      cargarPedidos() // Refresh list
       setTimeout(() => setToast(null), 3000)
     } catch (err: any) {
+      console.error(err)
       setToast({
         type: 'error',
         message: err?.message || 'Error al cambiar el estado del pedido'
@@ -54,7 +68,14 @@ export default function PedidosPage() {
 
   const pedidosFiltrados = pedidos.filter(pedido => {
     // Filtro por estado
-    const matchEstado = filtroEstado === 'TODOS' || pedido.estado_actual === filtroEstado
+    const estadoNormalizado = pedido.estado_actual?.toLowerCase() || ''
+    const filtroNormalizado = filtroEstado === 'TODOS' ? 'todos' : filtroEstado.toLowerCase()
+
+    // Map filter keys to backend values if necessary
+    const matchEstado = filtroEstado === 'TODOS' ||
+      estadoNormalizado === filtroNormalizado ||
+      (filtroNormalizado === 'pendiente' && estadoNormalizado === 'pendiente_validacion') ||
+      (filtroNormalizado === 'anulado' && estadoNormalizado === 'cancelado')
 
     // Filtro por búsqueda
     const searchLower = searchTerm.toLowerCase()
@@ -66,21 +87,39 @@ export default function PedidosPage() {
     return matchEstado && matchSearch
   })
 
+  // Pagination Logic
+  const totalPages = Math.ceil(pedidosFiltrados.length / itemsPerPage)
+  const paginatedPedidos = pedidosFiltrados.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  )
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage)
+    }
+  }
+
   const getEstadoBadgeColor = (estado: string) => {
-    switch (estado) {
-      case 'PENDIENTE':
+    // Normalize to lowercase for comparison
+    const normalizedEstado = estado?.toLowerCase().trim() || ''
+
+    switch (normalizedEstado) {
+      case 'pendiente':
+      case 'pendiente_validacion':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-      case 'APROBADO':
+      case 'aprobado':
         return 'bg-green-100 text-green-800 border-green-200'
-      case 'ANULADO':
+      case 'anulado':
+      case 'cancelado':
         return 'bg-red-100 text-red-800 border-red-200'
-      case 'EN_PREPARACION':
+      case 'en_preparacion':
         return 'bg-blue-100 text-blue-800 border-blue-200'
-      case 'FACTURADO':
+      case 'facturado':
         return 'bg-purple-100 text-purple-800 border-purple-200'
-      case 'EN_RUTA':
+      case 'en_ruta':
         return 'bg-indigo-100 text-indigo-800 border-indigo-200'
-      case 'ENTREGADO':
+      case 'entregado':
         return 'bg-emerald-100 text-emerald-800 border-emerald-200'
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200'
@@ -158,7 +197,7 @@ export default function PedidosPage() {
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
             >
-              {estado.replace('_', ' ')}
+              {estado.replace(/_/g, ' ')}
             </button>
           ))}
         </div>
@@ -212,7 +251,7 @@ export default function PedidosPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {pedidosFiltrados.map((pedido) => (
+                {paginatedPedidos.map((pedido) => (
                   <tr key={pedido.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3 text-sm font-mono text-gray-900">
                       {pedido.id.substring(0, 8)}...
@@ -224,12 +263,12 @@ export default function PedidosPage() {
                       {pedido.vendedor?.nombreCompleto || pedido.vendedor?.email || 'Sin vendedor'}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getEstadoBadgeColor(pedido.estado_actual)}`}>
-                        {pedido.estado_actual}
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getEstadoBadgeColor(pedido.estado_actual || '')}`}>
+                        {pedido.estado_actual?.replace(/_/g, ' ') || 'DESCONOCIDO'}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm font-semibold text-gray-900">
-                      {formatCurrency(parseFloat(pedido.total_final))}
+                      {formatCurrency(pedido.total_final)}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
                       {formatDate(pedido.created_at)}
@@ -244,24 +283,6 @@ export default function PedidosPage() {
                           <Eye className="w-3 h-3" />
                           Ver
                         </button>
-                        <button
-                          onClick={() => handleCambiarEstado(pedido.id, 'APROBADO')}
-                          disabled={pedido.estado_actual === 'APROBADO' || pedido.estado_actual === 'ANULADO' || pedido.estado_actual === 'EN_PREPARACION' || pedido.estado_actual === 'PREPARADO'}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                          title="Aprobar pedido"
-                        >
-                          <Check className="w-3 h-3" />
-                          Aprobar
-                        </button>
-                        <button
-                          onClick={() => handleCambiarEstado(pedido.id, 'ANULADO')}
-                          disabled={pedido.estado_actual === 'ANULADO' || pedido.estado_actual === 'EN_PREPARACION' || pedido.estado_actual === 'PREPARADO'}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                          title="Anular pedido"
-                        >
-                          <X className="w-3 h-3" />
-                          Anular
-                        </button>
                       </div>
                     </td>
                   </tr>
@@ -270,12 +291,35 @@ export default function PedidosPage() {
             </table>
           </div>
 
-          {/* Resumen */}
-          <div className="bg-gray-50 px-4 py-3 border-t border-gray-200">
+          {/* Resumen y Paginación */}
+          <div className="bg-gray-50 px-4 py-3 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-sm text-gray-600">
-              Mostrando <span className="font-semibold">{pedidosFiltrados.length}</span> de{' '}
-              <span className="font-semibold">{pedidos.length}</span> pedidos
+              Mostrando <span className="font-semibold">{paginatedPedidos.length}</span> de{' '}
+              <span className="font-semibold">{pedidosFiltrados.length}</span> pedidos
             </p>
+
+            {/* Controles de Paginación */}
+            {totalPages > 1 && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 text-xs font-medium bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Anterior
+                </button>
+                <div className="text-xs text-gray-600">
+                  Página <span className="font-semibold">{currentPage}</span> de <span className="font-semibold">{totalPages}</span>
+                </div>
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 text-xs font-medium bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Siguiente
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -306,7 +350,7 @@ export default function PedidosPage() {
               </div>
               <div>
                 <p className="text-xs text-gray-600">Estado</p>
-                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getEstadoBadgeColor(pedidoDetalle.estado_actual)}`}>
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getEstadoBadgeColor(pedidoDetalle.estado_actual || '')}`}>
                   {pedidoDetalle.estado_actual}
                 </span>
               </div>
@@ -332,7 +376,7 @@ export default function PedidosPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {pedidoDetalle.detalles?.map((detalle) => (
+                    {pedidoDetalle.detalles?.map((detalle: DetallePedido) => (
                       <tr key={detalle.id} className="hover:bg-gray-50">
                         <td className="px-4 py-2 text-xs font-mono text-gray-600">{detalle.codigo_sku}</td>
                         <td className="px-4 py-2 text-sm text-gray-900">
@@ -355,9 +399,9 @@ export default function PedidosPage() {
                         <td className="px-4 py-2 text-sm text-right text-gray-900">
                           {Number(detalle.cantidad).toFixed(2)} {detalle.unidad_medida}
                         </td>
-                        <td className="px-4 py-2 text-sm text-right text-gray-900">{formatCurrency(parseFloat(detalle.precio_lista))}</td>
-                        <td className="px-4 py-2 text-sm text-right font-semibold text-gray-900">{formatCurrency(parseFloat(detalle.precio_final))}</td>
-                        <td className="px-4 py-2 text-sm text-right font-semibold text-gray-900">{formatCurrency(parseFloat(detalle.subtotal_linea))}</td>
+                        <td className="px-4 py-2 text-sm text-right text-gray-900">{formatCurrency(detalle.precio_lista || 0)}</td>
+                        <td className="px-4 py-2 text-sm text-right font-semibold text-gray-900">{formatCurrency(detalle.precio_final)}</td>
+                        <td className="px-4 py-2 text-sm text-right font-semibold text-gray-900">{formatCurrency(detalle.subtotal_linea)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -370,47 +414,25 @@ export default function PedidosPage() {
               <div className="flex flex-col gap-2 max-w-xs ml-auto">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Subtotal:</span>
-                  <span className="font-semibold">{formatCurrency(parseFloat(pedidoDetalle.subtotal))}</span>
+                  <span className="font-semibold">{formatCurrency(pedidoDetalle.subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Descuentos:</span>
-                  <span className="font-semibold text-green-600">-{formatCurrency(parseFloat(pedidoDetalle.descuento_total))}</span>
+                  <span className="font-semibold text-green-600">-{formatCurrency(pedidoDetalle.descuento_total || 0)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Impuestos:</span>
-                  <span className="font-semibold">{formatCurrency(parseFloat(pedidoDetalle.impuestos_total))}</span>
+                  <span className="font-semibold">{formatCurrency(pedidoDetalle.impuestos_total || 0)}</span>
                 </div>
                 <div className="flex justify-between text-lg border-t border-gray-200 pt-2">
                   <span className="font-bold text-gray-900">Total Final:</span>
-                  <span className="font-bold text-brand-red">{formatCurrency(parseFloat(pedidoDetalle.total_final))}</span>
+                  <span className="font-bold text-brand-red">{formatCurrency(pedidoDetalle.total_final)}</span>
                 </div>
               </div>
             </div>
 
             {/* Botones de Acción */}
             <div className="flex justify-end gap-3 border-t border-gray-200 pt-4">
-              <button
-                onClick={() => {
-                  handleCambiarEstado(pedidoDetalle.id, 'APROBADO')
-                  setPedidoDetalle(null)
-                }}
-                disabled={pedidoDetalle.estado_actual === 'APROBADO' || pedidoDetalle.estado_actual === 'ANULADO' || pedidoDetalle.estado_actual === 'PREPARADO'}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                <Check className="w-4 h-4" />
-                Aprobar Pedido
-              </button>
-              <button
-                onClick={() => {
-                  handleCambiarEstado(pedidoDetalle.id, 'ANULADO')
-                  setPedidoDetalle(null)
-                }}
-                disabled={pedidoDetalle.estado_actual === 'ANULADO' || pedidoDetalle.estado_actual === 'PREPARADO'}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                <X className="w-4 h-4" />
-                Anular Pedido
-              </button>
               <button
                 onClick={() => setPedidoDetalle(null)}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300 transition-colors"

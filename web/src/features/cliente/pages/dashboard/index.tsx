@@ -55,7 +55,7 @@ export default function PaginaPanelCliente() {
 		[perfil],
 	)
 
-	const pedidosPendientes = pedidos.filter(p => p.status === EstadoPedido.PENDING || p.status === EstadoPedido.APPROVED)
+	const pedidosPendientes = pedidos.filter(p => (p.estado || p.status) === EstadoPedido.PENDING || (p.estado || p.status) === EstadoPedido.APPROVED)
 	const pedidosRecientes = pedidos.slice(0, 3)
 	const facturasPendientes = facturas.filter(f => f.status === EstadoFactura.PENDING || f.status === EstadoFactura.OVERDUE)
 	const entregasEnRuta = entregas.filter(e => e.currentStatus === 'in_transit')
@@ -86,7 +86,7 @@ export default function PaginaPanelCliente() {
 			<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
 				<MetricCard
 					title="Saldo pendiente"
-					value={`$${perfil?.currentDebt?.toFixed(2) || '0.00'}`}
+					value={`$${Number(perfil?.currentDebt || 0).toFixed(2)}`}
 					subtitle="Estado financiero"
 					icon={<Wallet className="h-5 w-5" />}
 					tone="red"
@@ -94,7 +94,7 @@ export default function PaginaPanelCliente() {
 				<MetricCard
 					title="Crédito disponible"
 					value={`$${creditoDisponible.toFixed(2)}`}
-					subtitle={`Límite: $${perfil?.creditLimit?.toFixed(2) || '0.00'}`}
+					subtitle={`Límite: $${Number(perfil?.creditLimit || 0).toFixed(2)}`}
 					icon={<CreditCard className="h-5 w-5" />}
 					tone="gold"
 				/>
@@ -126,14 +126,14 @@ export default function PaginaPanelCliente() {
 								<div key={pedido.id} className="rounded-2xl border border-neutral-100 bg-neutral-50 px-3 py-2">
 									<div className="flex items-center justify-between gap-3">
 										<div>
-											<p className="text-sm font-semibold text-neutral-900">Pedido {pedido.orderNumber}</p>
-											<p className="text-xs text-neutral-500">{new Date(pedido.createdAt).toLocaleDateString()}</p>
+											<p className="text-sm font-semibold text-neutral-900">Pedido {pedido.numero_pedido || pedido.orderNumber || 'N/A'}</p>
+											<p className="text-xs text-neutral-500">{new Date(pedido.creado_en || pedido.createdAt || Date.now()).toLocaleDateString()}</p>
 										</div>
 										<span className="rounded-full bg-brand-red/10 px-3 py-1 text-xs font-semibold text-brand-red">
-											{formatEstadoPedido(pedido.status)}
+											{formatEstadoPedido((pedido.estado || pedido.status) as EstadoPedido)}
 										</span>
 									</div>
-									<p className="text-sm font-bold text-neutral-900">${pedido.totalAmount.toFixed(2)}</p>
+									<p className="text-sm font-bold text-neutral-900">${Number(pedido.total || pedido.totalAmount || 0).toFixed(2)}</p>
 								</div>
 							))
 						)}
@@ -156,7 +156,7 @@ export default function PaginaPanelCliente() {
 										<p className="text-xs">Vence: {new Date(factura.dueDate).toLocaleDateString()}</p>
 									</div>
 									<span className="ml-auto rounded-full bg-white/60 px-2 py-0.5 text-xs font-semibold text-red-800">
-										${factura.total.toFixed(2)}
+										${Number(factura.total || 0).toFixed(2)}
 									</span>
 								</div>
 							))
@@ -178,12 +178,12 @@ export default function PaginaPanelCliente() {
 				<SectionCard title="Estado de pedidos" actionLabel="Ver historial" onAction={() => navigate('/cliente/pedidos')}>
 					<div className="grid grid-cols-2 gap-3 md:grid-cols-3">
 						{[
-							{ label: 'Pendiente', value: pedidos.filter(p => p.status === EstadoPedido.PENDING).length },
-							{ label: 'Aprobado', value: pedidos.filter(p => p.status === EstadoPedido.APPROVED).length },
-							{ label: 'En ruta', value: pedidos.filter(p => p.status === EstadoPedido.IN_TRANSIT).length },
-							{ label: 'Entregado', value: pedidos.filter(p => p.status === EstadoPedido.DELIVERED).length },
+							{ label: 'Pendiente', value: pedidos.filter(p => (p.estado || p.status) === EstadoPedido.PENDING).length },
+							{ label: 'Aprobado', value: pedidos.filter(p => (p.estado || p.status) === EstadoPedido.APPROVED).length },
+							{ label: 'En ruta', value: pedidos.filter(p => (p.estado || p.status) === EstadoPedido.IN_TRANSIT).length },
+							{ label: 'Entregado', value: pedidos.filter(p => (p.estado || p.status) === EstadoPedido.DELIVERED).length },
 							{ label: 'Facturado', value: facturas.length },
-							{ label: 'Cancelado', value: pedidos.filter(p => p.status === EstadoPedido.CANCELLED).length },
+							{ label: 'Cancelado', value: pedidos.filter(p => (p.estado || p.status) === EstadoPedido.CANCELLED).length },
 						].map(item => (
 							<div key={item.label} className="rounded-xl border border-neutral-100 bg-neutral-50 px-3 py-2 text-center">
 								<p className="text-xs text-neutral-500">{item.label}</p>

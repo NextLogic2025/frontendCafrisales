@@ -98,6 +98,19 @@ const getOrderDiscountAmount = (pedido?: OrderResponse, items: OrderItemDetail[]
   return Number(Math.min(subtotal, valor).toFixed(2))
 }
 
+const getItemsDiscountAmount = (items: OrderItemDetail[] = []) => {
+  return Number(
+    items.reduce((sum, item) => {
+      const base = Number(item?.precio_unitario_base)
+      const final = Number(item?.precio_unitario_final)
+      const qty = Number(item?.cantidad_solicitada)
+      if (!Number.isFinite(base) || !Number.isFinite(final) || !Number.isFinite(qty)) return sum
+      const delta = Math.max(0, base - final)
+      return sum + delta * qty
+    }, 0).toFixed(2),
+  )
+}
+
 const formatOrderDiscountLabel = (pedido?: OrderResponse) => {
   const tipo = pedido?.descuento_pedido_tipo
   const valor = Number(pedido?.descuento_pedido_valor)
@@ -141,6 +154,10 @@ export function OrderDetailTemplate({
   const total = getOrderTotal(pedido, items)
   const orderDiscountAmount = getOrderDiscountAmount(pedido, items)
   const orderDiscountLabel = formatOrderDiscountLabel(pedido)
+  const itemsDiscountAmount = getItemsDiscountAmount(items)
+  const promoRejected = historial.some((item) =>
+    (item.motivo || '').toLowerCase().includes('promociones rechazadas'),
+  )
 
   return (
     <View className="gap-4">
@@ -158,6 +175,14 @@ export function OrderDetailTemplate({
             </Text>
           </View>
         </View>
+
+        {promoRejected ? (
+          <View className="mt-3 bg-amber-50 border border-amber-200 rounded-xl p-3">
+            <Text className="text-xs text-amber-800">
+              Las promociones negociadas fueron rechazadas y se aplicaron precios de catálogo.
+            </Text>
+          </View>
+        ) : null}
 
         <View className="mt-3 flex-row justify-between">
           <View>
@@ -187,6 +212,16 @@ export function OrderDetailTemplate({
             <Text className="text-xs text-neutral-700">{formatMoney(pedido?.impuesto ?? 0)}</Text>
           </View>
         </View>
+
+        {itemsDiscountAmount > 0 ? (
+          <View className="mt-2 flex-row justify-between">
+            <View>
+              <Text className="text-xs text-neutral-500">Descuento items</Text>
+              <Text className="text-xs text-amber-700">Negociado</Text>
+            </View>
+            <Text className="text-xs text-amber-700">-{formatMoney(itemsDiscountAmount)}</Text>
+          </View>
+        ) : null}
 
         {orderDiscountAmount > 0 ? (
           <View className="mt-2 flex-row justify-between">

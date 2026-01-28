@@ -1,5 +1,5 @@
 import React from 'react'
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, Text, View } from 'react-native'
+import { ActivityIndicator, Alert, FlatList, Pressable, RefreshControl, Text, View } from 'react-native'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -33,6 +33,7 @@ export function SupervisorPromosScreen() {
   const [search, setSearch] = React.useState('')
   const [clientNameMap, setClientNameMap] = React.useState<Record<string, string>>({})
   const [approvingOrderId, setApprovingOrderId] = React.useState<string | null>(null)
+  const [rejectingOrderId, setRejectingOrderId] = React.useState<string | null>(null)
 
   const loadPromos = React.useCallback(async () => {
     setLoading(true)
@@ -94,11 +95,37 @@ export function SupervisorPromosScreen() {
     }
   }
 
+  const handleRejectAll = (orderId: string) => {
+    Alert.alert(
+      'Rechazar promociones',
+      'Esto quitará los descuentos y volverá a precio catálogo. ¿Deseas continuar?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Rechazar',
+          style: 'destructive',
+          onPress: async () => {
+            setRejectingOrderId(orderId)
+            try {
+              const ok = await OrderService.rejectPromotions(orderId, { reject_all: true })
+              if (ok) {
+                await loadPromos()
+              }
+            } finally {
+              setRejectingOrderId(null)
+            }
+          },
+        },
+      ],
+    )
+  }
+
   const renderItem = ({ item }: { item: OrderListItem }) => {
     const pendingItems = getPendingItems(item)
     const clientLabel = item.cliente_id ? clientNameMap[item.cliente_id] || item.cliente_id : 'Cliente'
     const orderLabel = item.numero_pedido || item.id
     const isApproving = approvingOrderId === item.id
+    const isRejecting = rejectingOrderId === item.id
 
     return (
       <View className="bg-white rounded-3xl border border-neutral-100 p-5 mb-4 shadow-sm">
@@ -161,6 +188,17 @@ export function SupervisorPromosScreen() {
             loading={isApproving}
             style={{ flex: 1 }}
           />
+          <Pressable
+            onPress={() => handleRejectAll(item.id)}
+            disabled={isRejecting}
+            className={`flex-1 rounded-2xl border items-center justify-center ${
+              isRejecting ? 'opacity-60 border-red-200 bg-red-50' : 'border-red-200 bg-red-50'
+            }`}
+          >
+            <Text className="text-sm font-semibold text-red-700">
+              {isRejecting ? 'Rechazando...' : 'Rechazar'}
+            </Text>
+          </Pressable>
           <Pressable
             onPress={() => navigation.navigate('SupervisorPedidoDetalle', { orderId: item.id })}
             className="flex-1 rounded-2xl border border-neutral-200 items-center justify-center"

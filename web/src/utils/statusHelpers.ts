@@ -1,29 +1,40 @@
 import { EstadoPedido, EstadoFactura, EstadoTicket, PrioridadTicket } from '../features/cliente/types'
 
 // Formateo de estados de pedido
-export function formatEstadoPedido(estado: EstadoPedido): string {
-  const labels: Record<EstadoPedido, string> = {
-    [EstadoPedido.PENDING]: 'Pendiente',
-    [EstadoPedido.APPROVED]: 'Aprobado',
-    [EstadoPedido.IN_PREPARATION]: 'En preparación',
-    [EstadoPedido.IN_TRANSIT]: 'En ruta',
-    [EstadoPedido.DELIVERED]: 'Entregado',
-    [EstadoPedido.CANCELLED]: 'Cancelado',
+export function formatEstadoPedido(estado: EstadoPedido | string): string {
+  const status = String(estado || '').toUpperCase()
+
+  const labels: Record<string, string> = {
+    'PENDING': 'Pendiente',
+    'PENDIENTE': 'Pendiente',
+    'PENDIENTE_VALIDACION': 'Pendiente Validación',
+    'PENDING_VALIDATION': 'Pendiente Validación',
+    'APPROVED': 'Aprobado',
+    'APROBADO': 'Aprobado',
+    'In_PREPARATION': 'En preparación',
+    'EN_PREPARACION': 'En preparación',
+    'IN_TRANSIT': 'En ruta',
+    'EN_RUTA': 'En ruta',
+    'DELIVERED': 'Entregado',
+    'ENTREGADO': 'Entregado',
+    'CANCELLED': 'Cancelado',
+    'CANCELADO': 'Cancelado',
   }
-  return labels[estado] || estado
+
+  return labels[status] || status.replace(/_/g, ' ')
 }
 
 // Colores para estados de pedido
-export function getEstadoPedidoColor(estado: EstadoPedido): string {
-  const colores: Record<EstadoPedido, string> = {
-    [EstadoPedido.PENDING]: '#fbbf24',
-    [EstadoPedido.APPROVED]: '#10b981',
-    [EstadoPedido.IN_PREPARATION]: '#3b82f6',
-    [EstadoPedido.IN_TRANSIT]: '#8b5cf6',
-    [EstadoPedido.DELIVERED]: '#059669',
-    [EstadoPedido.CANCELLED]: '#ef4444',
-  }
-  return colores[estado] || '#6b7280'
+export function getEstadoPedidoColor(estado: EstadoPedido | string): string {
+  const status = String(estado || '').toUpperCase()
+
+  // Map common statuses to colors
+  if (status === 'PENDIENTE_VALIDACION' || status === 'PENDIENTE' || status === 'PENDING') return '#F59E0B' // Amber/Yellow
+  if (status === 'APROBADO' || status === 'APPROVED' || status === 'DELIVERED' || status === 'ENTREGADO') return '#10B981' // Emerald/Green
+  if (status === 'CANCELADO' || status === 'CANCELLED') return '#EF4444' // Red
+  if (status === 'EN_PREPARACION' || status === 'IN_PREPARATION' || status === 'EN_RUTA' || status === 'IN_TRANSIT') return '#3B82F6' // Blue
+
+  return '#6B7280' // Gray default
 }
 
 // Config de estados de factura

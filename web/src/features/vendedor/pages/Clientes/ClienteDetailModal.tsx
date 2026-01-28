@@ -3,11 +3,8 @@ import { GoogleMap, Polygon, useJsApiLoader } from '@react-google-maps/api'
 import AdvancedMarker from '../../../../components/google/AdvancedMarker'
 
 import { Modal } from '../../../../components/ui/Modal'
-import { Alert } from '../../../../components/ui/Alert'
-
-import { type Sucursal } from '../../../supervisor/services/sucursalesApi'
-import { getSelectedRole } from '../../../../services/storage/roleStorage'
 import type { Cliente } from '../../../supervisor/services/clientesApi'
+import { obtenerZonaPorId, type ZonaComercial } from '../../../supervisor/services/zonasApi'
 
 import { GOOGLE_MAP_LIBRARIES, GOOGLE_MAP_SCRIPT_ID, GOOGLE_MAPS_API_KEY } from '../../../../config/googleMaps'
 
@@ -27,18 +24,47 @@ export function ClienteDetailModal({ isOpen, onClose, cliente }: ClienteDetailMo
     libraries: GOOGLE_MAP_LIBRARIES
   })
 
+  // State to hold full zone data (with polygon)
+  const [fullZona, setFullZona] = useState<ZonaComercial | null>(null)
+
   useEffect(() => {
-    // Clean up if needed when modal closes
-  }, [isOpen])
+    // Clean up or reset when modal closes or client changes
+    if (!isOpen || !cliente) {
+      setFullZona(null)
+      return
+    }
+
+    // Fetch full zone if we have an ID
+    const fetchZone = async () => {
+      if (cliente.zona_comercial_id) {
+        try {
+          const z = await obtenerZonaPorId(cliente.zona_comercial_id)
+          setFullZona(z)
+        } catch (e) {
+          console.error("Failed to fetch zone details", e)
+        }
+      } else {
+        setFullZona(null)
+      }
+    }
+    fetchZone()
+
+  }, [isOpen, cliente])
 
   const modalTitle = getClienteDisplayName(cliente)
   const secondaryName = cliente ? getClienteSecondaryName(cliente, modalTitle) : null
 
-  const zona = useMemo(() => cliente?.zona_comercial ?? null, [cliente])
+  // Use the fetched full zone for polygon data, or fallback to the one in cliente if available
+  const zona = fullZona || (cliente?.zona_comercial as any)
 
   const zonaPath = useMemo(() => {
-    if (!zona || !(zona as any)?.poligono_geografico) return []
-    return parseGeoPolygon((zona as any).poligono_geografico)
+    if (!zona || !zona.poligono_geografico) return []
+    try {
+      return parseGeoPolygon(zona.poligono_geografico)
+    } catch (e) {
+      console.error("Error parsing polygon", e)
+      return []
+    }
   }, [zona])
 
   const mainLocation = useMemo(() => {
@@ -52,7 +78,7 @@ export function ClienteDetailModal({ isOpen, onClose, cliente }: ClienteDetailMo
     return null
   }, [cliente])
 
-  const mapCenter = mainLocation || zonaPath[0] || defaultCenter
+  const mapCenter = mainLocation || (zonaPath.length > 0 ? zonaPath[0] : defaultCenter)
 
   const listaNombre = cliente?.lista_precios?.nombre ?? (cliente?.lista_precios_id ? `Lista ${cliente.lista_precios_id}` : null)
   const zonaNombre = zona?.nombre ?? (cliente?.zona_comercial_id ? `Zona ${cliente.zona_comercial_id}` : null)
@@ -175,36 +201,70 @@ export function ClienteDetailModal({ isOpen, onClose, cliente }: ClienteDetailMo
 }
 
 function parseGeoPolygon(value: unknown): google.maps.LatLngLiteral[] {
+  console.log('Parsing GeoPolygon Input:', value)
   if (!value) return []
 
   if (typeof value === 'string') {
     try {
-      const parsed = JSON.parse(value)
-      return parseGeoPolygon(parsed)
+      return parseGeoPolygon(JSON.parse(value))
     } catch (error) {
+      console.log('Error parsing string JSON')
       return []
     }
   }
 
-  if (Array.isArray(value) && value.every((p: any) => typeof p?.lat === 'number' && typeof p?.lng === 'number')) {
-    return dedupeClosingPoint(value as google.maps.LatLngLiteral[])
+  // Helper to check if an array is a linear ring (Array of [lng, lat])
+  const isRing = (arr: any[]) => {
+    if (!Array.isArray(arr) || arr.length === 0) return false
+    // Check first element
+    const first = arr[0]
+    return Array.isArray(first) && first.length >= 2 && typeof first[0] === 'number'
   }
 
-  if (typeof value === 'object' && value !== null && 'coordinates' in (value as any)) {
-    const coordinates = (value as any).coordinates?.[0]
-    if (Array.isArray(coordinates)) {
-      const path = coordinates
-        .map((pair: any) => {
-          if (!Array.isArray(pair) || pair.length < 2) return null
-          const [lng, lat] = pair
-          if (typeof lat !== 'number' || typeof lng !== 'number') return null
-          return { lat, lng }
-        })
-        .filter(Boolean) as google.maps.LatLngLiteral[]
-      return dedupeClosingPoint(path)
+  // Helper to find the first ring in a nested structure
+  const findRing = (data: any): any[] | null => {
+    if (!Array.isArray(data)) return null
+    if (isRing(data)) return data
+
+    // DFS to find ring
+    for (const item of data) {
+      if (Array.isArray(item)) {
+        const found = findRing(item)
+        if (found) return found
+      }
     }
+    return null
   }
 
+  let coordinates: any[] | null = null
+
+  if (typeof value === 'object' && 'coordinates' in (value as any)) {
+    // GeoJSON object
+    coordinates = (value as any).coordinates
+  } else if (Array.isArray(value)) {
+    // Raw array
+    coordinates = value
+  }
+
+  if (!coordinates) {
+    console.log('No coordinates found')
+    return []
+  }
+
+  const ring = findRing(coordinates)
+
+  if (ring) {
+    console.log('Found Ring:', ring)
+    const path = ring.map((pair: any) => {
+      if (!Array.isArray(pair) || pair.length < 2) return null
+      return { lat: pair[1], lng: pair[0] } // GeoJSON [lng, lat]
+    }).filter(Boolean) as google.maps.LatLngLiteral[]
+
+    console.log('Converted Path:', path)
+    return dedupeClosingPoint(path)
+  }
+
+  console.log('No valid ring found in coordinates')
   return []
 }
 

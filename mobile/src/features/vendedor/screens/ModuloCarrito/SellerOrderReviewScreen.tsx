@@ -43,6 +43,7 @@ export function SellerOrderReviewScreen() {
   const subtotal = totals.subtotal
   const parsedOrderDiscount = Number(orderDiscountValue)
   const orderDiscountIsValid = Number.isFinite(parsedOrderDiscount) && parsedOrderDiscount > 0
+  const hasItemDiscounts = cart.items.some((item) => item.discountType && item.discountValue)
   const orderDiscountAmount =
     orderDiscountIsValid
       ? orderDiscountType === 'porcentaje'
@@ -85,6 +86,10 @@ export function SellerOrderReviewScreen() {
     }
     if (!checked) {
       showGlobalToast('Confirma que revisaste el pedido', 'warning')
+      return
+    }
+    if (orderDiscountAmount > 0 && hasItemDiscounts) {
+      showGlobalToast('No se permite descuento por item y pedido al mismo tiempo', 'warning')
       return
     }
     if (orderDiscountAmount > 0) {
@@ -164,6 +169,10 @@ export function SellerOrderReviewScreen() {
       showGlobalToast('Cargando condiciones del cliente...', 'warning')
       return
     }
+    if (orderDiscountAmount > 0) {
+      showGlobalToast('No se permite descuento por item y pedido al mismo tiempo', 'warning')
+      return
+    }
     const item = cart.items.find((entry) => entry.skuId === itemId)
     setSelectedItemId(itemId)
     setDiscountType(item?.discountType ?? 'porcentaje')
@@ -212,6 +221,10 @@ export function SellerOrderReviewScreen() {
     if (!Number.isFinite(value) || value <= 0) {
       setOrderDiscountValue('')
       setOrderDiscountModalVisible(false)
+      return
+    }
+    if (hasItemDiscounts) {
+      showGlobalToast('Quita los descuentos por item para aplicar descuento al pedido', 'warning')
       return
     }
     if (orderDiscountType === 'porcentaje' && value > 100) {
@@ -321,6 +334,11 @@ export function SellerOrderReviewScreen() {
               </Text>
             </Pressable>
           </View>
+          {hasItemDiscounts ? (
+            <Text className="text-[11px] text-amber-700 mt-2">
+              No se permite descuento por item y pedido al mismo tiempo.
+            </Text>
+          ) : null}
         </View>
 
         <Pressable

@@ -152,7 +152,12 @@ export const useProductos = () => {
             setCart(updatedCart)
             localStorage.setItem('vendedor_cart', JSON.stringify(updatedCart))
             setProductForSkuSelection(null)
-            navigate('/vendedor/crear-pedido')
+
+            // Show toast instead of navigating
+            setLastAddedProduct(cartProduct)
+            setShowToast(true)
+
+            // navigate('/vendedor/crear-pedido') 
         } catch (error) {
             console.error('Error adding to cart:', error)
             alert('Error al agregar producto al carrito')
