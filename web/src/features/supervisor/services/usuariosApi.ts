@@ -243,7 +243,7 @@ export async function getUsers(): Promise<Usuario[]> {
   const createUrl = (path: string) => `${env.api.usuarios}/api${path}`
 
   try {
-    // 1. Fetch staff lists (now includes nested usuario & perfil)
+    // 1. Fetch staff lists
     const [vendedores, bodegueros, transportistas] = await Promise.all([
       fetch(createUrl('/staff/vendedores'), { headers }).then(r => r.ok ? r.json() : [] as StaffEntry[]),
       fetch(createUrl('/staff/bodegueros'), { headers }).then(r => r.ok ? r.json() : [] as StaffEntry[]),
@@ -256,12 +256,36 @@ export async function getUsers(): Promise<Usuario[]> {
       ...transportistas.map((item: StaffEntry) => ({ ...item, rol: 'transportista' })),
     ]
 
-    // 2. Map to Usuario interface using nested data
+    // 2. Fetch user details for each staff member
+    // The backend staff endpoints do NOT return nested user objects, so we must fetch them.
+    const userFetches = await Promise.all(
+      staff.map(async (member) => {
+        try {
+          const res = await fetch(createUrl(`/usuarios/${member.usuario_id}`), { headers })
+          // We expect the user object directly or maybe inside a data wrapper?
+          // Looking at getUserById line 407, it returns res.json().
+          const user = res.ok ? await res.json() : null
+          return { id: member.usuario_id, user }
+        } catch (error) {
+          console.error(`Error fetching user ${member.usuario_id}`, error)
+          return { id: member.usuario_id, user: null }
+        }
+      })
+    )
+
+    const userMap = new Map(userFetches.map((entry) => [entry.id, entry.user]))
+
+    // 3. Map to Usuario interface
     return staff.map((member) => {
-      const user = member.usuario
+      const user = userMap.get(member.usuario_id)
       const perfil = user?.perfil
       const email = user?.email || ''
-      const roleName = (user?.rol || member.rol || 'Usuario').toLowerCase()
+
+      // Determine role safely
+      const roleName = (user?.rol?.nombre || user?.rol || member.rol || 'Usuario').toLowerCase()
+
+      // Determine active status
+      // Prefer explicit user.estado if available
       const active = (user?.estado ? user.estado === 'activo' : undefined) ?? (member.activo ?? true)
 
       // Construct Name: "Luis Leon"
@@ -281,12 +305,12 @@ export async function getUsers(): Promise<Usuario[]> {
         id: member.usuario_id,
         email: email,
         nombre: realName,
-        nombreCompleto: displayName, // This will be used by obtainVendedores to show "Code - Name"
+        nombreCompleto: displayName,
         telefono: perfil?.telefono || null,
         avatarUrl: perfil?.url_avatar || null,
         emailVerificado: true,
         activo: active,
-        createdAt: user?.creado_en || new Date().toISOString(),
+        createdAt: user?.creado_en || user?.createdAt || new Date().toISOString(),
         rol: {
           id: roleId,
           nombre: roleName.charAt(0).toUpperCase() + roleName.slice(1)

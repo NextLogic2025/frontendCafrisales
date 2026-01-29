@@ -11,17 +11,11 @@ import type { SidebarItem } from '../components/ui/SidebarNav'
 export const CLIENTE_NAV_ITEMS: SidebarItem[] = [
   { id: 'dashboard', label: 'Inicio', to: '/cliente', icon: Home, end: true },
   { id: 'productos', label: 'Productos', to: '/cliente/productos', icon: Boxes },
-  { id: 'promociones', label: 'Promociones', to: '/cliente/promociones', icon: Percent },
   { id: 'carrito', label: 'Carrito', to: '/cliente/carrito', icon: ShoppingCart },
   { id: 'pedidos', label: 'Mis Pedidos', to: '/cliente/pedidos', icon: ClipboardList },
-  { id: 'facturas', label: 'Facturas', to: '/cliente/facturas', icon: CreditCard },
   { id: 'entregas', label: 'Entregas', to: '/cliente/entregas', icon: Truck },
-  { id: 'devoluciones', label: 'Devoluciones', to: '/cliente/devoluciones', icon: RotateCcw },
-  { id: 'soporte', label: 'Soporte', to: '/cliente/soporte', icon: LifeBuoy },
-  { id: 'mensajes', label: 'Mensajes', to: '/cliente/mensajes', icon: MessageCircle },
   { id: 'notificaciones', label: 'Notificaciones', to: '/cliente/notificaciones', icon: Bell },
   { id: 'perfil', label: 'Mi Perfil', to: '/cliente/perfil', icon: User },
-  { id: 'sucursal', label: 'Sucursal', to: '/cliente/sucursal', icon: Map },
 ]
 
 // ========================================
@@ -30,11 +24,6 @@ export const CLIENTE_NAV_ITEMS: SidebarItem[] = [
 export const BODEGUERO_NAV_ITEMS: SidebarItem[] = [
   { id: 'dashboard', label: 'Inicio', to: '/bodeguero', icon: Home, end: true },
   { id: 'pedidos', label: 'Pedidos', to: '/bodeguero/pedidos', icon: ClipboardList },
-  { id: 'inventario', label: 'Inventario', to: '/bodeguero/inventario', icon: Package },
-  { id: 'despachos', label: 'Despachos', to: '/bodeguero/despachos', icon: Truck },
-  { id: 'devoluciones', label: 'Devoluciones', to: '/bodeguero/devoluciones', icon: RotateCcw },
-  { id: 'reportes', label: 'Reportes', to: '/bodeguero/reportes', icon: BarChart3 },
-  { id: 'reservas', label: 'Reservas', to: '/bodeguero/reservas', icon: Archive },
   { id: 'notificaciones', label: 'Notificaciones', to: '/bodeguero/notificaciones', icon: Bell },
   { id: 'perfil', label: 'Mi Perfil', to: '/bodeguero/perfil', icon: User },
 ]
@@ -49,15 +38,11 @@ export const SUPERVISOR_NAV_ITEMS: SidebarItem[] = [
   { id: 'equipo', label: 'Equipo', to: '/supervisor/equipo', icon: Users },
   { id: 'catalogo', label: 'Catálogo', to: '/supervisor/catalogo', icon: BookOpen },
   { id: 'zonas', label: 'Zonas', to: '/supervisor/zonas', icon: Map },
-  { id: 'rutas', label: 'Rutas', to: '/supervisor/rutas', icon: Route },
+  { id: 'rutas', label: 'Rutas Comercial', to: '/supervisor/rutas', icon: Route },
   { id: 'ruteros-logisticos', label: 'Ruteros Logísticos', to: '/supervisor/ruteros-logisticos', icon: Truck },
   { id: 'pedidos', label: 'Pedidos', to: '/supervisor/pedidos', icon: ClipboardList },
   { id: 'aprobacion-promociones', label: 'Aprobación Promociones', to: '/supervisor/promociones', icon: ListChecks },
-  { id: 'bodega', label: 'Bodega', to: '/supervisor/bodega', icon: Package },
   { id: 'entregas', label: 'Entregas', to: '/supervisor/entregas', icon: Truck },
-  { id: 'devoluciones', label: 'Devoluciones', to: '/supervisor/devoluciones', icon: RotateCcw },
-  { id: 'reportes', label: 'Reportes', to: '/supervisor/reportes', icon: BarChart3 },
-  { id: 'alertas', label: 'Alertas', to: '/supervisor/alertas', icon: Bell },
   { id: 'notificaciones', label: 'Notificaciones', to: '/supervisor/notificaciones', icon: Bell },
   { id: 'perfil', label: 'Mi Perfil', to: '/supervisor/perfil', icon: User },
 ]
@@ -70,14 +55,9 @@ export const VENDEDOR_NAV_ITEMS: SidebarItem[] = [
   { id: 'clientes', label: 'Clientes', to: '/vendedor/clientes', icon: Users },
   { id: 'rutas', label: 'Rutas', to: '/vendedor/rutas', icon: Route },
   { id: 'productos', label: 'Productos', to: '/vendedor/productos', icon: Boxes },
-  { id: 'promociones', label: 'Promociones', to: '/vendedor/promociones', icon: Percent },
   { id: 'crear-pedido', label: 'Crear Pedido', to: '/vendedor/crear-pedido', icon: ShoppingCart },
   { id: 'pedidos', label: 'Pedidos', to: '/vendedor/pedidos', icon: ClipboardList },
-  { id: 'facturas', label: 'Facturas', to: '/vendedor/facturas', icon: CreditCard },
   { id: 'credito', label: 'Crédito', to: '/vendedor/credito', icon: CreditCard },
-  { id: 'entregas', label: 'Entregas', to: '/vendedor/entregas', icon: Truck },
-  { id: 'devoluciones', label: 'Devoluciones', to: '/vendedor/devoluciones', icon: RotateCcw },
-  { id: 'reportes', label: 'Reportes', to: '/vendedor/reportes', icon: BarChart3 },
   { id: 'notificaciones', label: 'Notificaciones', to: '/vendedor/notificaciones', icon: Bell },
   { id: 'perfil', label: 'Mi Perfil', to: '/vendedor/perfil', icon: User },
 ]
@@ -87,11 +67,7 @@ export const VENDEDOR_NAV_ITEMS: SidebarItem[] = [
 // ========================================
 export const TRANSPORTISTA_NAV_ITEMS: SidebarItem[] = [
   { id: 'inicio', label: 'Inicio', to: '/transportista', icon: Home, end: true },
-  { id: 'pedidos', label: 'Pedidos Asignados', to: '/transportista/pedidos', icon: Package },
   { id: 'rutas', label: 'Rutas', to: '/transportista/rutas', icon: Map },
-  { id: 'entregas', label: 'Entregas', to: '/transportista/entregas', icon: Truck },
-  { id: 'devoluciones', label: 'Devoluciones', to: '/transportista/devoluciones', icon: RotateCcw },
-  { id: 'historial', label: 'Historial', to: '/transportista/historial', icon: Calendar },
   { id: 'notificaciones', label: 'Notificaciones', to: '/transportista/notificaciones', icon: Bell },
   { id: 'perfil', label: 'Mi Perfil', to: '/transportista/perfil', icon: User },
 ]

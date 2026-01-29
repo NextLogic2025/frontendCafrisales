@@ -55,10 +55,10 @@ export function CategoriaList({ categories, onEdit, onDelete, onRestore, onView,
                 <button
                   onClick={() => onView?.(category)}
                   className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-brand-red bg-white px-3 py-2 text-sm font-semibold text-brand-red shadow-sm transition hover:bg-brand-red/90 hover:text-white hover:shadow-md focus:outline-none focus:ring-2 focus:ring-brand-red/40"
-                  title="Detalle"
+                  title="Detalles"
                 >
                   <ImageIcon className="h-4 w-4" />
-                  <span>Ver detalles</span>
+                  <span>Detalles</span>
                 </button>
                 <button
                   onClick={() => onDelete?.(Number(category.id))}
