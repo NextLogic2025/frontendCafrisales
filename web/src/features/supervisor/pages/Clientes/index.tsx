@@ -9,6 +9,7 @@ import { CrearClienteModal } from './CrearClienteModal'
 import { ClienteDetailModal } from './ClienteDetailModal'
 import { CrearCanalModal } from './CrearCanalModal'
 import { ClientStatusFilter } from './ClientStatusFilter'
+import { VerCanalesModal } from './VerCanalesModal'
 import { obtenerClientes } from '../../services/clientesApi'
 import { obtenerZonas } from '../../services/zonasApi'
 
@@ -18,6 +19,7 @@ export default function ClientesPage() {
   const [filterStatus, setFilterStatus] = useState<'activo' | 'inactivo' | 'todos'>('activo')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isChannelModalOpen, setIsChannelModalOpen] = useState(false)
+  const [isViewChannelsModalOpen, setIsViewChannelsModalOpen] = useState(false)
   const [editingCliente, setEditingCliente] = useState<Cliente | null>(null)
   const [detailCliente, setDetailCliente] = useState<Cliente | null>(null)
   const [zonas, setZonas] = useState<ZonaComercial[]>([])
@@ -105,6 +107,14 @@ export default function ClientesPage() {
 
         <div className="flex items-center gap-3">
           <Button
+            variant="outline"
+            onClick={() => setIsViewChannelsModalOpen(true)}
+            className="flex items-center gap-2 bg-white shadow-sm"
+          >
+            <Layout className="h-4 w-4 text-slate-500" />
+            Ver canales
+          </Button>
+          <Button
             onClick={() => setIsChannelModalOpen(true)}
             className="flex items-center gap-2 bg-slate-800 text-white hover:bg-slate-700"
           >
@@ -141,14 +151,9 @@ export default function ClientesPage() {
           tipo_identificacion: editingCliente.tipo_identificacion,
           razon_social: editingCliente.razon_social,
           nombre_comercial: editingCliente.nombre_comercial || '',
-          tiene_credito: editingCliente.tiene_credito,
-          limite_credito: typeof editingCliente.limite_credito === 'string'
-            ? parseFloat(editingCliente.limite_credito) || 0
-            : editingCliente.limite_credito,
-          dias_plazo: editingCliente.dias_plazo,
           direccion_texto: editingCliente.direccion_texto || '',
-          lista_precios_id: editingCliente.lista_precios_id,
-          zona_comercial_id: editingCliente.zona_comercial_id,
+          zona_comercial_id: editingCliente.zona_comercial_id ? Number(editingCliente.zona_comercial_id) : null,
+          canal_id: editingCliente.canal_id ? Number(editingCliente.canal_id) : null,
           // Extraer coordenadas de ubicacion_gps (GeoJSON format) o usar latitud/longitud si existen
           latitud: editingCliente.ubicacion_gps?.coordinates
             ? editingCliente.ubicacion_gps.coordinates[1]  // lat es el segundo elemento
@@ -157,7 +162,6 @@ export default function ClientesPage() {
             ? editingCliente.ubicacion_gps.coordinates[0]  // lng es el primer elemento
             : editingCliente.longitud,
           // Campos de contacto no se editan en modo edición
-          contacto_nombre: '',
           contacto_email: '',
           contacto_password: '',
         } : undefined}
@@ -170,6 +174,11 @@ export default function ClientesPage() {
         cliente={detailCliente}
         zonas={zonas}
         listasPrecios={listasPrecios}
+      />
+
+      <VerCanalesModal
+        isOpen={isViewChannelsModalOpen}
+        onClose={() => setIsViewChannelsModalOpen(false)}
       />
 
       <CrearCanalModal

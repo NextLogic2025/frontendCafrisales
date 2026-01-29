@@ -37,7 +37,7 @@ export function useZonas() {
   }
 
   const actualizarZonaSimple = async (
-    zonaId: number,
+    zonaId: number | string,
     zonaData: Partial<CreateZonaDto>
   ) => {
     const actualizada = await actualizarZona(zonaId, zonaData)

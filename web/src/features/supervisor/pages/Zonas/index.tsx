@@ -146,7 +146,7 @@ export default function ZonasPage() {
     setIsSubmitting(true)
 
     try {
-      let zoneId: number;
+      let zoneId: string | number;
 
       if (modalMode === 'crear') {
         const nuevaZona = await crearZona(formData)
@@ -270,6 +270,7 @@ export default function ZonasPage() {
           onSubmit={handleSubmit}
           onCancel={handleCloseModal}
           isEditing={modalMode === 'editar'}
+          zonas={zonas}
         />
       </Modal>
 

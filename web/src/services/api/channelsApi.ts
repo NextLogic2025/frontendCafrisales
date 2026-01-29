@@ -7,6 +7,7 @@ export type Channel = {
     nombre: string
     descripcion?: string | null
     activo: boolean
+    creado_en?: string
 }
 
 export type ChannelPayload = {

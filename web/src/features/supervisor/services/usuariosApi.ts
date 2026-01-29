@@ -175,6 +175,7 @@ export async function updateEstadoUsuario(userId: string, estado: 'activo' | 'in
 
 
 // --- Tipos internos para mapeo (copiados de mobile) ---
+// --- Tipos internos para mapeo (copiados de mobile) ---
 interface StaffEntry {
   usuario_id: string
   codigo_empleado?: string
@@ -182,13 +183,19 @@ interface StaffEntry {
   numero_licencia?: string
   licencia_vence_en?: string
   activo?: boolean
-}
-
-interface UserApiUser {
-  id?: string
-  email?: string
   rol?: string
-  estado?: 'activo' | 'inactivo' | 'suspendido'
+  usuario?: {
+    email: string
+    rol: string
+    estado?: string // 'activo' | 'inactivo' | ...
+    creado_en?: string
+    perfil?: {
+      nombres: string
+      apellidos: string
+      telefono?: string
+      url_avatar?: string
+    }
+  }
 }
 
 // Compatibilidad para useZonas.ts
@@ -236,87 +243,53 @@ export async function getUsers(): Promise<Usuario[]> {
   const createUrl = (path: string) => `${env.api.usuarios}/api${path}`
 
   try {
-    // 1. Fetch staff lists
+    // 1. Fetch staff lists (now includes nested usuario & perfil)
     const [vendedores, bodegueros, transportistas] = await Promise.all([
       fetch(createUrl('/staff/vendedores'), { headers }).then(r => r.ok ? r.json() : [] as StaffEntry[]),
       fetch(createUrl('/staff/bodegueros'), { headers }).then(r => r.ok ? r.json() : [] as StaffEntry[]),
       fetch(createUrl('/staff/transportistas'), { headers }).then(r => r.ok ? r.json() : [] as StaffEntry[]),
     ])
 
-    const staff = [
+    const staff: StaffEntry[] = [
       ...vendedores.map((item: StaffEntry) => ({ ...item, rol: 'vendedor' })),
       ...bodegueros.map((item: StaffEntry) => ({ ...item, rol: 'bodeguero' })),
       ...transportistas.map((item: StaffEntry) => ({ ...item, rol: 'transportista' })),
     ]
 
-    // 2. Fetch user details for each staff member
-    const userFetches = await Promise.all(
-      staff.map(async (member) => {
-        try {
-          const res = await fetch(createUrl(`/usuarios/${member.usuario_id}`), { headers })
-          const user = res.ok ? await res.json() as UserApiUser : null
-          return { id: member.usuario_id, user }
-        } catch (error) {
-          return { id: member.usuario_id, user: null }
-        }
-      })
-    )
-
-    const userMap = new Map(userFetches.map((entry) => [entry.id, entry.user]))
-
-    // 3. Map to Usuario interface
+    // 2. Map to Usuario interface using nested data
     return staff.map((member) => {
-      const user = userMap.get(member.usuario_id)
+      const user = member.usuario
+      const perfil = user?.perfil
       const email = user?.email || ''
-      // Prefer api user role, fallback to list role
       const roleName = (user?.rol || member.rol || 'Usuario').toLowerCase()
-      // Prefer the explicit user.estado when available (PATCH /usuarios/:id)
-      // because staff lists may be derived and lag behind. Fall back to
-      // member.activo if user.estado is not provided.
       const active = (user?.estado ? user.estado === 'activo' : undefined) ?? (member.activo ?? true)
-      // Mobile logic: "name = email || code || 'Sin nombre'" if no explicit name?
-      // Actually mobile fetches profile too? 
-      // Mobile `normalizeUser` does: `name: fullName || user.email || 'Sin nombre'`
-      // But `fetchStaffEmployees` in mobile DOES NOT fetch profile separately for each user in the list loop?
-      // Wait, mobile `fetchStaffEmployees` calls `ApiService.get.../usuarios/${member.usuario_id}` which returns `UserApiUser`.
-      // `UserApiUser` generally contains basic info. Does it contain profile names?
-      // Looking at mobile code: `type UserApiUser = { id, email, rol, estado }`.
-      // It seems mobile relies on `user` object.
-      // Mobile `fetchStaffEmployees` constructs name: `const name = email || member.codigo_empleado || 'Sin nombre'`.
-      // It seems mobile LIST implementation allows name to be email if profile isn't fetched?
-      // However, `normalizeUser` is used in `getProfile` but NOT in `fetchStaffEmployees` return map.
-      // Wait, let's re-read `fetchStaffEmployees` in mobile.
-      /*
-      return staff.map((member) => {
-          const user = userMap.get(member.usuario_id)
-          const email = user?.email || ''
-          ...
-          const name = email || member.codigo_empleado || 'Sin nombre'
-          ...
-      })
-      */
-      // Logic: Name IS email or code.
 
-      // FOR WEB: We probably want the real name if available?
-      // The web `Usuario` interface has `nombre` and `nombreCompleto`.
-      // `EquipoList` displays `usuario.nombre`.
-      // If we only have email, that's what we show.
+      // Construct Name: "Luis Leon"
+      let realName = email
+      if (perfil?.nombres) {
+        realName = `${perfil.nombres} ${perfil.apellidos}`.trim()
+      }
+
+      // Construct Display Name: "VEN-01 - Luis Leon"
+      const displayName = member.codigo_empleado
+        ? `${member.codigo_empleado} - ${realName}`
+        : realName
 
       const roleId = roleNameMap[roleName] || 0
 
       return {
         id: member.usuario_id,
         email: email,
-        nombre: email, // As per mobile logic
-        nombreCompleto: member.codigo_empleado, // Storing code here for now or maybe just leave undefined
-        telefono: null,
-        avatarUrl: null,
+        nombre: realName,
+        nombreCompleto: displayName, // This will be used by obtainVendedores to show "Code - Name"
+        telefono: perfil?.telefono || null,
+        avatarUrl: perfil?.url_avatar || null,
         emailVerificado: true,
         activo: active,
-        createdAt: new Date().toISOString(), // Mock, not available in listing
+        createdAt: user?.creado_en || new Date().toISOString(),
         rol: {
           id: roleId,
-          nombre: roleName.charAt(0).toUpperCase() + roleName.slice(1) // Capitalize
+          nombre: roleName.charAt(0).toUpperCase() + roleName.slice(1)
         }
       }
     })

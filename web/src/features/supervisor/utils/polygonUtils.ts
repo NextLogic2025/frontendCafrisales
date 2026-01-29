@@ -132,13 +132,13 @@ export function doPolygonsIntersect(poly1: LatLng[], poly2: LatLng[]): boolean {
  */
 export function findOverlappingZones(
     currentPolygon: any,
-    allZones: Array<{ id: number; nombre: string; poligono_geografico: any }>,
-    excludeZoneId?: number
-): Array<{ id: number; nombre: string }> {
+    allZones: Array<{ id: number | string; nombre: string; poligono_geografico: any }>,
+    excludeZoneId?: number | string
+): Array<{ id: number | string; nombre: string }> {
     const currentCoords = parsePolygonCoordinates(currentPolygon)
     if (currentCoords.length < 3) return []
 
-    const overlapping: Array<{ id: number; nombre: string }> = []
+    const overlapping: Array<{ id: number | string; nombre: string }> = []
 
     for (const zone of allZones) {
         // Skip the zone being edited

@@ -4,11 +4,14 @@ import { GoogleMap, Polygon, DrawingManager, useJsApiLoader } from '@react-googl
 import { Alert } from 'components/ui/Alert'
 
 import { GOOGLE_MAP_LIBRARIES, GOOGLE_MAP_SCRIPT_ID, GOOGLE_MAPS_API_KEY } from '../../../../config/googleMaps'
+import { type ZonaComercial } from '../../services/zonasApi'
+import { parsePolygonCoordinates } from '../../utils/polygonUtils'
 
 interface ZonaMapSelectorProps {
   polygon: google.maps.LatLngLiteral[]
   onPolygonChange: (path: google.maps.LatLngLiteral[]) => void
   center?: google.maps.LatLngLiteral
+  zonas?: ZonaComercial[]
 }
 
 const containerStyle = {
@@ -38,7 +41,7 @@ const drawingOptions = {
   },
 }
 
-export function ZonaMapSelector({ polygon, onPolygonChange, center }: ZonaMapSelectorProps) {
+export function ZonaMapSelector({ polygon, onPolygonChange, center, zonas = [] }: ZonaMapSelectorProps) {
   const { isLoaded, loadError } = useJsApiLoader({
     id: GOOGLE_MAP_SCRIPT_ID,
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
@@ -77,6 +80,19 @@ export function ZonaMapSelector({ polygon, onPolygonChange, center }: ZonaMapSel
       strokeColor: '#f0412d',
       strokeOpacity: 0.85,
       strokeWeight: 2,
+    }),
+    []
+  )
+
+  const existingZoneOptions = useMemo<google.maps.PolygonOptions>(
+    () => ({
+      fillColor: '#6B7280', // gray-500
+      fillOpacity: 0.15,
+      strokeColor: '#6B7280',
+      strokeOpacity: 0.5,
+      strokeWeight: 1,
+      clickable: false,
+      zIndex: 0,
     }),
     []
   )
@@ -122,6 +138,13 @@ export function ZonaMapSelector({ polygon, onPolygonChange, center }: ZonaMapSel
             {drawingOptions ? (
               <DrawingManager options={drawingOptions} onPolygonComplete={handlePolygonComplete} />
             ) : null}
+
+            {/* Render existing zones */}
+            {zonas.map((zona) => {
+              const path = parsePolygonCoordinates(zona.poligono_geografico)
+              if (path.length < 3) return null
+              return <Polygon key={zona.id} path={path} options={existingZoneOptions} />
+            })}
 
             {polygon.length > 0 ? <Polygon path={polygon} options={polygonOptions} /> : null}
           </GoogleMap>

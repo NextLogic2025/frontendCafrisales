@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { TextField } from 'components/ui/TextField'
 import { Alert } from 'components/ui/Alert'
-import { type CreateZonaDto, type ZoneSchedule } from '../../services/zonasApi'
+import { type CreateZonaDto, type ZoneSchedule, type ZonaComercial } from '../../services/zonasApi'
 import { ZonaMapSelector } from './ZonaMapSelector'
 
 import { ZoneScheduleConfig } from './ZoneScheduleConfig'
@@ -19,6 +19,7 @@ interface CrearZonaFormProps {
   onSubmit: (e: React.FormEvent) => void
   onCancel: () => void
   isEditing?: boolean
+  zonas: ZonaComercial[]
 }
 
 export function CrearZonaForm({
@@ -32,6 +33,7 @@ export function CrearZonaForm({
   onSubmit,
   onCancel,
   isEditing = false,
+  zonas,
 }: CrearZonaFormProps) {
   const [step, setStep] = useState<1 | 2>(1)
   const [polygonPath, setPolygonPath] = useState<LatLngLiteral[]>([])
@@ -142,6 +144,7 @@ export function CrearZonaForm({
               polygon={polygonPath}
               onPolygonChange={handlePolygonChange}
               center={mapCenter}
+              zonas={zonas}
             />
             {polygonPath.length > 0 ? (
               <p className="text-[11px] text-neutral-600">Vertices: {polygonPath.length} | Se guardará como polígono GeoJSON.</p>

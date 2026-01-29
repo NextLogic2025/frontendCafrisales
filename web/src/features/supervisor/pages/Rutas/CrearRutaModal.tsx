@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Modal } from 'components/ui/Modal'
 import { FormField } from 'components/ui/FormField'
+import { Alert } from 'components/ui/Alert'
 import { Plus, X } from 'lucide-react'
 import type { CreateRutaVendedorPayload } from '../../services/rutasVendedorTypes'
 import { obtenerTransportistas, type Usuario } from '../../services/usuariosApi'
@@ -38,6 +39,7 @@ export function CrearRutaModal({ isOpen, onClose, onSubmit }: CrearRutaModalProp
     // UI state
     const [showClienteSelector, setShowClienteSelector] = useState(false)
     const [searchCliente, setSearchCliente] = useState('')
+    const [submitError, setSubmitError] = useState<string | null>(null)
     const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
     useEffect(() => {
@@ -75,6 +77,30 @@ export function CrearRutaModal({ isOpen, onClose, onSubmit }: CrearRutaModalProp
         setClientesSeleccionados([])
         setShowClienteSelector(false)
         setSearchCliente('')
+    }
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setSubmitError(null)
+        setLoading(true)
+        try {
+            const payload: CreateRutaVendedorPayload = {
+                vendedor_id: vendedorId,
+                zona_id: zonaId,
+                fecha_rutero: fechaProgramada,
+                paradas: clientesSeleccionados.map(c => ({
+                    cliente_id: c.cliente_id,
+                    orden_visita: c.orden_visita,
+                })),
+            }
+
+            await onSubmit(payload)
+            onClose()
+        } catch (error: any) {
+            setSubmitError(error.message || 'Error al crear ruta')
+        } finally {
+            setLoading(false)
+        }
     }
 
     const handleAgregarCliente = (cliente: Cliente) => {
@@ -140,34 +166,6 @@ export function CrearRutaModal({ isOpen, onClose, onSubmit }: CrearRutaModalProp
         setClientesSeleccionados(reordenados)
     }
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-
-        if (!vendedorId || clientesSeleccionados.length === 0) {
-            alert('Debes seleccionar vendedor y al menos un cliente')
-            return
-        }
-
-        setLoading(true)
-        try {
-            const payload: CreateRutaVendedorPayload = {
-                vendedor_id: vendedorId,
-                zona_id: zonaId,
-                fecha_rutero: fechaProgramada,
-                paradas: clientesSeleccionados.map(c => ({
-                    cliente_id: c.cliente_id,
-                    orden_visita: c.orden_visita,
-                })),
-            }
-
-            await onSubmit(payload)
-            onClose()
-        } catch (error: any) {
-            alert(error.message || 'Error al crear ruta')
-        } finally {
-            setLoading(false)
-        }
-    }
 
     const clientesFiltrados = clientesDisponibles.filter(c => {
         if (!searchCliente) return true
@@ -194,6 +192,8 @@ export function CrearRutaModal({ isOpen, onClose, onSubmit }: CrearRutaModalProp
                 </div>
             ) : (
                 <form onSubmit={handleSubmit} className="space-y-6">
+                    {submitError && <Alert type="error" message={submitError} />}
+
                     {/* Vendedor */}
                     <FormField
                         label="Vendedor"

@@ -1,3 +1,8 @@
+export interface ListaPrecio {
+  id: string | number
+  nombre: string
+}
+
 export interface Cliente {
   id: string
   usuario_principal_id: string | null
