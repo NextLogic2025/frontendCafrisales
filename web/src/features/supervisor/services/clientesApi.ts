@@ -132,7 +132,8 @@ function mapCliente(raw: BackendCliente | Cliente): Cliente {
     vendedor_asignado_id: (raw as any).vendedor_asignado_id ?? null,
     zona_comercial_id: (raw as any).zona_id ?? (raw as any).zona_comercial_id ?? null,
     direccion_texto: direccion,
-    ubicacion_gps: (raw as any).ubicacion_gps ?? null,
+    ubicacion_gps: (raw as any).ubicacion_gps ||
+      ((raw.latitud && raw.longitud) ? { type: 'Point', coordinates: [Number(raw.longitud), Number(raw.latitud)] } : null),
     latitud: (raw as any).latitud !== null && (raw as any).latitud !== undefined ? Number((raw as any).latitud) : null,
     longitud: (raw as any).longitud !== null && (raw as any).longitud !== undefined ? Number((raw as any).longitud) : null,
     estado: (raw as any).estado ?? null,

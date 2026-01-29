@@ -91,6 +91,7 @@ export interface ParadaRutero {
     }
     total?: number
     estado?: string
+    zona_id?: string
   }
 }
 
@@ -113,6 +114,7 @@ export interface RuteroLogistico {
   id: string
   transportista_id: string
   vehiculo_id: string
+  zona_id: string
   estado: EstadoRutero
   fecha_programada?: string | null
   creado_en: string
@@ -140,6 +142,10 @@ export interface RuteroLogistico {
     modelo?: string | null
     capacidad_kg?: number | null
     estado: string
+  }
+  zona?: {
+    id: string | number
+    nombre: string
   }
   paradas?: ParadaRutero[]
   historial?: HistorialEstadoRutero[]

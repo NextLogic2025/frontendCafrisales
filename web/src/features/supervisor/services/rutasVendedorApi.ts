@@ -189,8 +189,11 @@ export async function publicarRuta(rutaId: string): Promise<RutaVendedor> {
     const res = await fetch(url, {
         method: 'PUT',
         headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({ action: 'publish' }),
     })
 
     if (!res.ok) {
@@ -293,8 +296,10 @@ export async function iniciarRuta(rutaId: string): Promise<RutaVendedor> {
     const res = await fetch(url, {
         method: 'PUT',
         headers: {
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({}),
     })
 
     if (!res.ok) {
@@ -316,8 +321,10 @@ export async function completarRuta(rutaId: string): Promise<RutaVendedor> {
     const res = await fetch(url, {
         method: 'PUT',
         headers: {
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({}),
     })
 
     if (!res.ok) {

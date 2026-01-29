@@ -2,28 +2,30 @@ import { Users, UserPlus, Layout } from 'lucide-react'
 import { SectionHeader } from 'components/ui/SectionHeader'
 import { PageHero } from 'components/ui/PageHero'
 import { Button } from 'components/ui/Button'
-import { useState, useEffect } from 'react'
-import { type Cliente, type ZonaComercial, type ListaPrecio } from '../../services/clientesApi'
+import { useState, useEffect, useMemo } from 'react'
+import { type Cliente, type ZonaComercial } from '../../services/clientesApi'
+import { channelsApi, type Channel } from '../../../../services/api/channelsApi'
 import { ClienteList } from './ClienteList'
 import { CrearClienteModal } from './CrearClienteModal'
 import { ClienteDetailModal } from './ClienteDetailModal'
 import { CrearCanalModal } from './CrearCanalModal'
 import { ClientStatusFilter } from './ClientStatusFilter'
-import { VerCanalesModal } from './VerCanalesModal'
 import { obtenerClientes } from '../../services/clientesApi'
 import { obtenerZonas } from '../../services/zonasApi'
 
 export default function ClientesPage() {
   const [clientes, setClientes] = useState<Cliente[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [filterStatus, setFilterStatus] = useState<'activo' | 'inactivo' | 'todos'>('activo')
+  // const [filterStatus, setFilterStatus] = useState<'activo' | 'inactivo' | 'todos'>('todos')
+  const [canales, setCanales] = useState<Channel[]>([])
+  const [selectedChannel, setSelectedChannel] = useState<string>('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isChannelModalOpen, setIsChannelModalOpen] = useState(false)
   const [isViewChannelsModalOpen, setIsViewChannelsModalOpen] = useState(false)
   const [editingCliente, setEditingCliente] = useState<Cliente | null>(null)
   const [detailCliente, setDetailCliente] = useState<Cliente | null>(null)
   const [zonas, setZonas] = useState<ZonaComercial[]>([])
-  const [listasPrecios, setListasPrecios] = useState<ListaPrecio[]>([])
+  const [listasPrecios, setListasPrecios] = useState<any[]>([])
 
   // Estado para notificaciones toast globales
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
@@ -31,12 +33,16 @@ export default function ClientesPage() {
   useEffect(() => {
     cargarClientes()
     cargarCatalogos()
-  }, [filterStatus])
+  }, [])
 
   const cargarCatalogos = async () => {
     try {
-      const zonasData = await obtenerZonas()
+      const [zonasData, canalesData] = await Promise.all([
+        obtenerZonas(),
+        channelsApi.getChannels()
+      ])
       setZonas(zonasData as any)
+      setCanales(canalesData)
     } catch (error) {
       console.error('Error al cargar catálogos:', error)
     }
@@ -45,7 +51,7 @@ export default function ClientesPage() {
   const cargarClientes = async () => {
     try {
       setIsLoading(true)
-      const data = await obtenerClientes(filterStatus)
+      const data = await obtenerClientes('todos')
       setClientes(data)
     } catch (error) {
       console.error('Error al cargar clientes:', error)
@@ -85,6 +91,15 @@ export default function ClientesPage() {
     setDetailCliente(cliente)
   }
 
+  const filteredClientes = useMemo(() => {
+    if (!selectedChannel) return clientes
+    return clientes.filter(c =>
+      // Comparar como string para evitar problemas de tipos
+      String(c.canal_id) === String(selectedChannel) ||
+      c.canal_nombre === selectedChannel // Por si viene el nombre en el select
+    )
+  }, [clientes, selectedChannel])
+
 
   return (
     <div className="space-y-6">
@@ -99,11 +114,23 @@ export default function ClientesPage() {
         subtitle="Listado de clientes activos e incidencias"
       />
 
+
+
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <ClientStatusFilter
-          selectedStatus={filterStatus}
-          onStatusChange={setFilterStatus}
-        />
+        <div className="flex items-center gap-2">
+          <select
+            value={selectedChannel}
+            onChange={(e) => setSelectedChannel(e.target.value)}
+            className="px-4 py-2 bg-slate-100 border-none rounded-xl text-sm font-medium text-slate-700 outline-none focus:ring-2 focus:ring-brand-red/20 cursor-pointer"
+          >
+            <option value="">Todos los canales</option>
+            {canales.map(canal => (
+              <option key={canal.id} value={canal.id}>
+                {canal.nombre}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <div className="flex items-center gap-3">
           <Button
@@ -132,7 +159,7 @@ export default function ClientesPage() {
       </div>
 
       <ClienteList
-        clientes={clientes}
+        clientes={filteredClientes}
         isLoading={isLoading}
         onEdit={handleEdit}
         onView={handleView}
@@ -191,30 +218,32 @@ export default function ClientesPage() {
       />
 
       {/* Toast Notification */}
-      {toast && (
-        <div
-          className={`fixed bottom-6 right-6 px-6 py-4 rounded-lg shadow-2xl flex items-center gap-3 z-50 ${toast.type === 'success'
-            ? 'bg-green-500 text-white'
-            : 'bg-red-500 text-white'
-            }`}
-          style={{
-            animation: 'slideInRight 0.3s ease-out',
-          }}
-        >
-          <div className="flex items-center gap-3">
-            {toast.type === 'success' ? (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            ) : (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            )}
-            <span className="font-semibold">{toast.message}</span>
+      {
+        toast && (
+          <div
+            className={`fixed bottom-6 right-6 px-6 py-4 rounded-lg shadow-2xl flex items-center gap-3 z-50 ${toast.type === 'success'
+              ? 'bg-green-500 text-white'
+              : 'bg-red-500 text-white'
+              }`}
+            style={{
+              animation: 'slideInRight 0.3s ease-out',
+            }}
+          >
+            <div className="flex items-center gap-3">
+              {toast.type === 'success' ? (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              )}
+              <span className="font-semibold">{toast.message}</span>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       <style>{`
         @keyframes slideInRight {
@@ -228,6 +257,6 @@ export default function ClientesPage() {
           }
         }
       `}</style>
-    </div>
+    </div >
   )
 }
