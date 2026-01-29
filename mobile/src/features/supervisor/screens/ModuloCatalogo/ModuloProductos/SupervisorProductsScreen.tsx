@@ -9,7 +9,7 @@ import { GenericList } from '../../../../../components/ui/GenericList'
 import { CategoryFilter } from '../../../../../components/ui/CategoryFilter'
 import { FeedbackModal, FeedbackType } from '../../../../../components/ui/FeedbackModal'
 import { ExpandableFab } from '../../../../../components/ui/ExpandableFab'
-import { BRAND_COLORS } from '../../../../../shared/types'
+import { BRAND_COLORS } from '../../../../../services/shared/types'
 import { CatalogProduct, CatalogProductService } from '../../../../../services/api/CatalogProductService'
 import { showGlobalToast } from '../../../../../utils/toastService'
 

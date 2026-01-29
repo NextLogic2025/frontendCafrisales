@@ -2,7 +2,7 @@ import React from 'react'
 import { View, Text, Pressable } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { Despacho, DespachoEstadoViaje, DESPACHO_ESTADO_COLORS, DESPACHO_ESTADO_LABELS, DespachosService } from '../../services/api/DespachosService'
-import { BRAND_COLORS } from '../../shared/types'
+import { BRAND_COLORS } from '../../services/shared/types'
 
 interface DespachoCardProps {
     despacho: Despacho

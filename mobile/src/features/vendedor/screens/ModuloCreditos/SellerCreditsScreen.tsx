@@ -8,7 +8,7 @@ import { SellerHeaderMenu } from '../../../../components/ui/SellerHeaderMenu'
 import { CategoryFilter } from '../../../../components/ui/CategoryFilter'
 import { GenericModal } from '../../../../components/ui/GenericModal'
 import { SearchBar } from '../../../../components/ui/SearchBar'
-import { BRAND_COLORS } from '../../../../shared/types'
+import { BRAND_COLORS } from '../../../../services/shared/types'
 import { CreditListItem, CreditService } from '../../../../services/api/CreditService'
 import { OrderListItem, OrderService } from '../../../../services/api/OrderService'
 import { UserClient, UserClientService } from '../../../../services/api/UserClientService'
@@ -272,10 +272,10 @@ export function SellerCreditsScreen() {
             activeTab === 'pendientes'
               ? filteredPending
               : activeTab === 'pagados'
-              ? filteredPagados
-              : activeTab === 'rechazados'
-              ? filteredRechazados
-              : filteredAprobados
+                ? filteredPagados
+                : activeTab === 'rechazados'
+                  ? filteredRechazados
+                  : filteredAprobados
           }
           keyExtractor={(item) => item.id}
           renderItem={activeTab === 'pendientes' ? renderPendingItem : renderItem}
@@ -290,19 +290,19 @@ export function SellerCreditsScreen() {
                 {activeTab === 'pendientes'
                   ? 'Sin solicitudes'
                   : activeTab === 'pagados'
-                  ? 'Sin creditos pagados'
-                  : activeTab === 'rechazados'
-                  ? 'Sin creditos rechazados'
-                  : 'Sin creditos'}
+                    ? 'Sin creditos pagados'
+                    : activeTab === 'rechazados'
+                      ? 'Sin creditos rechazados'
+                      : 'Sin creditos'}
               </Text>
               <Text className="text-sm text-neutral-500 text-center">
                 {activeTab === 'pendientes'
                   ? 'No hay pedidos a credito pendientes de aprobacion.'
                   : activeTab === 'pagados'
-                  ? 'No hay creditos pagados para mostrar.'
-                  : activeTab === 'rechazados'
-                  ? 'No hay creditos rechazados para mostrar.'
-                  : 'Todavia no tienes creditos registrados.'}
+                    ? 'No hay creditos pagados para mostrar.'
+                    : activeTab === 'rechazados'
+                      ? 'No hay creditos rechazados para mostrar.'
+                      : 'Todavia no tienes creditos registrados.'}
               </Text>
             </View>
           }

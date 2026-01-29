@@ -3,7 +3,7 @@ import { View, Text, Pressable, TextInput } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { GenericModal } from '../ui/GenericModal'
 import { PrimaryButton } from '../ui/PrimaryButton'
-import { BRAND_COLORS } from '../../shared/types'
+import { BRAND_COLORS } from '../../services/shared/types'
 import { DeliveryService, IncidentPayload, DeliveryIncident } from '../../services/api/DeliveryService'
 import { showGlobalToast } from '../../utils/toastService'
 
@@ -92,14 +92,12 @@ export function ReportIncidentModal({ visible, onClose, entregaId, onIncidentRep
                 <Pressable
                   key={type.id}
                   onPress={() => setSelectedType(type.id)}
-                  className={`px-3 py-2 rounded-xl border ${
-                    isActive ? 'border-brand-red bg-red-50' : 'border-neutral-200 bg-white'
-                  }`}
+                  className={`px-3 py-2 rounded-xl border ${isActive ? 'border-brand-red bg-red-50' : 'border-neutral-200 bg-white'
+                    }`}
                 >
                   <Text
-                    className={`text-xs font-semibold ${
-                      isActive ? 'text-brand-red' : 'text-neutral-600'
-                    }`}
+                    className={`text-xs font-semibold ${isActive ? 'text-brand-red' : 'text-neutral-600'
+                      }`}
                   >
                     {type.label}
                   </Text>
@@ -119,9 +117,8 @@ export function ReportIncidentModal({ visible, onClose, entregaId, onIncidentRep
                 <Pressable
                   key={option.id}
                   onPress={() => setSeverity(option.id)}
-                  className={`flex-1 py-3 rounded-xl border items-center ${
-                    isActive ? 'border-2' : 'border'
-                  }`}
+                  className={`flex-1 py-3 rounded-xl border items-center ${isActive ? 'border-2' : 'border'
+                    }`}
                   style={{
                     backgroundColor: isActive ? option.bg : '#FAFAFA',
                     borderColor: isActive ? option.color : '#E5E7EB',

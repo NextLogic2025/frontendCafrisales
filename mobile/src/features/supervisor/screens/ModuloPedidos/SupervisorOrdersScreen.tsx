@@ -7,7 +7,7 @@ import { SupervisorHeaderMenu } from '../../../../components/ui/SupervisorHeader
 import { CategoryFilter } from '../../../../components/ui/CategoryFilter'
 import { SearchBar } from '../../../../components/ui/SearchBar'
 import { GenericModal } from '../../../../components/ui/GenericModal'
-import { BRAND_COLORS } from '../../../../shared/types'
+import { BRAND_COLORS } from '../../../../services/shared/types'
 import { OrderListCard } from '../../../../components/orders/OrderListCard'
 import { OrderListItem, OrderService } from '../../../../services/api/OrderService'
 import { UserClientService } from '../../../../services/api/UserClientService'

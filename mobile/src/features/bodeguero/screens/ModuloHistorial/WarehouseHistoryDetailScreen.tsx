@@ -3,7 +3,7 @@ import { ActivityIndicator, ScrollView, Text, View } from 'react-native'
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Header } from '../../../../components/ui/Header'
-import { BRAND_COLORS } from '../../../../shared/types'
+import { BRAND_COLORS } from '../../../../services/shared/types'
 import { OrderDetail, OrderService, OrderValidation } from '../../../../services/api/OrderService'
 
 export function WarehouseHistoryDetailScreen() {
@@ -164,10 +164,10 @@ export function WarehouseHistoryDetailScreen() {
                     estado === 'aprobado'
                       ? 'bg-emerald-50 text-emerald-700'
                       : estado === 'aprobado_parcial'
-                      ? 'bg-amber-50 text-amber-700'
-                      : estado === 'sustituido'
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'bg-red-50 text-red-700'
+                        ? 'bg-amber-50 text-amber-700'
+                        : estado === 'sustituido'
+                          ? 'bg-blue-50 text-blue-700'
+                          : 'bg-red-50 text-red-700'
 
                   return (
                     <View

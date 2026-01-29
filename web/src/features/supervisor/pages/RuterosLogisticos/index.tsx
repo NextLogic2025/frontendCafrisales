@@ -8,11 +8,15 @@ import { EditarRuteroModal } from './EditarRuteroModal'
 import { DetalleRuteroModal } from './DetalleRuteroModal'
 import type { RuteroLogistico, EstadoRutero } from '../../services/types'
 import { getRuterosLogisticos, publicarRutero, cancelarRutero, createRuteroLogistico } from '../../services/logisticsApi'
+import { obtenerTransportistas, type Usuario } from '../../services/usuariosApi'
+import { getVehicles, type Vehicle } from '../../services/vehiclesApi'
 import { Modal } from 'components/ui/Modal'
 import { FormField } from 'components/ui/FormField'
 
 export default function RuterosLogisticosPage() {
     const [ruteros, setRuteros] = useState<RuteroLogistico[]>([])
+    const [transportistas, setTransportistas] = useState<Usuario[]>([])
+    const [vehiculos, setVehiculos] = useState<Vehicle[]>([])
     const [loading, setLoading] = useState(false)
     const [filtroEstado, setFiltroEstado] = useState<EstadoRutero | 'todos'>('todos')
     const [selectedRutero, setSelectedRutero] = useState<RuteroLogistico | null>(null)
@@ -35,10 +39,42 @@ export default function RuterosLogisticosPage() {
     const loadRuteros = async () => {
         setLoading(true)
         try {
-            const params =
-                filtroEstado === 'todos' ? undefined : { estado: filtroEstado as EstadoRutero }
-            const data = await getRuterosLogisticos(params)
-            setRuteros(data)
+            // Load all required data in parallel
+            const [ruterosData, transportistasData, vehiculosData] = await Promise.all([
+                getRuterosLogisticos(
+                    filtroEstado === 'todos' ? undefined : { estado: filtroEstado as EstadoRutero }
+                ),
+                obtenerTransportistas(),
+                getVehicles(),
+            ])
+
+            setTransportistas(transportistasData)
+            setVehiculos(vehiculosData)
+
+            // Populate ruteros with names from IDs
+            const populatedRuteros = ruterosData.map((r) => {
+                const transportista = transportistasData.find((t) => t.id === r.transportista_id)
+                const vehiculo = vehiculosData.find((v) => v.id === r.vehiculo_id)
+
+                return {
+                    ...r,
+                    transportista: r.transportista || (transportista ? {
+                        id: transportista.id,
+                        nombre: transportista.nombre || '',
+                        apellido: '', // Usuario type doesn't have apellido directly
+                        email: transportista.email
+                    } : undefined),
+                    vehiculo: r.vehiculo || (vehiculo ? {
+                        id: vehiculo.id,
+                        placa: vehiculo.placa,
+                        modelo: vehiculo.modelo,
+                        capacidad_kg: vehiculo.capacidad_kg,
+                        estado: vehiculo.estado
+                    } : undefined)
+                }
+            })
+
+            setRuteros(populatedRuteros)
         } catch (error) {
             console.error('Error al cargar ruteros:', error)
             showToast('error', 'Error al cargar ruteros logísticos')

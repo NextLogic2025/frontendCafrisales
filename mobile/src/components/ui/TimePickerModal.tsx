@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, Platform } from 'react-native'
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker'
 import { Ionicons } from '@expo/vector-icons'
 import { GenericModal } from './GenericModal'
-import { BRAND_COLORS } from '../../shared/types'
+import { BRAND_COLORS } from '../../services/shared/types'
 
 type Props = {
   visible: boolean

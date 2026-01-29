@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons'
 
 import { Header } from '../../../../components/ui/Header'
 import { SupervisorHeaderMenu } from '../../../../components/ui/SupervisorHeaderMenu'
-import { BRAND_COLORS } from '../../../../shared/types'
+import { BRAND_COLORS } from '../../../../services/shared/types'
 import { UserClientService, UserClient } from '../../../../services/api/UserClientService'
 import { Zone, ZoneService } from '../../../../services/api/ZoneService'
 import { MiniMapPreview } from '../../../../components/ui/MiniMapPreview'

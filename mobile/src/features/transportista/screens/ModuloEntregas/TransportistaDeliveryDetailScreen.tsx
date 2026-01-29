@@ -10,7 +10,7 @@ import { AddEvidenceModal } from '../../../../components/delivery/AddEvidenceMod
 import { ReportIncidentModal } from '../../../../components/delivery/ReportIncidentModal'
 import { EvidenceGalleryModal } from '../../../../components/delivery/EvidenceGalleryModal'
 import { IncidentListModal } from '../../../../components/delivery/IncidentListModal'
-import { BRAND_COLORS } from '../../../../shared/types'
+import { BRAND_COLORS } from '../../../../services/shared/types'
 import {
   DeliveryDetail,
   DeliveryEvidence,
@@ -318,16 +318,14 @@ export function TransportistaDeliveryDetailScreen() {
                   <Pressable
                     onPress={handleNoDelivery}
                     disabled={updating || !motivoNoEntrega.trim()}
-                    className={`rounded-2xl py-3 items-center border ${
-                      motivoNoEntrega.trim()
+                    className={`rounded-2xl py-3 items-center border ${motivoNoEntrega.trim()
                         ? 'border-red-300 bg-red-50'
                         : 'border-neutral-200 bg-neutral-50'
-                    }`}
+                      }`}
                   >
                     <Text
-                      className={`text-sm font-semibold ${
-                        motivoNoEntrega.trim() ? 'text-red-700' : 'text-neutral-400'
-                      }`}
+                      className={`text-sm font-semibold ${motivoNoEntrega.trim() ? 'text-red-700' : 'text-neutral-400'
+                        }`}
                     >
                       {updating ? 'Enviando...' : 'Confirmar no entrega'}
                     </Text>

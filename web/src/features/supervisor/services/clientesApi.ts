@@ -318,7 +318,9 @@ export async function eliminarCliente(id: string): Promise<void> {
 export async function obtenerZonas(): Promise<ZonaComercial[]> {
   try {
     const token = await getValidToken()
-    const url = `${USERS_API_URL}/zonas?estado=activo`
+    const ZONAS_BASE_URL = env.api.zonas
+    const ZONAS_API_URL = ZONAS_BASE_URL.endsWith('/api') ? ZONAS_BASE_URL : `${ZONAS_BASE_URL}/api`
+    const url = `${ZONAS_API_URL}/zonas?estado=activo`
     const headers: any = {}
     if (token) headers.Authorization = `Bearer ${token}`
 

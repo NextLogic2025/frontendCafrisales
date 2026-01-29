@@ -8,7 +8,7 @@ import { SupervisorHeaderMenu } from '../../../../components/ui/SupervisorHeader
 import { SearchBar } from '../../../../components/ui/SearchBar'
 import { PrimaryButton } from '../../../../components/ui/PrimaryButton'
 import { FeedbackModal } from '../../../../components/ui/FeedbackModal'
-import { BRAND_COLORS } from '../../../../shared/types'
+import { BRAND_COLORS } from '../../../../services/shared/types'
 import { OrderListItem, OrderService } from '../../../../services/api/OrderService'
 import { UserClientService } from '../../../../services/api/UserClientService'
 
@@ -188,9 +188,8 @@ export function SupervisorPromosScreen() {
           <Pressable
             onPress={() => handleRejectAll(item.id)}
             disabled={isRejecting}
-            className={`flex-1 rounded-2xl border items-center justify-center ${
-              isRejecting ? 'opacity-60 border-red-200 bg-red-50' : 'border-red-200 bg-red-50'
-            }`}
+            className={`flex-1 rounded-2xl border items-center justify-center ${isRejecting ? 'opacity-60 border-red-200 bg-red-50' : 'border-red-200 bg-red-50'
+              }`}
           >
             <Text className="text-sm font-semibold text-red-700">
               {isRejecting ? 'Rechazando...' : 'Rechazar'}

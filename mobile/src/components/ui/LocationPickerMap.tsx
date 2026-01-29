@@ -1,7 +1,7 @@
 import React from 'react'
 import { View, Text } from 'react-native'
 import MapView, { Marker, Polygon, PROVIDER_GOOGLE, Region } from 'react-native-maps'
-import { BRAND_COLORS } from '../../shared/types'
+import { BRAND_COLORS } from '../../services/shared/types'
 
 type MapPoint = { latitude: number; longitude: number }
 

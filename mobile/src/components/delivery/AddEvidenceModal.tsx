@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons'
 import * as ImagePicker from 'expo-image-picker'
 import { GenericModal } from '../ui/GenericModal'
 import { PrimaryButton } from '../ui/PrimaryButton'
-import { BRAND_COLORS } from '../../shared/types'
+import { BRAND_COLORS } from '../../services/shared/types'
 import { DeliveryService, EvidencePayload, DeliveryEvidence } from '../../services/api/DeliveryService'
 import { showGlobalToast } from '../../utils/toastService'
 
@@ -122,9 +122,8 @@ export function AddEvidenceModal({ visible, onClose, entregaId, onEvidenceAdded 
                 <Pressable
                   key={type.id}
                   onPress={() => setSelectedType(type.id)}
-                  className={`flex-row items-center px-4 py-2.5 rounded-xl border ${
-                    isActive ? 'border-brand-red bg-red-50' : 'border-neutral-200 bg-white'
-                  }`}
+                  className={`flex-row items-center px-4 py-2.5 rounded-xl border ${isActive ? 'border-brand-red bg-red-50' : 'border-neutral-200 bg-white'
+                    }`}
                 >
                   <Ionicons
                     name={type.icon}
@@ -132,9 +131,8 @@ export function AddEvidenceModal({ visible, onClose, entregaId, onEvidenceAdded 
                     color={isActive ? BRAND_COLORS.red : '#6B7280'}
                   />
                   <Text
-                    className={`ml-2 text-sm font-semibold ${
-                      isActive ? 'text-brand-red' : 'text-neutral-600'
-                    }`}
+                    className={`ml-2 text-sm font-semibold ${isActive ? 'text-brand-red' : 'text-neutral-600'
+                      }`}
                   >
                     {type.label}
                   </Text>

@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { Header } from '../../../../components/ui/Header'
 import { PrimaryButton } from '../../../../components/ui/PrimaryButton'
 import { GenericModal } from '../../../../components/ui/GenericModal'
-import { BRAND_COLORS } from '../../../../shared/types'
+import { BRAND_COLORS } from '../../../../services/shared/types'
 import { RouteService, LogisticRoute, RouteHistoryEntry } from '../../../../services/api/RouteService'
 import { OrderService } from '../../../../services/api/OrderService'
 import { Delivery, DeliveryDetail, DeliveryService } from '../../../../services/api/DeliveryService'
@@ -783,12 +783,12 @@ export function TransportistaRouteDetailScreen() {
                 const style = statusColors[entry.estado] || statusColors.borrador
                 const dateStr = entry.creado_en
                   ? new Date(entry.creado_en).toLocaleString('es-EC', {
-                      day: '2-digit',
-                      month: 'short',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })
                   : '-'
                 return (
                   <View

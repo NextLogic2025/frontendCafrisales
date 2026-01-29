@@ -146,10 +146,11 @@ export interface RuteroLogistico {
 }
 
 export interface CreateRuteroLogisticoPayload {
-  transportista_id: string
+  fecha_rutero: string
+  zona_id: string
   vehiculo_id: string
-  fecha_programada?: string
-  pedidos: Array<{
+  transportista_id: string
+  paradas: Array<{
     pedido_id: string
     orden_entrega: number
   }>

@@ -6,6 +6,7 @@ import type { CreateRuteroLogisticoPayload } from '../../services/types'
 import { obtenerTransportistas, type Usuario } from '../../services/usuariosApi'
 import { getVehicles, type Vehicle } from '../../services/vehiclesApi'
 import { obtenerPedidos, type Pedido } from '../../services/pedidosApi'
+import { obtenerZonas, type ZonaComercial } from '../../services/clientesApi'
 
 interface CrearRuteroModalProps {
     isOpen: boolean
@@ -26,13 +27,16 @@ export function CrearRuteroModal({ isOpen, onClose, onSubmit }: CrearRuteroModal
     // Form state
     const [transportistaId, setTransportistaId] = useState('')
     const [vehiculoId, setVehiculoId] = useState('')
+    const [zonaId, setZonaId] = useState('')
     const [fechaProgramada, setFechaProgramada] = useState('')
     const [pedidosSeleccionados, setPedidosSeleccionados] = useState<PedidoSeleccionado[]>([])
 
     // Data lists
     const [transportistas, setTransportistas] = useState<Usuario[]>([])
     const [vehiculos, setVehiculos] = useState<Vehicle[]>([])
+    const [zonas, setZonas] = useState<ZonaComercial[]>([])
     const [pedidosPendientes, setPedidosPendientes] = useState<Pedido[]>([])
+    const [todosPedidos, setTodosPedidos] = useState<Pedido[]>([])
 
     // UI state
     const [showPedidoSelector, setShowPedidoSelector] = useState(false)
@@ -49,20 +53,23 @@ export function CrearRuteroModal({ isOpen, onClose, onSubmit }: CrearRuteroModal
     const loadData = async () => {
         setLoadingData(true)
         try {
-            const [transportistasData, vehiculosData, pedidosData] = await Promise.all([
+            const [transportistasData, vehiculosData, zonasData, pedidosData] = await Promise.all([
                 obtenerTransportistas(),
                 getVehicles('disponible'),
+                obtenerZonas(),
                 obtenerPedidos({ skipClients: false }),
             ])
 
             setTransportistas(transportistasData)
             setVehiculos(vehiculosData)
+            setZonas(zonasData)
 
-            // Filter pedidos that are in "preparado" state (ready for delivery)
-            const pedidosPreparados = pedidosData.filter(
-                p => p.estado === 'preparado' || p.estado_actual === 'preparado'
+            // Filter pedidos that are in "validado" state (ready for delivery)
+            const pedidosValidados = pedidosData.filter(
+                p => p.estado === 'validado' || p.estado_actual === 'validado'
             )
-            setPedidosPendientes(pedidosPreparados)
+            setTodosPedidos(pedidosValidados)
+            setPedidosPendientes(pedidosValidados)
         } catch (error) {
             console.error('Error loading data:', error)
         } finally {
@@ -73,11 +80,37 @@ export function CrearRuteroModal({ isOpen, onClose, onSubmit }: CrearRuteroModal
     const resetForm = () => {
         setTransportistaId('')
         setVehiculoId('')
+        setZonaId('')
         setFechaProgramada('')
         setPedidosSeleccionados([])
         setShowPedidoSelector(false)
         setSearchPedido('')
     }
+
+    // Enable zone filtering now that order data includes zone information
+    useEffect(() => {
+        if (!zonaId) {
+            setPedidosPendientes(todosPedidos)
+            return
+        }
+
+        // Filter valid orders that match the selected zone
+        const filtered = todosPedidos.filter(p => String(p.zona_id) === String(zonaId))
+        setPedidosPendientes(filtered)
+
+        console.log(`Zone ${zonaId} selected. Showing ${filtered.length} matching orders out of ${todosPedidos.length} validated orders.`)
+    }, [zonaId, todosPedidos])
+
+    // Clear selected orders if zone changes to avoid cross-zone routes
+    useEffect(() => {
+        if (pedidosSeleccionados.length > 0) {
+            const hasCrossZone = pedidosSeleccionados.some(ps => ps.pedido && String(ps.pedido.zona_id) !== String(zonaId))
+            if (hasCrossZone) {
+                console.log('Zone changed. Clearing order selections because they don\'t match the new zone.')
+                setPedidosSeleccionados([])
+            }
+        }
+    }, [zonaId])
 
     const handleAgregarPedido = (pedido: Pedido) => {
         const yaSeleccionado = pedidosSeleccionados.some(p => p.pedido_id === pedido.id)
@@ -132,18 +165,19 @@ export function CrearRuteroModal({ isOpen, onClose, onSubmit }: CrearRuteroModal
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
 
-        if (!transportistaId || !vehiculoId || pedidosSeleccionados.length === 0) {
-            alert('Debes seleccionar transportista, vehículo y al menos un pedido')
+        if (!transportistaId || !vehiculoId || !zonaId || pedidosSeleccionados.length === 0) {
+            alert('Debes seleccionar transportista, vehículo, zona y al menos un pedido')
             return
         }
 
         setLoading(true)
         try {
             const payload: CreateRuteroLogisticoPayload = {
-                transportista_id: transportistaId,
+                fecha_rutero: fechaProgramada || new Date().toISOString().split('T')[0],
+                zona_id: zonaId,
                 vehiculo_id: vehiculoId,
-                fecha_programada: fechaProgramada || undefined,
-                pedidos: pedidosSeleccionados.map(p => ({
+                transportista_id: transportistaId,
+                paradas: pedidosSeleccionados.map(p => ({
                     pedido_id: p.pedido_id,
                     orden_entrega: p.orden_entrega,
                 })),
@@ -209,6 +243,21 @@ export function CrearRuteroModal({ isOpen, onClose, onSubmit }: CrearRuteroModal
                             ...vehiculos.map(v => ({
                                 label: `${v.placa}${v.modelo ? ` - ${v.modelo}` : ''}${v.capacidad_kg ? ` (${v.capacidad_kg}kg)` : ''}`,
                                 value: v.id,
+                            })),
+                        ]}
+                    />
+
+                    {/* Zona */}
+                    <FormField
+                        label="Zona Comercial"
+                        type="select"
+                        value={zonaId}
+                        onChange={setZonaId}
+                        options={[
+                            { label: 'Todas las zonas', value: '' },
+                            ...zonas.map(z => ({
+                                label: z.nombre,
+                                value: String(z.id),
                             })),
                         ]}
                     />

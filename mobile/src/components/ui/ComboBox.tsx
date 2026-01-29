@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons'
 import * as React from 'react'
 import { Modal, Pressable, ScrollView, Text, TouchableOpacity, View } from 'react-native'
 
-import { BRAND_COLORS } from '../../shared/types'
+import { BRAND_COLORS } from '../../services/shared/types'
 
 export type ComboBoxOption<Value extends string | number = string> = {
   value: Value

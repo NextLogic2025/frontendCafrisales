@@ -1,7 +1,7 @@
 import React from 'react'
 import { Pressable, Text, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { BRAND_COLORS } from '../../shared/types'
+import { BRAND_COLORS } from '../../services/shared/types'
 import { CreditResponse, CreditTotals, CreditPayment } from '../../services/api/CreditService'
 import { UserClient } from '../../services/api/UserClientService'
 import { OrderDetail } from '../../services/api/OrderService'

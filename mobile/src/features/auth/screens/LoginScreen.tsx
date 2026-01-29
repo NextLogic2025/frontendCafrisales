@@ -1,4 +1,4 @@
-import { BRAND_COLORS, credentialsSchema, type Credentials } from '../../../shared/types'
+import { BRAND_COLORS, credentialsSchema, type Credentials } from '../../../services/shared/types'
 import { Ionicons } from '@expo/vector-icons'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { StatusBar } from 'expo-status-bar'
@@ -70,12 +70,12 @@ export function LoginScreen({ onSignedIn, onForgotPassword }: Props) {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           className="flex-1"
         >
-            <ScrollView
-              keyboardShouldPersistTaps="handled"
-              contentContainerStyle={{ flexGrow: 1 }}
-              className="flex-1"
-            >
-              <View className="flex-1 justify-center px-8 pb-10 pt-4">
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ flexGrow: 1 }}
+            className="flex-1"
+          >
+            <View className="flex-1 justify-center px-8 pb-10 pt-4">
 
               <View className="items-center mb-10">
                 <View className="h-32 w-full items-center justify-center mb-6">

@@ -25,6 +25,7 @@ export interface Pedido {
     numero_pedido?: string // Mobile uses numero_pedido
     codigo_visual?: string // Web UI uses this, mapping to numero_pedido or id
     cliente_id?: string
+    zona_id?: string
     cliente?: {
         razon_social: string
         identificacion?: string
@@ -74,19 +75,15 @@ export async function obtenerPedidos(options: { skipClients?: boolean } = {}): P
 
     const dataPedidos = await resPedidos.json()
     const clientesList = options.skipClients ? [] : (resClientes || [])
-    const clientesMap = new Map(clientesList.map((c: any) => [c.id, c]))
-
-    if (!resPedidos.ok) {
-        throw new Error('Error al obtener pedidos')
-    }
+    const clientesMap = new Map<string, any>(clientesList.map((c: any) => [String(c.id), c]))
 
     return Array.isArray(dataPedidos) ? dataPedidos.map((p: any) => {
         const mapped = mapMobileToWebPedido(p)
-        const clienteInfo = clientesMap.get(p.cliente_id)
+        const clienteInfo = clientesMap.get(String(p.cliente_id))
         if (clienteInfo) {
             mapped.cliente = {
-                razon_social: clienteInfo.razon_social,
-                identificacion: clienteInfo.identificacion
+                razon_social: clienteInfo.razon_social || 'Cliente',
+                identificacion: clienteInfo.identificacion || 'N/A'
             }
         }
         return mapped
@@ -131,6 +128,7 @@ function mapMobileToWebPedido(raw: any): Pedido {
         id: raw.id,
         codigo_visual: raw.numero_pedido || raw.id.substring(0, 8),
         cliente_id: raw.cliente_id,
+        zona_id: raw.zona_id,
         estado_actual: raw.estado,
         estado: raw.estado,
         total_final: Number(raw.total || 0),

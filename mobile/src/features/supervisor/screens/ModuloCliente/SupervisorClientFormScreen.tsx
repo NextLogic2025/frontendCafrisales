@@ -10,7 +10,7 @@ import { PrimaryButton } from '../../../../components/ui/PrimaryButton'
 import { PickerModal, PickerOption } from '../../../../components/ui/PickerModal'
 import { LocationPickerMap } from '../../../../components/ui/LocationPickerMap'
 import { KeyboardFormLayout } from '../../../../components/ui/KeyboardFormLayout'
-import { BRAND_COLORS } from '../../../../shared/types'
+import { BRAND_COLORS } from '../../../../services/shared/types'
 import { Zone, ZoneService } from '../../../../services/api/ZoneService'
 import { Channel, ChannelService } from '../../../../services/api/ChannelService'
 import { UserClient, UserClientService } from '../../../../services/api/UserClientService'
@@ -305,182 +305,182 @@ export function SupervisorClientFormScreen() {
 
       <KeyboardFormLayout>
         <View className="px-5 py-4 gap-5">
-            <View className="bg-white rounded-3xl border border-neutral-200 p-5 gap-4">
-              <View className="flex-row items-center">
-                <View className="w-10 h-10 rounded-xl bg-red-50 items-center justify-center mr-3 border border-red-100">
-                  <Ionicons name="person-outline" size={20} color={BRAND_COLORS.red} />
-                </View>
-                <View>
-                  <Text className="text-lg font-bold text-neutral-900">Cuenta del cliente</Text>
-                  <Text className="text-sm text-neutral-500">Datos del usuario y contacto.</Text>
-                </View>
+          <View className="bg-white rounded-3xl border border-neutral-200 p-5 gap-4">
+            <View className="flex-row items-center">
+              <View className="w-10 h-10 rounded-xl bg-red-50 items-center justify-center mr-3 border border-red-100">
+                <Ionicons name="person-outline" size={20} color={BRAND_COLORS.red} />
               </View>
-
-              <TextField
-                label="Nombres"
-                placeholder="Ej. Ana Maria"
-                value={nombres}
-                onChangeText={setNombres}
-                autoCapitalize="words"
-                error={errors.nombres}
-              />
-              <TextField
-                label="Apellidos"
-                placeholder="Ej. Gomez"
-                value={apellidos}
-                onChangeText={setApellidos}
-                autoCapitalize="words"
-                error={errors.apellidos}
-              />
-              <TextField
-                label="Email"
-                placeholder="correo@empresa.com"
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                textContentType="emailAddress"
-                editable={!isEditing}
-                error={errors.email}
-              />
-              <TextField
-                label="Telefono"
-                placeholder="+593 999 999 999"
-                value={telefono}
-                onChangeText={setTelefono}
-                keyboardType="phone-pad"
-              />
-
-              {!isEditing ? (
-                <TextField
-                  label="Contrasena"
-                  placeholder="********"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry={!showPassword}
-                  textContentType="password"
-                  error={errors.password}
-                  right={
-                    <Pressable onPress={() => setShowPassword((prev) => !prev)}>
-                      <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color="#6B7280" />
-                    </Pressable>
-                  }
-                />
-              ) : null}
-            </View>
-
-            <View className="bg-white rounded-3xl border border-neutral-200 p-5 gap-4">
-              <View className="flex-row items-center">
-                <View className="w-10 h-10 rounded-xl bg-red-50 items-center justify-center mr-3 border border-red-100">
-                  <Ionicons name="business-outline" size={20} color={BRAND_COLORS.red} />
-                </View>
-                <View>
-                  <Text className="text-lg font-bold text-neutral-900">Datos comerciales</Text>
-                  <Text className="text-sm text-neutral-500">Informacion del negocio.</Text>
-                </View>
-              </View>
-
-              <TextField
-                label="Nombre comercial"
-                placeholder="Ej. Tienda Central"
-                value={nombreComercial}
-                onChangeText={setNombreComercial}
-                autoCapitalize="words"
-                error={errors.nombreComercial}
-              />
-              <TextField
-                label="RUC"
-                placeholder="999999999999"
-                value={ruc}
-                onChangeText={handleRucChange}
-                keyboardType="numeric"
-                maxLength={12}
-                error={errors.ruc}
-              />
-              <TextField
-                label="Direccion"
-                placeholder="Av. Principal y Secundaria"
-                value={direccion}
-                onChangeText={setDireccion}
-                autoCapitalize="sentences"
-                error={errors.direccion}
-              />
-
-              <Pressable onPress={() => setShowCanalModal(true)} className="gap-2">
-                <Text className="text-xs text-neutral-600">Canal comercial</Text>
-                <View className={`flex-row items-center rounded-2xl border px-4 py-3 bg-neutral-50 ${errors.canalId ? 'border-red-400/60' : 'border-neutral-200'}`}>
-                  <Text className="flex-1 text-neutral-900">
-                    {selectedCanal ? selectedCanal.nombre : 'Selecciona un canal'}
-                  </Text>
-                  <Ionicons name="chevron-down" size={18} color="#6B7280" />
-                </View>
-                {errors.canalId ? <Text className="text-xs text-red-700">{errors.canalId}</Text> : null}
-              </Pressable>
-
-              <Pressable onPress={() => setShowZonaModal(true)} className="gap-2">
-                <Text className="text-xs text-neutral-600">Zona asignada</Text>
-                <View className={`flex-row items-center rounded-2xl border px-4 py-3 bg-neutral-50 ${errors.zonaId ? 'border-red-400/60' : 'border-neutral-200'}`}>
-                  <Text className="flex-1 text-neutral-900">
-                    {selectedZona ? `${selectedZona.nombre} (${selectedZona.codigo})` : 'Selecciona una zona'}
-                  </Text>
-                  <Ionicons name="chevron-down" size={18} color="#6B7280" />
-                </View>
-                {errors.zonaId ? <Text className="text-xs text-red-700">{errors.zonaId}</Text> : null}
-              </Pressable>
-
-              <Pressable onPress={() => setShowVendedorModal(true)} className="gap-2">
-                <Text className="text-xs text-neutral-600">Vendedor asignado (opcional)</Text>
-                <View className="flex-row items-center rounded-2xl border px-4 py-3 bg-neutral-50 border-neutral-200">
-                  <Text className="flex-1 text-neutral-900">
-                    {selectedVendedor ? selectedVendedor.name : 'Seleccionar vendedor'}
-                  </Text>
-                  <Ionicons name="chevron-down" size={18} color="#6B7280" />
-                </View>
-              </Pressable>
-            </View>
-
-            <View className="bg-white rounded-3xl border border-neutral-200 p-5 gap-4">
-              <View className="flex-row items-center">
-                <View className="flex-row items-center flex-1">
-                  <View className="w-10 h-10 rounded-xl bg-red-50 items-center justify-center mr-3 border border-red-100">
-                    <Ionicons name="pin-outline" size={20} color={BRAND_COLORS.red} />
-                  </View>
-                  <View>
-                    <Text className="text-lg font-bold text-neutral-900">Ubicacion</Text>
-                    <Text className="text-sm text-neutral-500">Marca la ubicacion en el mapa.</Text>
-                  </View>
-                </View>
-              </View>
-
-              <LocationPickerMap value={mapPoint} onChange={updateMapPoint} polygons={zonePolygons} />
-
-              <View className="flex-row gap-3">
-                <View className="flex-1">
-                  <TextField
-                    label="Latitud"
-                    placeholder="-3.99"
-                    value={latitud}
-                    onChangeText={handleLatitudChange}
-                    keyboardType="numeric"
-                  />
-                </View>
-                <View className="flex-1">
-                  <TextField
-                    label="Longitud"
-                    placeholder="-79.20"
-                    value={longitud}
-                    onChangeText={handleLongitudChange}
-                    keyboardType="numeric"
-                  />
-                </View>
+              <View>
+                <Text className="text-lg font-bold text-neutral-900">Cuenta del cliente</Text>
+                <Text className="text-sm text-neutral-500">Datos del usuario y contacto.</Text>
               </View>
             </View>
 
-            <PrimaryButton
-              title={isEditing ? 'Guardar cambios' : 'Crear cliente'}
-              onPress={handleSave}
-              loading={saving}
+            <TextField
+              label="Nombres"
+              placeholder="Ej. Ana Maria"
+              value={nombres}
+              onChangeText={setNombres}
+              autoCapitalize="words"
+              error={errors.nombres}
             />
+            <TextField
+              label="Apellidos"
+              placeholder="Ej. Gomez"
+              value={apellidos}
+              onChangeText={setApellidos}
+              autoCapitalize="words"
+              error={errors.apellidos}
+            />
+            <TextField
+              label="Email"
+              placeholder="correo@empresa.com"
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              textContentType="emailAddress"
+              editable={!isEditing}
+              error={errors.email}
+            />
+            <TextField
+              label="Telefono"
+              placeholder="+593 999 999 999"
+              value={telefono}
+              onChangeText={setTelefono}
+              keyboardType="phone-pad"
+            />
+
+            {!isEditing ? (
+              <TextField
+                label="Contrasena"
+                placeholder="********"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                textContentType="password"
+                error={errors.password}
+                right={
+                  <Pressable onPress={() => setShowPassword((prev) => !prev)}>
+                    <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color="#6B7280" />
+                  </Pressable>
+                }
+              />
+            ) : null}
+          </View>
+
+          <View className="bg-white rounded-3xl border border-neutral-200 p-5 gap-4">
+            <View className="flex-row items-center">
+              <View className="w-10 h-10 rounded-xl bg-red-50 items-center justify-center mr-3 border border-red-100">
+                <Ionicons name="business-outline" size={20} color={BRAND_COLORS.red} />
+              </View>
+              <View>
+                <Text className="text-lg font-bold text-neutral-900">Datos comerciales</Text>
+                <Text className="text-sm text-neutral-500">Informacion del negocio.</Text>
+              </View>
+            </View>
+
+            <TextField
+              label="Nombre comercial"
+              placeholder="Ej. Tienda Central"
+              value={nombreComercial}
+              onChangeText={setNombreComercial}
+              autoCapitalize="words"
+              error={errors.nombreComercial}
+            />
+            <TextField
+              label="RUC"
+              placeholder="999999999999"
+              value={ruc}
+              onChangeText={handleRucChange}
+              keyboardType="numeric"
+              maxLength={12}
+              error={errors.ruc}
+            />
+            <TextField
+              label="Direccion"
+              placeholder="Av. Principal y Secundaria"
+              value={direccion}
+              onChangeText={setDireccion}
+              autoCapitalize="sentences"
+              error={errors.direccion}
+            />
+
+            <Pressable onPress={() => setShowCanalModal(true)} className="gap-2">
+              <Text className="text-xs text-neutral-600">Canal comercial</Text>
+              <View className={`flex-row items-center rounded-2xl border px-4 py-3 bg-neutral-50 ${errors.canalId ? 'border-red-400/60' : 'border-neutral-200'}`}>
+                <Text className="flex-1 text-neutral-900">
+                  {selectedCanal ? selectedCanal.nombre : 'Selecciona un canal'}
+                </Text>
+                <Ionicons name="chevron-down" size={18} color="#6B7280" />
+              </View>
+              {errors.canalId ? <Text className="text-xs text-red-700">{errors.canalId}</Text> : null}
+            </Pressable>
+
+            <Pressable onPress={() => setShowZonaModal(true)} className="gap-2">
+              <Text className="text-xs text-neutral-600">Zona asignada</Text>
+              <View className={`flex-row items-center rounded-2xl border px-4 py-3 bg-neutral-50 ${errors.zonaId ? 'border-red-400/60' : 'border-neutral-200'}`}>
+                <Text className="flex-1 text-neutral-900">
+                  {selectedZona ? `${selectedZona.nombre} (${selectedZona.codigo})` : 'Selecciona una zona'}
+                </Text>
+                <Ionicons name="chevron-down" size={18} color="#6B7280" />
+              </View>
+              {errors.zonaId ? <Text className="text-xs text-red-700">{errors.zonaId}</Text> : null}
+            </Pressable>
+
+            <Pressable onPress={() => setShowVendedorModal(true)} className="gap-2">
+              <Text className="text-xs text-neutral-600">Vendedor asignado (opcional)</Text>
+              <View className="flex-row items-center rounded-2xl border px-4 py-3 bg-neutral-50 border-neutral-200">
+                <Text className="flex-1 text-neutral-900">
+                  {selectedVendedor ? selectedVendedor.name : 'Seleccionar vendedor'}
+                </Text>
+                <Ionicons name="chevron-down" size={18} color="#6B7280" />
+              </View>
+            </Pressable>
+          </View>
+
+          <View className="bg-white rounded-3xl border border-neutral-200 p-5 gap-4">
+            <View className="flex-row items-center">
+              <View className="flex-row items-center flex-1">
+                <View className="w-10 h-10 rounded-xl bg-red-50 items-center justify-center mr-3 border border-red-100">
+                  <Ionicons name="pin-outline" size={20} color={BRAND_COLORS.red} />
+                </View>
+                <View>
+                  <Text className="text-lg font-bold text-neutral-900">Ubicacion</Text>
+                  <Text className="text-sm text-neutral-500">Marca la ubicacion en el mapa.</Text>
+                </View>
+              </View>
+            </View>
+
+            <LocationPickerMap value={mapPoint} onChange={updateMapPoint} polygons={zonePolygons} />
+
+            <View className="flex-row gap-3">
+              <View className="flex-1">
+                <TextField
+                  label="Latitud"
+                  placeholder="-3.99"
+                  value={latitud}
+                  onChangeText={handleLatitudChange}
+                  keyboardType="numeric"
+                />
+              </View>
+              <View className="flex-1">
+                <TextField
+                  label="Longitud"
+                  placeholder="-79.20"
+                  value={longitud}
+                  onChangeText={handleLongitudChange}
+                  keyboardType="numeric"
+                />
+              </View>
+            </View>
+          </View>
+
+          <PrimaryButton
+            title={isEditing ? 'Guardar cambios' : 'Crear cliente'}
+            onPress={handleSave}
+            loading={saving}
+          />
         </View>
       </KeyboardFormLayout>
 
