@@ -1,7 +1,7 @@
 import React from 'react'
 import { View, Text, ScrollView, RefreshControl } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { BRAND_COLORS } from '../../../../services/shared/types'
+import { BRAND_COLORS } from '../../../../shared/types'
 
 import { Header } from '../../../../components/ui/Header'
 import { SupervisorHeaderMenu } from '../../../../components/ui/SupervisorHeaderMenu'

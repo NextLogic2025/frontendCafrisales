@@ -1,4 +1,4 @@
-import { BRAND_COLORS } from '../services/shared/types'
+import { BRAND_COLORS } from '../shared/types'
 
 export const MOBILE_COLORS = {
   brand: BRAND_COLORS,

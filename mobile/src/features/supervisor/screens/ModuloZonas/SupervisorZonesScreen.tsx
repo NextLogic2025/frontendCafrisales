@@ -8,7 +8,7 @@ import { SearchBar } from '../../../../components/ui/SearchBar'
 import { GenericList } from '../../../../components/ui/GenericList'
 import { FloatingIconButton } from '../../../../components/ui/FloatingIconButton'
 import { CategoryFilter } from '../../../../components/ui/CategoryFilter'
-import { BRAND_COLORS } from '../../../../services/shared/types'
+import { BRAND_COLORS } from '../../../../shared/types'
 import { Zone, ZoneService, ZoneStatusFilter } from '../../../../services/api/ZoneService'
 
 export function SupervisorZonesScreen() {

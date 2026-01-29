@@ -8,7 +8,7 @@ import { SupervisorHeaderMenu } from '../../../../components/ui/SupervisorHeader
 import { SearchBar } from '../../../../components/ui/SearchBar'
 import { PrimaryButton } from '../../../../components/ui/PrimaryButton'
 import { FeedbackModal } from '../../../../components/ui/FeedbackModal'
-import { BRAND_COLORS } from '../../../../services/shared/types'
+import { BRAND_COLORS } from '../../../../shared/types'
 import { OrderListItem, OrderService } from '../../../../services/api/OrderService'
 import { UserClientService } from '../../../../services/api/UserClientService'
 

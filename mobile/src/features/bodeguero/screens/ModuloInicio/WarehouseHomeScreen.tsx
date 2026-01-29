@@ -19,8 +19,6 @@ type QuickAction = {
 
 const QUICK_ACTIONS: QuickAction[] = [
   { label: 'Validar Pedidos', icon: 'checkmark-circle-outline', color: BRAND_COLORS.red, route: 'Pedidos' },
-  { label: 'Preparar Pickings', icon: 'cube-outline', color: '#6366F1', route: 'Preparacion' },
-  { label: 'Despachar', icon: 'car-sport-outline', color: '#10B981', route: 'Despacho' },
   { label: 'Historial', icon: 'time-outline', color: '#F59E0B', route: 'Historial' },
 ]
 

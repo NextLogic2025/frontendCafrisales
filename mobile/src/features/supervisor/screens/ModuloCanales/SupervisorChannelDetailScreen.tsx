@@ -7,7 +7,7 @@ import { SupervisorHeaderMenu } from '../../../../components/ui/SupervisorHeader
 import { ToggleSwitch } from '../../../../components/ui/ToggleSwitch'
 import { FeedbackModal } from '../../../../components/ui/FeedbackModal'
 import { PrimaryButton } from '../../../../components/ui/PrimaryButton'
-import { BRAND_COLORS } from '../../../../services/shared/types'
+import { BRAND_COLORS } from '../../../../shared/types'
 import { Channel, ChannelService } from '../../../../services/api/ChannelService'
 import { showGlobalToast } from '../../../../utils/toastService'
 import { getUserFriendlyMessage } from '../../../../utils/errorMessages'

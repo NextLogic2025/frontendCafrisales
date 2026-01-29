@@ -1,7 +1,7 @@
 import React from 'react'
 import { Modal, Pressable, Text, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { BRAND_COLORS } from '../../services/shared/types'
+import { BRAND_COLORS } from '../../shared/types'
 import { useStableInsets } from '../../hooks/useStableInsets'
 
 export type HeaderMenuAction = {

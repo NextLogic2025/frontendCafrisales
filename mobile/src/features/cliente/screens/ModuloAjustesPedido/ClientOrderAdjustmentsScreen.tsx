@@ -4,7 +4,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
 import { Header } from '../../../../components/ui/Header'
 import { ClientHeaderMenu } from '../../../../components/ui/ClientHeaderMenu'
-import { BRAND_COLORS } from '../../../../services/shared/types'
+import { BRAND_COLORS } from '../../../../shared/types'
 import { OrderDetail, OrderListItem, OrderService } from '../../../../services/api/OrderService'
 
 type AdjustmentItem = {

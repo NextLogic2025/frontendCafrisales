@@ -1,4 +1,4 @@
-import { BRAND_COLORS } from '../../services/shared/types'
+import { BRAND_COLORS } from '../../shared/types'
 import { Ionicons } from '@expo/vector-icons'
 import React from 'react'
 import { View, Text, FlatList, RefreshControl, ListRenderItemInfo } from 'react-native'

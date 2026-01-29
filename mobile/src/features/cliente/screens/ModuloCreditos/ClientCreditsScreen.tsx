@@ -7,7 +7,7 @@ import { jwtDecode } from 'jwt-decode'
 import { Header } from '../../../../components/ui/Header'
 import { ClientHeaderMenu } from '../../../../components/ui/ClientHeaderMenu'
 import { CategoryFilter } from '../../../../components/ui/CategoryFilter'
-import { BRAND_COLORS } from '../../../../services/shared/types'
+import { BRAND_COLORS } from '../../../../shared/types'
 import { CreditListItem, CreditService } from '../../../../services/api/CreditService'
 import { getValidToken } from '../../../../services/auth/authClient'
 

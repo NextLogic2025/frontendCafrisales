@@ -1,4 +1,4 @@
-import { BRAND_COLORS } from '../../services/shared/types'
+import { BRAND_COLORS } from '../../shared/types'
 import React from 'react'
 import { View, ActivityIndicator } from 'react-native'
 
