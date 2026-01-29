@@ -109,6 +109,23 @@ export function TransportistaDeliveryDetailScreen() {
     }
   }
 
+  const handleMarkEnRuta = async () => {
+    if (!entregaId) return
+    setUpdating(true)
+    try {
+      const updated = await DeliveryService.markEnRuta(entregaId)
+      if (!updated) {
+        showGlobalToast('No se pudo iniciar la ruta', 'error')
+        return
+      }
+      setDelivery((prev) => (prev ? { ...prev, ...updated } : null))
+      showGlobalToast('¡Ruta iniciada!', 'success')
+    } finally {
+      setUpdating(false)
+    }
+  }
+
+
   const handleNoDelivery = async () => {
     if (!entregaId) return
     if (!motivoNoEntrega.trim()) {
@@ -292,7 +309,24 @@ export function TransportistaDeliveryDetailScreen() {
           </View>
 
           {/* Delivery Actions */}
-          {canUpdate ? (
+          {estado === 'pendiente' ? (
+            <View className="mt-6">
+              <Pressable
+                onPress={handleMarkEnRuta}
+                disabled={updating}
+                className="rounded-2xl py-4 items-center flex-row justify-center"
+                style={{ backgroundColor: BRAND_COLORS.red }}
+              >
+                <Ionicons name="navigate" size={20} color="white" />
+                <Text className="ml-2 text-base font-bold text-white">
+                  {updating ? 'Iniciando...' : 'Iniciar Ruta'}
+                </Text>
+              </Pressable>
+              <Text className="text-xs text-neutral-500 text-center mt-2">
+                Presiona para indicar que estás en camino al cliente
+              </Text>
+            </View>
+          ) : estado === 'en_ruta' ? (
             <View className="mt-6 gap-4">
               <PrimaryButton
                 title={updating ? 'Completando...' : 'Marcar como entregado'}
@@ -318,16 +352,14 @@ export function TransportistaDeliveryDetailScreen() {
                   <Pressable
                     onPress={handleNoDelivery}
                     disabled={updating || !motivoNoEntrega.trim()}
-                    className={`rounded-2xl py-3 items-center border ${
-                      motivoNoEntrega.trim()
-                        ? 'border-red-300 bg-red-50'
-                        : 'border-neutral-200 bg-neutral-50'
-                    }`}
+                    className={`rounded-2xl py-3 items-center border ${motivoNoEntrega.trim()
+                      ? 'border-red-300 bg-red-50'
+                      : 'border-neutral-200 bg-neutral-50'
+                      }`}
                   >
                     <Text
-                      className={`text-sm font-semibold ${
-                        motivoNoEntrega.trim() ? 'text-red-700' : 'text-neutral-400'
-                      }`}
+                      className={`text-sm font-semibold ${motivoNoEntrega.trim() ? 'text-red-700' : 'text-neutral-400'
+                        }`}
                     >
                       {updating ? 'Enviando...' : 'Confirmar no entrega'}
                     </Text>

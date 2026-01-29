@@ -10,6 +10,7 @@ import { WarehouseOrderDetailScreen } from '../features/bodeguero/screens/Modulo
 import { WarehouseValidateOrderScreen } from '../features/bodeguero/screens/ModuloValidaciones/WarehouseValidateOrderScreen'
 import { WarehouseHistoryScreen } from '../features/bodeguero/screens/ModuloHistorial/WarehouseHistoryScreen'
 import { WarehouseHistoryDetailScreen } from '../features/bodeguero/screens/ModuloHistorial/WarehouseHistoryDetailScreen'
+import { WarehouseDeliveriesListScreen } from '../features/bodeguero/screens/ModuloEntregas'
 
 const Tab = createBottomTabNavigator()
 const Stack = createNativeStackNavigator()
@@ -35,6 +36,8 @@ export function WarehouseNavigator() {
             <Stack.Screen name="WarehousePedidoDetalle" component={WarehouseOrderDetailScreen} />
             <Stack.Screen name="WarehouseValidarPedido" component={WarehouseValidateOrderScreen} />
             <Stack.Screen name="WarehouseHistorialDetalle" component={WarehouseHistoryDetailScreen} />
+            <Stack.Screen name="WarehouseEntregas" component={WarehouseDeliveriesListScreen} />
         </Stack.Navigator>
     )
 }
+

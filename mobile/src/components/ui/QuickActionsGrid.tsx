@@ -9,22 +9,22 @@ export function QuickActionsGrid() {
 
     const actions = [
         {
-            label: 'Clientes',
-            icon: 'people-outline',
-            color: '#EF4444',
-            onPress: () => navigation.navigate('Clientes'),
-        },
-        {
             label: 'Mi equipo',
             icon: 'people-circle-outline',
             color: '#6366F1',
             onPress: () => navigation.navigate('Equipo'),
         },
         {
-            label: 'Pedidos',
-            icon: 'receipt-outline',
-            color: '#F59E0B',
-            onPress: () => navigation.navigate('SupervisorPedidos'),
+            label: 'Entregas',
+            icon: 'cube-outline',
+            color: '#3B82F6',
+            onPress: () => navigation.navigate('SupervisorEntregas'),
+        },
+        {
+            label: 'Incidencias',
+            icon: 'alert-circle-outline',
+            color: '#EF4444',
+            onPress: () => navigation.navigate('SupervisorIncidencias'),
         },
         {
             label: 'Ruteros',

@@ -297,7 +297,7 @@ export function SupervisorCommercialRouteDetailScreen() {
             </View>
 
             {paradas.length === 0 ? (
-              <Text className="text-xs text-neutral-500 mt-3">AÃºn no hay paradas asignadas.</Text>
+              <Text className="text-xs text-neutral-500 mt-3">Aun no hay paradas asignadas.</Text>
             ) : (
               <View className="mt-3 gap-3">
                 {paradas.map((stop) => {
@@ -319,7 +319,7 @@ export function SupervisorCommercialRouteDetailScreen() {
                         </View>
                       </View>
                       {client?.direccion ? (
-                        <Text className="text-xs text-neutral-500 mt-2">DirecciÃ³n: {client.direccion}</Text>
+                        <Text className="text-xs text-neutral-500 mt-2">Direccion: {client.direccion}</Text>
                       ) : null}
                       {stop.objetivo ? (
                         <Text className="text-xs text-neutral-500 mt-2">Objetivo: {stop.objetivo}</Text>
@@ -398,12 +398,12 @@ export function SupervisorCommercialRouteDetailScreen() {
                 const style = statusColors[entry.estado] || statusColors.borrador
                 const dateStr = entry.creado_en
                   ? new Date(entry.creado_en).toLocaleString('es-EC', {
-                      day: '2-digit',
-                      month: 'short',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })
                   : '-'
                 return (
                   <View

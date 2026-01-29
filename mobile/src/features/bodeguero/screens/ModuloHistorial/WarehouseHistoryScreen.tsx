@@ -37,7 +37,7 @@ export function WarehouseHistoryScreen() {
       }
       const pairs = await Promise.all(
         uniqueClientIds.map(async (clienteId) => {
-          const client = await UserClientService.getClient(clienteId)
+          const client = await UserClientService.getClient(clienteId as string)
           return [clienteId, client?.nombre_comercial || client?.ruc || clienteId] as const
         }),
       )
@@ -69,13 +69,13 @@ export function WarehouseHistoryScreen() {
 
       <View className="px-5 pt-4">
         <LinearGradient
-          colors={['#0F172A', '#1E293B']}
+          colors={dataByTab.length === 0 ? ['#7F1D1D', '#991B1B'] : ['#0F172A', '#1E293B']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{ borderRadius: 18, padding: 14, marginBottom: 14 }}
         >
           <Text className="text-xs text-slate-200">Resumen</Text>
-          <Text className="text-lg font-bold text-white mt-1">
+          <Text className={`text-lg font-bold mt-1 ${dataByTab.length === 0 ? 'text-red-100' : 'text-white'}`}>
             {dataByTab.length} pedidos {activeTab === 'validado' ? 'validados' : activeTab === 'ajustado' ? 'ajustados' : 'cancelados'}
           </Text>
         </LinearGradient>
@@ -96,9 +96,8 @@ export function WarehouseHistoryScreen() {
               <Pressable
                 key={tab}
                 onPress={() => setActiveTab(tab)}
-                className={`px-3 py-1.5 rounded-full border ${
-                  isActive ? 'bg-brand-red/10 border-brand-red' : 'border-neutral-200'
-                }`}
+                className={`px-3 py-1.5 rounded-full border ${isActive ? 'bg-brand-red/10 border-brand-red' : 'border-neutral-200'
+                  }`}
               >
                 <Text className={`text-xs font-semibold ${isActive ? 'text-brand-red' : 'text-neutral-600'}`}>
                   {tab === 'validado' ? 'Validados' : tab === 'ajustado' ? 'Ajustados' : 'Cancelados'}
@@ -133,16 +132,14 @@ export function WarehouseHistoryScreen() {
                       #{item.numero_pedido || item.id?.slice?.(0, 8)}
                     </Text>
                   </View>
-                  <View className={`px-3 py-1 rounded-full ${
-                    estado === 'validado' ? 'bg-emerald-50' :
+                  <View className={`px-3 py-1 rounded-full ${estado === 'validado' ? 'bg-emerald-50' :
                     estado === 'ajustado_bodega' || estado === 'aceptado_cliente' ? 'bg-amber-50' :
-                    'bg-red-50'
-                  }`}>
-                    <Text className={`text-xs font-semibold ${
-                      estado === 'validado' ? 'text-emerald-700' :
-                      estado === 'ajustado_bodega' || estado === 'aceptado_cliente' ? 'text-amber-700' :
-                      'text-red-700'
+                      'bg-red-50'
                     }`}>
+                    <Text className={`text-xs font-semibold ${estado === 'validado' ? 'text-emerald-700' :
+                      estado === 'ajustado_bodega' || estado === 'aceptado_cliente' ? 'text-amber-700' :
+                        'text-red-700'
+                      }`}>
                       {estado.replace(/_/g, ' ').toUpperCase()}
                     </Text>
                   </View>

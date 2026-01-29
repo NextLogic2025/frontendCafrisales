@@ -113,7 +113,7 @@ export function TransportistaRouteDetailScreen() {
         return
       }
       const zone = await ZoneService.getZoneById(rutero.zona_id)
-      const polygons = extractPolygons(zone?.zonaGeom ?? zone?.zona_geom ?? null)
+      const polygons = extractPolygons((zone?.zonaGeom ?? zone?.zona_geom ?? null) as Parameters<typeof extractPolygons>[0])
       setZonePolygon(polygons[0] ?? null)
     }
     loadZone()
@@ -126,7 +126,7 @@ export function TransportistaRouteDetailScreen() {
         return
       }
       const results = await Promise.all(
-        rutero.paradas.map(async (stop) => {
+        rutero.paradas.map(async (stop): Promise<StopMarker | null> => {
           try {
             const detail = await OrderService.getOrderDetail(stop.pedido_id)
             const orderNumber = detail?.pedido?.numero_pedido
@@ -141,14 +141,14 @@ export function TransportistaRouteDetailScreen() {
               label: client.nombre_comercial || stop.pedido_id.slice(0, 8),
               orden: stop.orden_entrega,
               orderNumber,
-              address: client.direccion || '',
+              address: client.direccion,
             }
           } catch {
             return null
           }
         }),
       )
-      setMarkers(results.filter((item): item is StopMarker => Boolean(item)))
+      setMarkers(results.filter((item): item is StopMarker => item !== null))
     }
     loadMarkers()
   }, [rutero?.paradas])
@@ -412,7 +412,7 @@ export function TransportistaRouteDetailScreen() {
               style={{ height: 220 }}
             >
               <MapView
-                ref={(ref) => (mapRef.current = ref)}
+                ref={(ref) => { mapRef.current = ref }}
                 provider={PROVIDER_GOOGLE}
                 style={{ flex: 1 }}
                 initialRegion={FALLBACK_REGION}
@@ -563,7 +563,7 @@ export function TransportistaRouteDetailScreen() {
       >
         <View className="rounded-2xl overflow-hidden border border-neutral-200" style={{ height: 360 }}>
           <MapView
-            ref={(ref) => (modalMapRef.current = ref)}
+            ref={(ref) => { modalMapRef.current = ref }}
             provider={PROVIDER_GOOGLE}
             style={{ flex: 1 }}
             initialRegion={FALLBACK_REGION}
@@ -651,7 +651,7 @@ export function TransportistaRouteDetailScreen() {
               ))}
             </View>
           ) : (
-            <Text className="text-xs text-neutral-500">AÃºn no hay evidencias registradas.</Text>
+            <Text className="text-xs text-neutral-500">Aun no hay evidencias registradas.</Text>
           )}
 
           <Text className="text-xs text-neutral-500 mt-3">Tipo de evidencia</Text>
@@ -682,7 +682,7 @@ export function TransportistaRouteDetailScreen() {
             />
           </View>
           <View>
-            <Text className="text-xs text-neutral-500 mb-1">DescripciÃ³n (opcional)</Text>
+            <Text className="text-xs text-neutral-500 mb-1">Descripcion (opcional)</Text>
             <TextInput
               value={evidenceDesc}
               onChangeText={setEvidenceDesc}
@@ -783,12 +783,12 @@ export function TransportistaRouteDetailScreen() {
                 const style = statusColors[entry.estado] || statusColors.borrador
                 const dateStr = entry.creado_en
                   ? new Date(entry.creado_en).toLocaleString('es-EC', {
-                      day: '2-digit',
-                      month: 'short',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })
                   : '-'
                 return (
                   <View

@@ -164,6 +164,69 @@ const rawService = {
       return []
     }
   },
+
+  async markEnRuta(id: string): Promise<Delivery | null> {
+    try {
+      return await ApiService.put<Delivery>(`${DELIVERY_API_URL}/entregas/${id}/en-ruta`, {})
+    } catch (error) {
+      logErrorForDebugging(error, 'DeliveryService.markEnRuta', { id })
+      return null
+    }
+  },
+
+  async completePartial(id: string, payload: {
+    motivo_parcial: string
+    observaciones?: string
+    latitud?: number
+    longitud?: number
+  }): Promise<Delivery | null> {
+    try {
+      return await ApiService.post<Delivery>(`${DELIVERY_API_URL}/entregas/${id}/completar-parcial`, payload)
+    } catch (error) {
+      logErrorForDebugging(error, 'DeliveryService.completePartial', { id })
+      return null
+    }
+  },
+
+  async getHistory(id: string): Promise<Array<{ id: string; estado: string; motivo?: string; creado_en: string }>> {
+    try {
+      return await ApiService.get(`${DELIVERY_API_URL}/entregas/${id}/historial`)
+    } catch (error) {
+      logErrorForDebugging(error, 'DeliveryService.getHistory', { id })
+      return []
+    }
+  },
+
+  async cancelDelivery(id: string, motivo: string): Promise<Delivery | null> {
+    try {
+      return await ApiService.put<Delivery>(`${DELIVERY_API_URL}/entregas/${id}/cancelar`, { motivo })
+    } catch (error) {
+      logErrorForDebugging(error, 'DeliveryService.cancelDelivery', { id })
+      return null
+    }
+  },
+
+  async getIncidents(params?: { resuelto?: string; severidad?: string }): Promise<DeliveryIncident[]> {
+    try {
+      const search = new URLSearchParams()
+      if (params?.resuelto) search.set('resuelto', params.resuelto)
+      if (params?.severidad) search.set('severidad', params.severidad)
+      const query = search.toString()
+      return await ApiService.get<DeliveryIncident[]>(`${DELIVERY_API_URL}/incidencias${query ? `?${query}` : ''}`)
+    } catch (error) {
+      logErrorForDebugging(error, 'DeliveryService.getIncidents')
+      return []
+    }
+  },
+
+  async resolveIncident(id: string, resolucion: string): Promise<DeliveryIncident | null> {
+    try {
+      return await ApiService.put<DeliveryIncident>(`${DELIVERY_API_URL}/incidencias/${id}/resolver`, { resolucion })
+    } catch (error) {
+      logErrorForDebugging(error, 'DeliveryService.resolveIncident', { id })
+      return null
+    }
+  },
 }
 
 export const DeliveryService = createService('DeliveryService', rawService)
