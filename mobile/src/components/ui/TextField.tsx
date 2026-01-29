@@ -1,25 +1,28 @@
 import * as React from 'react'
-import { Text, TextInput, View } from 'react-native'
+import { Text, TextInput, TextInputProps, View } from 'react-native'
 
-type Props = {
+/**
+ * Props for TextField component.
+ * Extends native TextInput props for full flexibility.
+ */
+type TextFieldProps = {
+  /** Label displayed above the input */
   label: string
-  placeholder?: string
-  value?: string
-  onChangeText?: (v: string) => void
-  onBlur?: () => void
-  secureTextEntry?: boolean
+  /** Error message displayed below the input */
   error?: string
+  /** Element to render on the left side of the input */
   left?: React.ReactNode
+  /** Element to render on the right side of the input */
   right?: React.ReactNode
-  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters'
-  keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad'
-  textContentType?: 'emailAddress' | 'password' | 'none'
-  editable?: boolean
-  multiline?: boolean
-  maxLength?: number
-}
+} & Omit<TextInputProps, 'style'>
 
-export const TextField = React.memo(function TextField({ label, error, left, right, ...inputProps }: Props) {
+export const TextField = React.memo(function TextField({
+  label,
+  error,
+  left,
+  right,
+  ...inputProps
+}: TextFieldProps) {
   return (
     <View className="gap-2">
       <Text className="text-xs text-neutral-600">{label}</Text>
@@ -35,7 +38,6 @@ export const TextField = React.memo(function TextField({ label, error, left, rig
           className="flex-1 text-neutral-900"
           placeholderTextColor="rgba(17,24,39,0.45)"
           {...inputProps}
-          placeholder={inputProps.placeholder}
         />
         {right ? <View>{right}</View> : null}
       </View>

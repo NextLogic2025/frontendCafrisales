@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useDeferredValue } from 'react'
 import { View, Text, Pressable, TouchableOpacity, StyleSheet } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
@@ -29,6 +29,9 @@ export function TransportistaRoutesScreen() {
   const [searchQuery, setSearchQuery] = React.useState('')
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>('todos')
 
+  // useDeferredValue para búsqueda sin bloquear UI
+  const deferredSearch = useDeferredValue(searchQuery.trim().toLowerCase())
+
   const fetchRoutes = React.useCallback(async () => {
     setLoading(true)
     try {
@@ -46,16 +49,15 @@ export function TransportistaRoutesScreen() {
   )
 
   const filtered = React.useMemo(() => {
-    const query = searchQuery.trim().toLowerCase()
     return routes.filter((route) => {
       if (statusFilter !== 'todos' && route.estado !== statusFilter) return false
-      if (!query) return true
+      if (!deferredSearch) return true
       return (
-        route.id.toLowerCase().includes(query) ||
-        route.zona_id.toLowerCase().includes(query)
+        route.id.toLowerCase().includes(deferredSearch) ||
+        route.zona_id.toLowerCase().includes(deferredSearch)
       )
     })
-  }, [routes, searchQuery, statusFilter])
+  }, [routes, deferredSearch, statusFilter])
 
   const statusOptions = [
     { id: 'todos', name: 'Todos' },

@@ -9,6 +9,18 @@ const sharedTypesPath = path.resolve(workspaceRoot, 'shared', 'types')
 
 const config = getDefaultConfig(projectRoot)
 
+// Enable tree shaking and dead code elimination
+config.transformer = {
+  ...config.transformer,
+  minifierConfig: {
+    compress: {
+      drop_console: process.env.NODE_ENV === 'production',
+      dead_code: true,
+      unused: true,
+    },
+  },
+}
+
 // Monorepo: permite importar paquetes del workspace (ej. `@cafrilosa/shared-types`).
 // Evita romper Metro cuando el workspace no existe en esta maquina.
 config.watchFolders = sharedTypesPath && require('fs').existsSync(sharedTypesPath)

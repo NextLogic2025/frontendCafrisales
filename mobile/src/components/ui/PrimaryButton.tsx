@@ -1,32 +1,37 @@
 import { BRAND_COLORS } from '../../services/shared/types'
 import { LinearGradient } from 'expo-linear-gradient'
 import * as React from 'react'
-import { ActivityIndicator, Pressable, Text, ViewStyle } from 'react-native'
+import { ActivityIndicator, Pressable, PressableProps, Text, ViewStyle } from 'react-native'
 
-type Props = {
+/**
+ * Props for PrimaryButton component.
+ * Extends native Pressable props for full accessibility and interaction support.
+ */
+type PrimaryButtonProps = {
+  /** Button label text */
   title: string
-  onPress: () => void
+  /** Show loading spinner instead of title */
   loading?: boolean
-  disabled?: boolean
+  /** Additional container style */
   style?: ViewStyle
-}
+} & Omit<PressableProps, 'style' | 'children'>
 
 export const PrimaryButton = React.memo(function PrimaryButton({
   title,
-  onPress,
   loading,
   disabled,
   style,
-}: Props) {
+  ...pressableProps
+}: PrimaryButtonProps) {
   const isDisabled = disabled || loading
 
   return (
     <Pressable
       accessibilityRole="button"
-      onPress={onPress}
       disabled={isDisabled}
       className={['overflow-hidden rounded-2xl', isDisabled ? 'opacity-60' : 'active:opacity-90'].join(' ')}
       style={({ pressed }) => [pressed && !isDisabled ? { transform: [{ translateY: 1 }] } : null, style]}
+      {...pressableProps}
     >
       <LinearGradient
         colors={[BRAND_COLORS.red, BRAND_COLORS.red700]}
