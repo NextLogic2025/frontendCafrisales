@@ -19,8 +19,18 @@ interface CardGridProps {
 }
 
 export const CardGrid: React.FC<CardGridProps> = ({ items, columns = 4, className }) => {
-  // Responsive grid: 2 cols mobile, columns md+, gap-3
-  const gridClass = `grid grid-cols-2 gap-3 md:grid-cols-${columns} ${className || ''}`;
+  // Map columns to Tailwind classes to ensure they are included in the build
+  const gridColsMap: Record<number, string> = {
+    1: 'md:grid-cols-1',
+    2: 'md:grid-cols-2',
+    3: 'md:grid-cols-3',
+    4: 'md:grid-cols-4',
+    5: 'md:grid-cols-5',
+    6: 'md:grid-cols-6',
+  }
+
+  const responsiveCols = gridColsMap[columns] || 'md:grid-cols-4'
+  const gridClass = `grid grid-cols-2 gap-3 ${responsiveCols} ${className || ''}`;
 
   return (
     <div className={gridClass}>

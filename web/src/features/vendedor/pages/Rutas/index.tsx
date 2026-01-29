@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Filter, Flag, RefreshCcw } from 'lucide-react'
 import { PageHero } from '../../../../components/ui/PageHero'
 import { RutaVendedorCard } from '../../components/RutaVendedorCard'
-import { getMisRutas, iniciarRuta, completarRuta } from '../../../supervisor/services/rutasVendedorApi'
+import { getMisRutas, getRutaVendedorById, iniciarRuta, completarRuta } from '../../../supervisor/services/rutasVendedorApi'
 import type { RutaVendedor, EstadoRuta } from '../../../supervisor/services/rutasVendedorTypes'
 
 export default function RutasPage() {
@@ -20,18 +20,39 @@ export default function RutasPage() {
   const loadRutas = async () => {
     setLoading(true)
     try {
-      let estado: EstadoRuta | undefined
+      let data: RutaVendedor[] = []
       if (filtroEstado === 'activos') {
         // For simplicity, we filter in JS or if the API supports multiple states
-        const data = await getMisRutas()
-        setRutas(data.filter(r => r.estado === 'publicado' || r.estado === 'en_curso'))
+        const allData = await getMisRutas()
+        data = allData.filter(r => r.estado === 'publicado' || r.estado === 'en_curso')
       } else if (filtroEstado === 'completados') {
-        const data = await getMisRutas({ estado: 'completado' })
-        setRutas(data)
+        data = await getMisRutas({ estado: 'completado' })
       } else {
-        const data = await getMisRutas()
-        setRutas(data)
+        data = await getMisRutas()
       }
+
+      // Load full details for each ruta to get paradas
+      const rutasConDetalles = await Promise.all(
+        data.map(async (r) => {
+          try {
+            // Get full route details including paradas
+            const rutaCompleta = await getRutaVendedorById(r.id)
+            return {
+              ...rutaCompleta,
+              paradas: rutaCompleta.paradas || [],
+            }
+          } catch (error) {
+            // If individual route fetch fails, return basic data
+            console.error(`Error loading details for route ${r.id}:`, error)
+            return {
+              ...r,
+              paradas: r.paradas || [],
+            }
+          }
+        })
+      )
+
+      setRutas(rutasConDetalles)
     } catch (error) {
       console.error('Error al cargar rutas:', error)
       showToast('error', 'No se pudieron cargar tus rutas')

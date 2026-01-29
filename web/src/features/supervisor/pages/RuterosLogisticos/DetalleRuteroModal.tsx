@@ -30,14 +30,13 @@ export function DetalleRuteroModal({ isOpen, onClose, rutero }: DetalleRuteroMod
     }
 
     // Prepare map data
-    const puntosMapa =
-        rutero.paradas
-            ?.filter((p) => p.pedido?.ubicacion_gps)
-            .map((p, index) => ({
-                lat: p.pedido!.ubicacion_gps!.coordinates[1],
-                lng: p.pedido!.ubicacion_gps!.coordinates[0],
-                nombre: `${index + 1}. ${p.pedido?.cliente_nombre || 'Cliente'}`,
-            })) || []
+    const puntosMapa = (rutero.paradas || [])
+        .filter((p) => p.pedido?.ubicacion_gps)
+        .map((p, index) => ({
+            lat: p.pedido!.ubicacion_gps!.coordinates[1],
+            lng: p.pedido!.ubicacion_gps!.coordinates[0],
+            nombre: `${index + 1}. ${p.pedido?.cliente_nombre || 'Cliente'}`,
+        }))
 
     return (
         <Modal

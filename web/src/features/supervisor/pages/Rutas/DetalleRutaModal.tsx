@@ -27,7 +27,7 @@ export function DetalleRutaModal({ isOpen, onClose, ruta }: DetalleRutaModalProp
     }
 
     // Prepare markers for map
-    const puntos = ruta.paradas
+    const puntos = (ruta.paradas || [])
         .filter(p => p.cliente?.latitud && p.cliente?.longitud)
         .map(p => ({
             lat: p.cliente!.latitud!,

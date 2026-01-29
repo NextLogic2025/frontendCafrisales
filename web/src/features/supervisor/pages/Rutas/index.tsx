@@ -12,6 +12,7 @@ import { DetalleRutaModal } from './DetalleRutaModal'
 import type { RutaVendedor, EstadoRuta, CreateRutaVendedorPayload, CancelarRutaPayload } from '../../services/rutasVendedorTypes'
 import {
     getRutasVendedor,
+    getRutaVendedorById,
     createRutaVendedor,
     publicarRuta,
     cancelarRuta,
@@ -65,25 +66,53 @@ export default function RutasPage() {
 
             const data = await getRutasVendedor(filtros)
 
-            // Populate routes with vendor and zone data
-            const populated = data.map(r => {
-                const vendedor = vendedoresList.find(v => v.id === r.vendedor_id)
-                const zona = zonasList.find(z => String(z.id) === String(r.zona_id)) // Assuming r.zona_id exists and Zona has an id
-                return {
-                    ...r,
-                    vendedor: r.vendedor || (vendedor ? {
-                        id: vendedor.id,
-                        nombre: vendedor.nombre,
-                        email: '' // Vendedor doesn't have email in this list
-                    } : undefined),
-                    zona: r.zona || (zona ? { // Populate zona if needed
-                        id: zona.id,
-                        nombre: zona.nombre,
-                    } : undefined),
-                }
-            })
+            // Load full details for each route to get paradas
+            const rutasConDetalles = await Promise.all(
+                data.map(async (r) => {
+                    try {
+                        // Get full route details including paradas
+                        const rutaCompleta = await getRutaVendedorById(r.id)
+                        
+                        const vendedor = vendedoresList.find(v => v.id === rutaCompleta.vendedor_id)
+                        const zona = zonasList.find(z => String(z.id) === String(rutaCompleta.zona_id))
+                        
+                        return {
+                            ...rutaCompleta,
+                            paradas: rutaCompleta.paradas || [],
+                            vendedor: rutaCompleta.vendedor || (vendedor ? {
+                                id: vendedor.id,
+                                nombre: vendedor.nombre,
+                                email: ''
+                            } : undefined),
+                            zona: rutaCompleta.zona || (zona ? {
+                                id: zona.id,
+                                nombre: zona.nombre,
+                            } : undefined),
+                        }
+                    } catch (error) {
+                        // If individual route fetch fails, return basic data
+                        console.error(`Error loading details for route ${r.id}:`, error)
+                        const vendedor = vendedoresList.find(v => v.id === r.vendedor_id)
+                        const zona = zonasList.find(z => String(z.id) === String(r.zona_id))
+                        
+                        return {
+                            ...r,
+                            paradas: r.paradas || [],
+                            vendedor: r.vendedor || (vendedor ? {
+                                id: vendedor.id,
+                                nombre: vendedor.nombre,
+                                email: ''
+                            } : undefined),
+                            zona: r.zona || (zona ? {
+                                id: zona.id,
+                                nombre: zona.nombre,
+                            } : undefined),
+                        }
+                    }
+                })
+            )
 
-            setRutas(populated)
+            setRutas(rutasConDetalles)
         } catch (error) {
             console.error('Error loading rutas:', error)
             showToast('error', 'Error al cargar rutas')
@@ -131,8 +160,17 @@ export default function RutasPage() {
         }
     }
 
-    const handleVerDetalle = (ruta: RutaVendedor) => {
-        setDetalleRuta(ruta)
+    const handleVerDetalle = async (ruta: RutaVendedor) => {
+        try {
+            // Fetch full route details including paradas with cliente data
+            const rutaCompleta = await getRutaVendedorById(ruta.id)
+            setDetalleRuta(rutaCompleta)
+        } catch (error) {
+            console.error('Error loading route details:', error)
+            showToast('error', 'Error al cargar detalles de la ruta')
+            // Fallback to the current ruta data
+            setDetalleRuta(ruta)
+        }
     }
 
     return (

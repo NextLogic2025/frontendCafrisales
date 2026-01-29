@@ -7,7 +7,7 @@ import { CrearRuteroModal } from './CrearRuteroModal'
 import { EditarRuteroModal } from './EditarRuteroModal'
 import { DetalleRuteroModal } from './DetalleRuteroModal'
 import type { RuteroLogistico, EstadoRutero } from '../../services/types'
-import { getRuterosLogisticos, publicarRutero, cancelarRutero, createRuteroLogistico } from '../../services/logisticsApi'
+import { getRuterosLogisticos, getRuteroLogistico, publicarRutero, cancelarRutero, createRuteroLogistico } from '../../services/logisticsApi'
 import { obtenerTransportistas, type Usuario } from '../../services/usuariosApi'
 import { getVehicles, type Vehicle } from '../../services/vehiclesApi'
 import { Modal } from 'components/ui/Modal'
@@ -51,30 +51,62 @@ export default function RuterosLogisticosPage() {
             setTransportistas(transportistasData)
             setVehiculos(vehiculosData)
 
-            // Populate ruteros with names from IDs
-            const populatedRuteros = ruterosData.map((r) => {
-                const transportista = transportistasData.find((t) => t.id === r.transportista_id)
-                const vehiculo = vehiculosData.find((v) => v.id === r.vehiculo_id)
+            // Load full details for each rutero to get paradas
+            const ruterosConDetalles = await Promise.all(
+                ruterosData.map(async (r) => {
+                    try {
+                        // Get full rutero details including paradas
+                        const ruteroCompleto = await getRuteroLogistico(r.id)
+                        if (!ruteroCompleto) throw new Error('Rutero not found')
+                        
+                        const transportista = transportistasData.find((t) => t.id === ruteroCompleto.transportista_id)
+                        const vehiculo = vehiculosData.find((v) => v.id === ruteroCompleto.vehiculo_id)
 
-                return {
-                    ...r,
-                    transportista: r.transportista || (transportista ? {
-                        id: transportista.id,
-                        nombre: transportista.nombre || '',
-                        apellido: '', // Usuario type doesn't have apellido directly
-                        email: transportista.email
-                    } : undefined),
-                    vehiculo: r.vehiculo || (vehiculo ? {
-                        id: vehiculo.id,
-                        placa: vehiculo.placa,
-                        modelo: vehiculo.modelo,
-                        capacidad_kg: vehiculo.capacidad_kg,
-                        estado: vehiculo.estado
-                    } : undefined)
-                }
-            })
+                        return {
+                            ...ruteroCompleto,
+                            paradas: ruteroCompleto.paradas || [],
+                            transportista: ruteroCompleto.transportista || (transportista ? {
+                                id: transportista.id,
+                                nombre: transportista.nombre || '',
+                                apellido: '',
+                                email: transportista.email
+                            } : undefined),
+                            vehiculo: ruteroCompleto.vehiculo || (vehiculo ? {
+                                id: vehiculo.id,
+                                placa: vehiculo.placa,
+                                modelo: vehiculo.modelo,
+                                capacidad_kg: vehiculo.capacidad_kg,
+                                estado: vehiculo.estado
+                            } : undefined)
+                        }
+                    } catch (error) {
+                        // If individual rutero fetch fails, return basic data
+                        console.error(`Error loading details for rutero ${r.id}:`, error)
+                        const transportista = transportistasData.find((t) => t.id === r.transportista_id)
+                        const vehiculo = vehiculosData.find((v) => v.id === r.vehiculo_id)
 
-            setRuteros(populatedRuteros)
+                        return {
+                            ...r,
+                            paradas: r.paradas || [],
+                            transportista: r.transportista || (transportista ? {
+                                id: transportista.id,
+                                nombre: transportista.nombre || '',
+                                apellido: '',
+                                email: transportista.email
+                            } : undefined),
+                            vehiculo: r.vehiculo || (vehiculo ? {
+                                id: vehiculo.id,
+                                placa: vehiculo.placa,
+                                modelo: vehiculo.modelo,
+                                capacidad_kg: vehiculo.capacidad_kg,
+                                estado: vehiculo.estado
+                            } : undefined)
+                        }
+                    }
+                })
+            )
+
+            setRuteros(ruterosConDetalles)
         } catch (error) {
             console.error('Error al cargar ruteros:', error)
             showToast('error', 'Error al cargar ruteros logísticos')
@@ -123,9 +155,23 @@ export default function RuterosLogisticosPage() {
         setShowHistorial(true)
     }
 
-    const handleViewDetalle = (rutero: RuteroLogistico) => {
-        setRuteroDetalle(rutero)
-        setShowDetalleModal(true)
+    const handleViewDetalle = async (rutero: RuteroLogistico) => {
+        try {
+            // Fetch full rutero details including paradas with pedido data
+            const ruteroCompleto = await getRuteroLogistico(rutero.id)
+            if (ruteroCompleto) {
+                setRuteroDetalle(ruteroCompleto)
+            } else {
+                setRuteroDetalle(rutero)
+            }
+            setShowDetalleModal(true)
+        } catch (error) {
+            console.error('Error loading rutero details:', error)
+            showToast('error', 'Error al cargar detalles del rutero')
+            // Fallback to the current rutero data
+            setRuteroDetalle(rutero)
+            setShowDetalleModal(true)
+        }
     }
 
     const handleEditarClick = (rutero: RuteroLogistico) => {

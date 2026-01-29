@@ -181,7 +181,7 @@ export default function DetalleRutaPage() {
                                 {ruta.estado === 'en_curso' && (
                                     <button
                                         onClick={() => handleAction('completar')}
-                                        className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700"
+                                        className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700"
                                     >
                                         Finalizar Ruta
                                     </button>

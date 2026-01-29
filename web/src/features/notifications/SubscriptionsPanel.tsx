@@ -87,30 +87,7 @@ export function SubscriptionsPanel() {
 
   if (loading) return <div className="p-4">Cargando preferencias...</div>
 
-  return (
-    <div className="bg-white border rounded-lg p-4">
-      <h3 className="font-semibold mb-3">Preferencias de Notificaciones</h3>
-      {types.length === 0 ? (
-        <div className="text-sm text-neutral-500">No hay tipos de notificación disponibles.</div>
-      ) : (
-        <div className="space-y-2">
-          {types.map(t => (
-            <div key={t.id} className="flex items-center justify-between p-2 border rounded-md">
-              <div>
-                <div className="font-medium">{t.nombre ?? t.codigo}</div>
-                {t.descripcion && <div className="text-xs text-neutral-500">{t.descripcion}</div>}
-              </div>
-              <div>
-                <label className="inline-flex items-center gap-2">
-                  <input type="checkbox" checked={!!enabled[t.id]} onChange={() => toggle(t.id)} />
-                </label>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  )
+  
 }
 
 export default SubscriptionsPanel
