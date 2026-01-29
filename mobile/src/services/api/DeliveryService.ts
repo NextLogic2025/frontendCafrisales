@@ -20,10 +20,53 @@ export type Delivery = {
   longitud?: number | null
 }
 
+export type DeliveryEvidence = {
+  id: string
+  entrega_id: string
+  tipo: 'foto' | 'firma' | 'documento' | 'audio' | 'otro'
+  url: string
+  mime_type?: string | null
+  hash_archivo?: string | null
+  tamano_bytes?: number | null
+  descripcion?: string | null
+  creado_en?: string | null
+}
+
+export type DeliveryIncident = {
+  id: string
+  entrega_id: string
+  tipo_incidencia: string
+  severidad: 'baja' | 'media' | 'alta' | 'critica'
+  descripcion: string
+  reportado_en?: string | null
+  resuelto_en?: string | null
+  resolucion?: string | null
+}
+
+export type DeliveryDetail = Delivery & {
+  evidencias?: DeliveryEvidence[]
+  incidencias?: DeliveryIncident[]
+}
+
 export type CompleteDeliveryPayload = {
   observaciones?: string
   latitud?: number
   longitud?: number
+}
+
+export type EvidencePayload = {
+  tipo: 'foto' | 'firma' | 'documento' | 'audio' | 'otro'
+  url: string
+  mime_type?: string
+  hash_archivo?: string
+  tamano_bytes?: number
+  descripcion?: string
+}
+
+export type IncidentPayload = {
+  tipo_incidencia: string
+  severidad: 'baja' | 'media' | 'alta' | 'critica'
+  descripcion: string
 }
 
 export type NoDeliveryPayload = {
@@ -68,6 +111,15 @@ const rawService = {
     }
   },
 
+  async getDeliveryDetail(id: string): Promise<DeliveryDetail | null> {
+    try {
+      return await ApiService.get<DeliveryDetail>(`${DELIVERY_API_URL}/entregas/${id}`)
+    } catch (error) {
+      logErrorForDebugging(error, 'DeliveryService.getDeliveryDetail', { id })
+      return null
+    }
+  },
+
   async completeDelivery(id: string, payload: CompleteDeliveryPayload): Promise<Delivery | null> {
     try {
       return await ApiService.post<Delivery>(`${DELIVERY_API_URL}/entregas/${id}/completar`, payload)
@@ -83,6 +135,33 @@ const rawService = {
     } catch (error) {
       logErrorForDebugging(error, 'DeliveryService.markNoDelivery', { id })
       return null
+    }
+  },
+
+  async addEvidence(id: string, payload: EvidencePayload): Promise<DeliveryEvidence | null> {
+    try {
+      return await ApiService.post<DeliveryEvidence>(`${DELIVERY_API_URL}/entregas/${id}/evidencias`, payload)
+    } catch (error) {
+      logErrorForDebugging(error, 'DeliveryService.addEvidence', { id })
+      return null
+    }
+  },
+
+  async reportIncident(id: string, payload: IncidentPayload): Promise<DeliveryIncident | null> {
+    try {
+      return await ApiService.post<DeliveryIncident>(`${DELIVERY_API_URL}/entregas/${id}/incidencias`, payload)
+    } catch (error) {
+      logErrorForDebugging(error, 'DeliveryService.reportIncident', { id })
+      return null
+    }
+  },
+
+  async getEvidenceByDelivery(id: string): Promise<DeliveryEvidence[]> {
+    try {
+      return await ApiService.get<DeliveryEvidence[]>(`${DELIVERY_API_URL}/evidencias/entrega/${id}`)
+    } catch (error) {
+      logErrorForDebugging(error, 'DeliveryService.getEvidenceByDelivery', { id })
+      return []
     }
   },
 }

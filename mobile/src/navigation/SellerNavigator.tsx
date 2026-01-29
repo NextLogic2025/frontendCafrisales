@@ -15,6 +15,8 @@ import { SellerCreditRequestsScreen } from '../features/vendedor/screens/ModuloC
 import { SellerCreditRequestDetailScreen } from '../features/vendedor/screens/ModuloCreditos/SellerCreditRequestDetailScreen'
 import { SellerOrdersScreen } from '../features/vendedor/screens/ModuloPedidos/SellerOrdersScreen'
 import { SellerOrderDetailScreen } from '../features/vendedor/screens/ModuloPedidos/SellerOrderDetailScreen'
+import { SellerCommercialRoutesScreen } from '../features/vendedor/screens/ModuloRuteroComercial/SellerCommercialRoutesScreen'
+import { SellerCommercialRouteDetailScreen } from '../features/vendedor/screens/ModuloRuteroComercial/SellerCommercialRouteDetailScreen'
 
 const Tab = createBottomTabNavigator()
 const Stack = createNativeStackNavigator()
@@ -42,6 +44,8 @@ export function SellerNavigator() {
       <Stack.Screen name="SolicitudCreditoDetalle" component={SellerCreditRequestDetailScreen} />
       <Stack.Screen name="SellerPedidos" component={SellerOrdersScreen} />
       <Stack.Screen name="SellerPedidoDetalle" component={SellerOrderDetailScreen} />
+      <Stack.Screen name="SellerRuterosComerciales" component={SellerCommercialRoutesScreen} />
+      <Stack.Screen name="SellerRuteroComercialDetalle" component={SellerCommercialRouteDetailScreen} />
     </Stack.Navigator>
   )
 }
