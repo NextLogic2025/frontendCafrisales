@@ -91,26 +91,26 @@ export function WarehouseHomeScreen() {
         {/* Welcome Hero */}
         <View className="px-4 pt-4">
           <LinearGradient
-            colors={['#111827', '#1F2937']}
+            colors={['#7F1D1D', '#991B1B']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.heroCard}
           >
             <View className="flex-row items-center">
-              <View className="w-14 h-14 rounded-2xl bg-white/10 items-center justify-center mr-4">
+              <View className="w-14 h-14 rounded-2xl bg-white/20 items-center justify-center mr-4">
                 <Ionicons name="cube" size={28} color="#FFFFFF" />
               </View>
               <View className="flex-1">
                 <Text className="text-lg font-bold text-white">¡Hola, {userName}!</Text>
-                <Text className="text-sm text-neutral-300 mt-0.5">
+                <Text className="text-sm text-red-100 mt-0.5">
                   Bodega en control
                 </Text>
               </View>
             </View>
-            <View className="mt-4 bg-white/10 rounded-xl p-3">
+            <View className="mt-4 bg-white/15 rounded-xl p-3">
               <View className="flex-row items-center">
-                <Ionicons name="calendar-outline" size={18} color="#9CA3AF" />
-                <Text className="text-sm text-neutral-300 ml-2 flex-1">
+                <Ionicons name="calendar-outline" size={18} color="#FECACA" />
+                <Text className="text-sm text-red-100 ml-2 flex-1">
                   {new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
                 </Text>
               </View>
@@ -123,22 +123,22 @@ export function WarehouseHomeScreen() {
           <View className="px-4 mt-4">
             <Pressable
               onPress={() => navigateToTab('Pedidos')}
-              className="rounded-2xl p-4 border border-amber-200"
-              style={{ backgroundColor: '#FEF3C7' }}
+              className="rounded-2xl p-4 border border-red-200"
+              style={{ backgroundColor: '#FEE2E2' }}
             >
               <View className="flex-row items-center">
-                <View className="w-10 h-10 rounded-xl bg-amber-100 items-center justify-center mr-3">
-                  <Ionicons name="alert-circle" size={22} color="#D97706" />
+                <View className="w-10 h-10 rounded-xl bg-red-100 items-center justify-center mr-3">
+                  <Ionicons name="alert-circle" size={22} color={BRAND_COLORS.red} />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-sm font-bold text-amber-900">
+                  <Text className="text-sm font-bold text-red-900">
                     {pendingCount} {pendingCount === 1 ? 'pedido pendiente' : 'pedidos pendientes'}
                   </Text>
-                  <Text className="text-xs text-amber-700 mt-0.5">
+                  <Text className="text-xs text-red-700 mt-0.5">
                     Requieren validacion urgente
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color="#D97706" />
+                <Ionicons name="chevron-forward" size={20} color={BRAND_COLORS.red} />
               </View>
             </Pressable>
           </View>
