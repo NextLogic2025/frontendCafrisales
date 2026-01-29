@@ -9,9 +9,9 @@ import { ClienteList } from './ClienteList'
 import { CrearClienteModal } from './CrearClienteModal'
 import { ClienteDetailModal } from './ClienteDetailModal'
 import { CrearCanalModal } from './CrearCanalModal'
-import { ClientStatusFilter } from './ClientStatusFilter'
 import { obtenerClientes } from '../../services/clientesApi'
 import { obtenerZonas } from '../../services/zonasApi'
+import { VerCanalesModal } from './VerCanalesModal'
 
 export default function ClientesPage() {
   const [clientes, setClientes] = useState<Cliente[]>([])
