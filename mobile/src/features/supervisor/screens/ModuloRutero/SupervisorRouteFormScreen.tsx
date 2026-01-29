@@ -49,6 +49,7 @@ export function SupervisorRouteFormScreen() {
   const [zonePolygon, setZonePolygon] = React.useState<MapPoint[] | null>(null)
   const [mapMarkers, setMapMarkers] = React.useState<StopMarker[]>([])
   const mapRef = React.useRef<MapView | null>(null)
+  const modalMapRef = React.useRef<MapView | null>(null)
 
   const [zones, setZones] = React.useState<Zone[]>([])
   const [vehicles, setVehicles] = React.useState<Vehicle[]>([])
@@ -343,6 +344,22 @@ export function SupervisorRouteFormScreen() {
     )
   }, [activeOrderId, mapMarkers])
 
+  React.useEffect(() => {
+    if (!showMapModal || !modalMapRef.current) return
+    const coords: { latitude: number; longitude: number }[] = []
+    if (zonePolygon?.length) {
+      coords.push(...zonePolygon)
+    }
+    if (mapMarkers.length) {
+      coords.push(...mapMarkers.map((m) => ({ latitude: m.latitude, longitude: m.longitude })))
+    }
+    if (!coords.length) return
+    modalMapRef.current.fitToCoordinates(coords, {
+      edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+      animated: true,
+    })
+  }, [showMapModal, zonePolygon, mapMarkers])
+
   return (
     <View className="flex-1 bg-neutral-50">
       <Header
@@ -548,17 +565,9 @@ export function SupervisorRouteFormScreen() {
                   pinColor={BRAND_COLORS.red}
                 >
                   <View className="items-center">
-                    <View className="w-7 h-7 rounded-full items-center justify-center border border-white" style={{ backgroundColor: BRAND_COLORS.red }}>
+                    <View className="w-8 h-8 rounded-full items-center justify-center border-2 border-white" style={{ backgroundColor: BRAND_COLORS.red }}>
                       <Text className="text-[11px] text-white font-bold">{marker.orden}</Text>
                     </View>
-                    <View className="mt-1 px-2 py-0.5 rounded-full bg-white border border-neutral-200">
-                      <Text className="text-[10px] text-neutral-700">{marker.label}</Text>
-                    </View>
-                    {marker.address ? (
-                      <View className="mt-1 px-2 py-0.5 rounded-full bg-white border border-neutral-200">
-                        <Text className="text-[9px] text-neutral-500">{marker.address}</Text>
-                      </View>
-                    ) : null}
                   </View>
                 </Marker>
               ))}
@@ -637,7 +646,7 @@ export function SupervisorRouteFormScreen() {
       >
         <View className="rounded-2xl overflow-hidden border border-neutral-200" style={{ height: 360 }}>
           <MapView
-            ref={(ref) => (mapRef.current = ref)}
+            ref={(ref) => (modalMapRef.current = ref)}
             provider={PROVIDER_GOOGLE}
             style={{ flex: 1 }}
             initialRegion={FALLBACK_REGION}
@@ -662,17 +671,9 @@ export function SupervisorRouteFormScreen() {
                 pinColor={BRAND_COLORS.red}
               >
                 <View className="items-center">
-                  <View className="w-7 h-7 rounded-full items-center justify-center border border-white" style={{ backgroundColor: BRAND_COLORS.red }}>
+                  <View className="w-8 h-8 rounded-full items-center justify-center border-2 border-white" style={{ backgroundColor: BRAND_COLORS.red }}>
                     <Text className="text-[11px] text-white font-bold">{marker.orden}</Text>
                   </View>
-                  <View className="mt-1 px-2 py-0.5 rounded-full bg-white border border-neutral-200">
-                    <Text className="text-[10px] text-neutral-700">{marker.label}</Text>
-                  </View>
-                  {marker.address ? (
-                    <View className="mt-1 px-2 py-0.5 rounded-full bg-white border border-neutral-200">
-                      <Text className="text-[9px] text-neutral-500">{marker.address}</Text>
-                    </View>
-                  ) : null}
                 </View>
               </Marker>
             ))}

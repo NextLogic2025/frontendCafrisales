@@ -18,7 +18,8 @@ export function SupervisorHeaderMenu({ extraActions = [] }: Props) {
     { label: 'Promociones', icon: 'sparkles-outline', onPress: () => navigation.navigate('SupervisorPromociones') },
     { label: 'Creditos', icon: 'card-outline', onPress: () => navigation.navigate('SupervisorCreditos') },
     { label: 'Vehiculos', icon: 'car-sport-outline', onPress: () => navigation.navigate('SupervisorVehiculos') },
-    { label: 'Ruteros', icon: 'navigate-outline', onPress: () => navigation.navigate('SupervisorRuteros') },
+    { label: 'Ruteros logÃ­sticos', icon: 'navigate-outline', onPress: () => navigation.navigate('SupervisorRuteros') },
+    { label: 'Ruteros comerciales', icon: 'walk-outline', onPress: () => navigation.navigate('SupervisorRuterosComerciales') },
   ]
 
   return <HeaderMenu actions={[...actions, ...extraActions]} />

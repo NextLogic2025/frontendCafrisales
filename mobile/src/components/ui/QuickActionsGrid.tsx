@@ -20,6 +20,30 @@ export function QuickActionsGrid() {
             color: '#6366F1',
             onPress: () => navigation.navigate('Equipo'),
         },
+        {
+            label: 'Pedidos',
+            icon: 'receipt-outline',
+            color: '#F59E0B',
+            onPress: () => navigation.navigate('SupervisorPedidos'),
+        },
+        {
+            label: 'Ruteros',
+            icon: 'navigate-outline',
+            color: '#10B981',
+            onPress: () => navigation.navigate('SupervisorRuteros'),
+        },
+        {
+            label: 'Comercial',
+            icon: 'walk-outline',
+            color: '#8B5CF6',
+            onPress: () => navigation.navigate('SupervisorRuterosComerciales'),
+        },
+        {
+            label: 'Vehiculos',
+            icon: 'car-sport-outline',
+            color: '#06B6D4',
+            onPress: () => navigation.navigate('SupervisorVehiculos'),
+        },
     ]
 
     return (

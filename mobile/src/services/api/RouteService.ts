@@ -28,6 +28,27 @@ export type RoutePlan = {
   estado: string
 }
 
+export type CommercialStop = {
+  id: string
+  rutero_id: string
+  cliente_id: string
+  orden_visita: number
+  objetivo?: string | null
+  checkin_en?: string | null
+  checkout_en?: string | null
+  resultado?: string | null
+  notas?: string | null
+}
+
+export type CommercialRoute = {
+  id: string
+  fecha_rutero: string
+  zona_id: string
+  vendedor_id: string
+  estado: string
+  paradas?: CommercialStop[]
+}
+
 export type ScheduledVisit = {
   id: string
   rutero_id: string
@@ -55,12 +76,29 @@ export type LogisticRoute = {
   vehiculo?: Vehicle | null
 }
 
+export type RouteHistoryEntry = {
+  id: number
+  tipo: string
+  rutero_id: string
+  estado: string
+  cambiado_por_id: string
+  motivo?: string | null
+  creado_en: string
+}
+
 export type CreateLogisticRoutePayload = {
   fecha_rutero: string
   zona_id: string
   vehiculo_id: string
   transportista_id: string
   paradas: { pedido_id: string; orden_entrega: number }[]
+}
+
+export type CreateCommercialRoutePayload = {
+  fecha_rutero: string
+  zona_id: string
+  vendedor_id: string
+  paradas: { cliente_id: string; orden_visita: number; objetivo?: string }[]
 }
 
 const ROUTE_BASE_URL = env.api.routeUrl
@@ -104,6 +142,111 @@ const rawService = {
     }
   },
 
+  async getCommercialRoutes(params?: { vendedor_id?: string; fecha_desde?: string }): Promise<CommercialRoute[]> {
+    try {
+      const search = new URLSearchParams()
+      if (params?.vendedor_id) search.set('vendedor_id', params.vendedor_id)
+      if (params?.fecha_desde) search.set('fecha_desde', params.fecha_desde)
+      const query = search.toString()
+      return await ApiService.get<CommercialRoute[]>(`${ROUTE_API_URL}/ruteros-comerciales${query ? `?${query}` : ''}`)
+    } catch (error) {
+      logErrorForDebugging(error, 'RouteService.getCommercialRoutes')
+      return []
+    }
+  },
+
+  async getCommercialRoute(id: string): Promise<CommercialRoute | null> {
+    try {
+      return await ApiService.get<CommercialRoute>(`${ROUTE_API_URL}/ruteros-comerciales/${id}`)
+    } catch (error) {
+      logErrorForDebugging(error, 'RouteService.getCommercialRoute', { id })
+      return null
+    }
+  },
+
+  async createCommercialRoute(payload: CreateCommercialRoutePayload): Promise<CommercialRoute | null> {
+    try {
+      return await ApiService.post<CommercialRoute>(`${ROUTE_API_URL}/ruteros-comerciales`, payload)
+    } catch (error) {
+      logErrorForDebugging(error, 'RouteService.createCommercialRoute')
+      return null
+    }
+  },
+
+  async addCommercialVisit(id: string, payload: { cliente_id: string; orden_visita: number; objetivo?: string }): Promise<CommercialStop | null> {
+    try {
+      return await ApiService.post<CommercialStop>(`${ROUTE_API_URL}/ruteros-comerciales/${id}/visits`, payload)
+    } catch (error) {
+      logErrorForDebugging(error, 'RouteService.addCommercialVisit', { id })
+      return null
+    }
+  },
+
+  async publishCommercialRoute(id: string): Promise<CommercialRoute | null> {
+    try {
+      return await ApiService.put<CommercialRoute>(`${ROUTE_API_URL}/ruteros-comerciales/${id}/publicar`, {})
+    } catch (error) {
+      logErrorForDebugging(error, 'RouteService.publishCommercialRoute', { id })
+      return null
+    }
+  },
+
+  async startCommercialRoute(id: string): Promise<CommercialRoute | null> {
+    try {
+      return await ApiService.put<CommercialRoute>(`${ROUTE_API_URL}/ruteros-comerciales/${id}/iniciar`, {})
+    } catch (error) {
+      logErrorForDebugging(error, 'RouteService.startCommercialRoute', { id })
+      return null
+    }
+  },
+
+  async completeCommercialRoute(id: string): Promise<CommercialRoute | null> {
+    try {
+      return await ApiService.put<CommercialRoute>(`${ROUTE_API_URL}/ruteros-comerciales/${id}/completar`, {})
+    } catch (error) {
+      logErrorForDebugging(error, 'RouteService.completeCommercialRoute', { id })
+      return null
+    }
+  },
+
+  async cancelCommercialRoute(id: string, motivo?: string): Promise<CommercialRoute | null> {
+    try {
+      return await ApiService.put<CommercialRoute>(`${ROUTE_API_URL}/ruteros-comerciales/${id}/cancelar`, {
+        motivo: motivo || undefined,
+      })
+    } catch (error) {
+      logErrorForDebugging(error, 'RouteService.cancelCommercialRoute', { id })
+      return null
+    }
+  },
+
+  async checkinCommercialStop(stopId: string): Promise<CommercialStop | null> {
+    try {
+      return await ApiService.put<CommercialStop>(`${ROUTE_API_URL}/paradas-comerciales/${stopId}/checkin`, {})
+    } catch (error) {
+      logErrorForDebugging(error, 'RouteService.checkinCommercialStop', { stopId })
+      return null
+    }
+  },
+
+  async checkoutCommercialStop(stopId: string, payload: { resultado: string; notas?: string }): Promise<CommercialStop | null> {
+    try {
+      return await ApiService.put<CommercialStop>(`${ROUTE_API_URL}/paradas-comerciales/${stopId}/checkout`, payload)
+    } catch (error) {
+      logErrorForDebugging(error, 'RouteService.checkoutCommercialStop', { stopId })
+      return null
+    }
+  },
+
+  async getCommercialRouteHistory(id: string): Promise<RouteHistoryEntry[]> {
+    try {
+      return await ApiService.get<RouteHistoryEntry[]>(`${ROUTE_API_URL}/ruteros-comerciales/${id}/historial`)
+    } catch (error) {
+      logErrorForDebugging(error, 'RouteService.getCommercialRouteHistory', { id })
+      return []
+    }
+  },
+
   async getLogisticsRoutes(estado?: string): Promise<LogisticRoute[]> {
     try {
       const query = estado ? `?estado=${encodeURIComponent(estado)}` : ''
@@ -128,6 +271,43 @@ const rawService = {
       return await ApiService.post<LogisticRoute>(`${ROUTE_API_URL}/ruteros-logisticos`, payload)
     } catch (error) {
       logErrorForDebugging(error, 'RouteService.createLogisticsRoute')
+      return null
+    }
+  },
+
+  async getLogisticsRouteHistory(id: string): Promise<RouteHistoryEntry[]> {
+    try {
+      return await ApiService.get<RouteHistoryEntry[]>(`${ROUTE_API_URL}/ruteros-logisticos/${id}/historial`)
+    } catch (error) {
+      logErrorForDebugging(error, 'RouteService.getLogisticsRouteHistory', { id })
+      return []
+    }
+  },
+
+  async addLogisticsRouteOrder(id: string, payload: { pedido_id: string; orden_entrega: number }): Promise<LogisticStop | null> {
+    try {
+      return await ApiService.post<LogisticStop>(`${ROUTE_API_URL}/ruteros-logisticos/${id}/orders`, payload)
+    } catch (error) {
+      logErrorForDebugging(error, 'RouteService.addLogisticsRouteOrder', { id })
+      return null
+    }
+  },
+
+  async removeLogisticsRouteOrder(id: string, pedidoId: string): Promise<boolean> {
+    try {
+      await ApiService.delete(`${ROUTE_API_URL}/ruteros-logisticos/${id}/orders/${pedidoId}`)
+      return true
+    } catch (error) {
+      logErrorForDebugging(error, 'RouteService.removeLogisticsRouteOrder', { id, pedidoId })
+      return false
+    }
+  },
+
+  async updateLogisticsRouteVehicle(id: string, vehiculo_id: string): Promise<LogisticRoute | null> {
+    try {
+      return await ApiService.put<LogisticRoute>(`${ROUTE_API_URL}/ruteros-logisticos/${id}/vehiculo`, { vehiculo_id })
+    } catch (error) {
+      logErrorForDebugging(error, 'RouteService.updateLogisticsRouteVehicle', { id })
       return null
     }
   },

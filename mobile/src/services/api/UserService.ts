@@ -52,7 +52,12 @@ type StaffEntry = {
 const USERS_BASE_URL = env.api.usersUrl
 const USERS_API_URL = USERS_BASE_URL.endsWith('/api') ? USERS_BASE_URL : `${USERS_BASE_URL}/api`
 const AUTH_BASE_URL = env.auth.baseUrl || env.api.baseUrl
-const AUTH_REGISTER_URL = `${AUTH_BASE_URL}/auth/register`
+const AUTH_API_URL = AUTH_BASE_URL.endsWith('/auth')
+    ? AUTH_BASE_URL
+    : AUTH_BASE_URL.endsWith('/api')
+        ? `${AUTH_BASE_URL}/auth`
+        : `${AUTH_BASE_URL}/api/auth`
+const AUTH_REGISTER_URL = `${AUTH_API_URL}/register`
 
 const normalizeUser = (user: UserApiUser, profile?: UserApiProfile | null): UserProfile => {
     const fullName = [profile?.nombres, profile?.apellidos].filter(Boolean).join(' ').trim()
@@ -298,6 +303,22 @@ const rawService = {
         }
     },
 
+    async getUserDetail(userId: string): Promise<UserProfile | null> {
+        try {
+            const user = await ApiService.get<UserApiUser>(`${USERS_API_URL}/usuarios/${userId}`)
+            let profile: UserApiProfile | null = null
+            try {
+                profile = await ApiService.get<UserApiProfile>(`${USERS_API_URL}/usuarios/${userId}/perfil`, { silent: true })
+            } catch (error) {
+                logErrorForDebugging(error, 'UserService.getUserDetail.profile', { userId })
+            }
+            return normalizeUser(user, profile)
+        } catch (error) {
+            logErrorForDebugging(error, 'UserService.getUserDetail', { userId })
+            return null
+        }
+    },
+
     async getVendors(): Promise<UserProfile[]> {
         const users = await rawService.getUsers()
         return users.filter((user) => user.role.toLowerCase().includes('vend'))
@@ -308,6 +329,8 @@ const rawService = {
         data: Partial<{
             nombre: string
             telefono: string
+            email: string
+            password: string
             activo: boolean
             rolId: number
             rol: string
@@ -318,12 +341,20 @@ const rawService = {
         }>,
     ): Promise<{ success: boolean; message?: string }> {
         try {
+            if (data.email) {
+                await ApiService.put(`${AUTH_API_URL}/usuarios/${userId}/email`, { email: data.email.trim() })
+            }
+            if (data.password) {
+                await ApiService.put(`${AUTH_API_URL}/usuarios/${userId}/password`, { password: data.password })
+            }
+
             const payload: Record<string, unknown> = {}
             const roleFromId = data.rolId ? roleIdMap[data.rolId] : undefined
             const rol = (data.rol || roleFromId || '').toLowerCase()
             const codigo = data.codigoEmpleado?.trim()
             if (rol) payload.rol = rol
             if (data.activo !== undefined) payload.estado = data.activo ? 'activo' : 'inactivo'
+            if (data.email) payload.email = data.email.trim()
 
             if (data.nombre || data.telefono !== undefined) {
                 const perfilPayload: Record<string, unknown> = {}
