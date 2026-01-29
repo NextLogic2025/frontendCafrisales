@@ -34,13 +34,17 @@ export function useSocket() {
         }
     }
 
-    const [notifications, setNotifications] = useState<AppNotification[]>(() => loadNotifications())
+    const [notifications, setNotifications] = useState<AppNotification[]>(() => {
+        // Only load from localStorage if we have a token
+        if (!token) return []
+        return loadNotifications()
+    })
     const [isConnected, setIsConnected] = useState(false)
     const lastTokenRef = useRef<string | null>(null)
 
     const clearNotifications = () => {
         setNotifications([])
-        try { localStorage.removeItem(NOTIFICATIONS_STORAGE_KEY) } catch {}
+        try { localStorage.removeItem(NOTIFICATIONS_STORAGE_KEY) } catch { }
     }
 
     useEffect(() => {
@@ -76,7 +80,13 @@ export function useSocket() {
                     'Authorization': sentToken ? `Bearer ${sentToken}` : '',
                 },
             })
-            if (!res.ok) return
+            if (!res.ok) {
+                if (res.status === 401 && typeof auth?.refresh === 'function') {
+                    console.log('useSocket: 401 fetching notifications, refreshing...')
+                    auth.refresh()
+                }
+                return
+            }
             const list = await res.json()
             if (!Array.isArray(list)) return
             const normalized = list.map((payload: any) => {
@@ -126,6 +136,14 @@ export function useSocket() {
                 if (payload.exp && typeof payload.exp === 'number') {
                     const expiresAt = new Date(payload.exp * 1000)
                     console.log('useSocket: jwt expires at', expiresAt.toISOString())
+
+                    if (expiresAt.getTime() < Date.now()) {
+                        console.log('useSocket: token expired, refreshing before connect...')
+                        if (typeof auth?.refresh === 'function') {
+                            auth.refresh()
+                        }
+                        return
+                    }
                 }
             }
         } catch (err) {
@@ -161,7 +179,7 @@ export function useSocket() {
 
             const text = String(msg || '').toLowerCase()
             // If token expired/invalid and auth exposes a refresh, try refresh + reconnect
-            if ((text.includes('jwt') || text.includes('token') || text.includes('expired')) ) {
+            if ((text.includes('jwt') || text.includes('token') || text.includes('expired'))) {
                 try {
                     if (typeof auth?.refreshToken === 'function') {
                         console.log('useSocket: attempting token refresh via auth.refreshToken()')
@@ -187,7 +205,12 @@ export function useSocket() {
 
         socket.on('error', (err) => {
             try {
-                console.error('Socket error event:', typeof err === 'object' ? JSON.stringify(err) : err)
+                const errMsg = typeof err === 'object' ? JSON.stringify(err) : String(err)
+                console.error('Socket error event:', errMsg)
+                if ((errMsg.includes('Token inválido') || errMsg.includes('expired') || errMsg.includes('jwt')) && typeof auth?.refresh === 'function') {
+                    console.log('useSocket: socket error triggers refresh...')
+                    auth.refresh()
+                }
             } catch (e) {
                 console.error('Socket error event (stringify failed):', err)
             }
