@@ -13,7 +13,6 @@ export function VehiculosTable({ vehiculos, isLoading, onView }: VehiculosTableP
         <GenericDataTable
             data={vehiculos}
             loading={isLoading}
-            searchPlaceholder="Buscar vehículo por placa o modelo..."
             columns={[
                 {
                     key: 'placa',
@@ -39,12 +38,21 @@ export function VehiculosTable({ vehiculos, isLoading, onView }: VehiculosTableP
                         </StatusBadge>
                     )
                 },
-            ]}
-            actions={(item) => [
                 {
-                    label: 'Ver detalles',
-                    onClick: () => onView(item),
-                },
+                    key: 'id', // Using id as key for actions column
+                    label: 'Acciones',
+                    className: 'text-right',
+                    render: (_, item: Vehicle) => (
+                        <div className="flex justify-end gap-2">
+                            <button
+                                onClick={() => onView(item)}
+                                className="rounded-lg p-2 text-blue-600 transition-colors hover:bg-blue-50 text-sm font-medium"
+                            >
+                                Ver detalles
+                            </button>
+                        </div>
+                    )
+                }
             ]}
         />
     )
