@@ -62,7 +62,7 @@ export function SupervisorRouteDetailScreen() {
       }
       const data = await ZoneService.getZoneById(rutero.zona_id)
       setZona(data)
-      const polygons = extractPolygons(data?.zonaGeom ?? data?.zona_geom ?? null)
+      const polygons = extractPolygons((data?.zonaGeom ?? data?.zona_geom ?? null) as any)
       setZonePolygon(polygons[0] ?? null)
     }
     loadZone()
@@ -82,7 +82,7 @@ export function SupervisorRouteDetailScreen() {
           let clientName = ''
           if (order?.cliente_id) {
             const client = await UserClientService.getClient(order.cliente_id)
-            clientName = client?.nombre_comercial || client?.razon_social || client?.ruc || ''
+            clientName = client?.nombre_comercial || client?.ruc || ''
           }
           return order ? { orderId: stop.pedido_id, order, clientName } : null
         })

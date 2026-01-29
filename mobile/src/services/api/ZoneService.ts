@@ -42,9 +42,22 @@ const ZONES_BASE_URL = env.api.zoneUrl.endsWith('/api')
   ? env.api.zoneUrl
   : `${env.api.zoneUrl}/api`
 
+const safeParseGeom = (g: any) => {
+  if (!g) return null
+  if (typeof g === 'string') {
+    try {
+      return JSON.parse(g)
+    } catch {
+      return null
+    }
+  }
+  return g
+}
+
 const normalizeZone = (zone: Zone): Zone => ({
   ...zone,
-  zonaGeom: zone.zonaGeom ?? zone.zona_geom ?? null,
+  id: String((zone as any).id ?? ''),
+  zonaGeom: safeParseGeom(zone.zonaGeom ?? zone.zona_geom ?? null),
 })
 
 const rawService = {

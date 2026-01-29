@@ -60,6 +60,7 @@ export function SupervisorRouteFormScreen() {
   const [loading, setLoading] = React.useState(false)
   const [loadingOrders, setLoadingOrders] = React.useState(false)
 
+
   const [showDatePicker, setShowDatePicker] = React.useState(false)
   const [showZonePicker, setShowZonePicker] = React.useState(false)
   const [showVehiclePicker, setShowVehiclePicker] = React.useState(false)
@@ -123,7 +124,7 @@ export function SupervisorRouteFormScreen() {
           return [
             order.id,
             {
-              name: client.nombre_comercial || client.razon_social || client.ruc || undefined,
+              name: client.nombre_comercial || client.ruc || undefined,
               address: client.direccion || undefined,
             },
           ] as const
@@ -277,7 +278,7 @@ export function SupervisorRouteFormScreen() {
       setZonePolygon(null)
       return
     }
-    const polygons = extractPolygons(selectedZone.zonaGeom ?? selectedZone.zona_geom ?? null)
+    const polygons = extractPolygons((selectedZone.zonaGeom ?? selectedZone.zona_geom ?? null) as any)
     setZonePolygon(polygons[0] ?? null)
   }, [selectedZone])
 
@@ -299,10 +300,10 @@ export function SupervisorRouteFormScreen() {
               id: orderId,
               latitude: Number(client.latitud),
               longitude: Number(client.longitud),
-              label: client.nombre_comercial || formatOrderLabel(order, orderId),
+              label: client.nombre_comercial || client.ruc || formatOrderLabel(order, orderId),
               orden: index + 1,
               address: client.direccion || '',
-            }
+            } as StopMarker
           } catch {
             return null
           }
@@ -458,7 +459,9 @@ export function SupervisorRouteFormScreen() {
                 return (
                   <Pressable
                     key={order.id}
-                    onPress={() => toggleOrder(order.id)}
+                    onPress={() => {
+                      toggleOrder(order.id)
+                    }}
                     className={`rounded-2xl border px-4 py-3 ${isSelected ? 'border-brand-red bg-red-50' : 'border-neutral-200 bg-white'}`}
                   >
                     <Text className="text-xs text-neutral-500">Pedido</Text>
@@ -540,7 +543,7 @@ export function SupervisorRouteFormScreen() {
           </View>
           <View className="mt-3 rounded-2xl overflow-hidden border border-neutral-200" style={{ height: 220 }}>
             <MapView
-              ref={(ref) => (mapRef.current = ref)}
+              ref={(ref) => { mapRef.current = ref }}
               provider={PROVIDER_GOOGLE}
               style={{ flex: 1 }}
               initialRegion={FALLBACK_REGION}
@@ -600,7 +603,7 @@ export function SupervisorRouteFormScreen() {
         options={zoneOptions}
         selectedId={zonaId || undefined}
         onSelect={(id) => {
-          setZonaId(id)
+          setZonaId(String(id))
           setShowZonePicker(false)
         }}
         onClose={() => setShowZonePicker(false)}
@@ -646,7 +649,7 @@ export function SupervisorRouteFormScreen() {
       >
         <View className="rounded-2xl overflow-hidden border border-neutral-200" style={{ height: 360 }}>
           <MapView
-            ref={(ref) => (modalMapRef.current = ref)}
+            ref={(ref) => { modalMapRef.current = ref }}
             provider={PROVIDER_GOOGLE}
             style={{ flex: 1 }}
             initialRegion={FALLBACK_REGION}

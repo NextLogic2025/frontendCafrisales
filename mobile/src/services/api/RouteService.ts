@@ -349,6 +349,15 @@ const rawService = {
       return null
     }
   },
+  async getAssignedOrderIds(): Promise<string[]> {
+    try {
+      const data = await ApiService.get<{ pedido_ids: string[] }>(`${ROUTE_API_URL}/pedidos/asignados`)
+      return data?.pedido_ids || []
+    } catch (error) {
+      logErrorForDebugging(error, 'RouteService.getAssignedOrderIds')
+      return []
+    }
+  },
 }
 
 export const RouteService = createService('RouteService', rawService)

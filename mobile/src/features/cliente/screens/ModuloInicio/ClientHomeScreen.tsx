@@ -200,7 +200,7 @@ export function ClientHomeScreen() {
                                             {order.items?.length || 0} productos
                                         </Text>
                                         <Text className="text-sm font-bold text-neutral-900">
-                                            ${(order.total ?? 0).toFixed(2)}
+                                            ${Number(order.total ?? 0).toFixed(2)}
                                         </Text>
                                     </View>
                                 </Pressable>

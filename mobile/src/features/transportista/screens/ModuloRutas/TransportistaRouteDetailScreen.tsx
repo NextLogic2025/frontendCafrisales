@@ -502,20 +502,44 @@ export function TransportistaRouteDetailScreen() {
                       </View>
                       {estado === 'en_curso' && deliveriesByOrder[stop.pedido_id] ? (
                         <View className="flex-row items-center gap-2">
-                          <Pressable
-                            onPress={() => openDeliveryModal('complete', deliveriesByOrder[stop.pedido_id])}
-                            className="px-3 py-1 rounded-full border border-emerald-200"
-                            style={{ backgroundColor: '#ECFDF3' }}
-                          >
-                            <Text className="text-[10px] font-semibold text-emerald-700">Entregado</Text>
-                          </Pressable>
-                          <Pressable
-                            onPress={() => openDeliveryModal('no', deliveriesByOrder[stop.pedido_id])}
-                            className="px-3 py-1 rounded-full border border-red-200"
-                            style={{ backgroundColor: '#FEE2E2' }}
-                          >
-                            <Text className="text-[10px] font-semibold text-red-700">No entregado</Text>
-                          </Pressable>
+                          {deliveriesByOrder[stop.pedido_id].estado === 'pendiente' ? (
+                            <Pressable
+                              onPress={async () => {
+                                setUpdating(true)
+                                try {
+                                  const updated = await DeliveryService.markEnRuta(deliveriesByOrder[stop.pedido_id].id)
+                                  if (updated) {
+                                    const refresh = await DeliveryService.getDeliveries({ rutero_logistico_id: ruteroId })
+                                    setDeliveries(refresh)
+                                    showGlobalToast('Entrega iniciada', 'success')
+                                  }
+                                } finally {
+                                  setUpdating(false)
+                                }
+                              }}
+                              className="px-3 py-1 rounded-full border border-amber-200"
+                              style={{ backgroundColor: '#FEF3C7' }}
+                            >
+                              <Text className="text-[10px] font-semibold text-amber-700">Iniciar</Text>
+                            </Pressable>
+                          ) : deliveriesByOrder[stop.pedido_id].estado === 'en_ruta' ? (
+                            <>
+                              <Pressable
+                                onPress={() => openDeliveryModal('complete', deliveriesByOrder[stop.pedido_id])}
+                                className="px-3 py-1 rounded-full border border-emerald-200"
+                                style={{ backgroundColor: '#ECFDF3' }}
+                              >
+                                <Text className="text-[10px] font-semibold text-emerald-700">Entregado</Text>
+                              </Pressable>
+                              <Pressable
+                                onPress={() => openDeliveryModal('no', deliveriesByOrder[stop.pedido_id])}
+                                className="px-3 py-1 rounded-full border border-red-200"
+                                style={{ backgroundColor: '#FEE2E2' }}
+                              >
+                                <Text className="text-[10px] font-semibold text-red-700">No entregado</Text>
+                              </Pressable>
+                            </>
+                          ) : null}
                         </View>
                       ) : null}
                     </View>

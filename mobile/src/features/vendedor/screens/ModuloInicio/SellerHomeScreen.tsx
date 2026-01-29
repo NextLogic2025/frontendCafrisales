@@ -65,7 +65,7 @@ export function SellerHomeScreen() {
         })
         const pendientes = orders.filter(o => o.estado === 'PENDIENTE' || o.estado === 'EN_REVISION').length
         const aprobados = orders.filter(o => o.estado === 'APROBADO' || o.estado === 'EN_PREPARACION' || o.estado === 'DESPACHADO').length
-        const totalVentasHoy = todayOrders.reduce((acc, o) => acc + (o.total ?? 0), 0)
+        const totalVentasHoy = todayOrders.reduce((acc, o) => acc + Number(o.total ?? 0), 0)
         return { pedidosHoy: todayOrders.length, pendientes, aprobados, totalVentasHoy }
     }, [orders])
 
@@ -177,7 +177,7 @@ export function SellerHomeScreen() {
                         <View style={{ width: '48%' }} className="mb-3">
                             <DashboardCard
                                 label="Ventas Hoy"
-                                value={`$${kpis.totalVentasHoy.toFixed(0)}`}
+                                value={`$${Number(kpis.totalVentasHoy).toFixed(0)}`}
                                 icon="cash-outline"
                                 color={BRAND_COLORS.red}
                             />
@@ -268,7 +268,7 @@ export function SellerHomeScreen() {
                                             {order.items?.length || 0} productos
                                         </Text>
                                         <Text className="text-sm font-bold text-neutral-900">
-                                            ${(order.total ?? 0).toFixed(2)}
+                                            ${Number(order.total ?? 0).toFixed(2)}
                                         </Text>
                                     </View>
                                 </Pressable>

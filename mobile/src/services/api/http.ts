@@ -15,7 +15,11 @@ export type HttpOptions = {
 function getUserFriendlyHttpMessage(status: number, backendMessage?: string): string {
   if (backendMessage) {
     const msg = backendMessage.toLowerCase()
-    if (msg.includes('credenciales') || msg.includes('inválid')) return ERROR_MESSAGES.INVALID_CREDENTIALS
+    // Errores de zona/clientes/vendedor - mostrar mensaje original
+    if (msg.includes('zona') || msg.includes('cliente') || msg.includes('vendedor') || msg.includes('comercial') || msg.includes('canal')) {
+      return backendMessage
+    }
+    if (msg.includes('credenciales inválid') || msg.includes('credenciales invalidas')) return ERROR_MESSAGES.INVALID_CREDENTIALS
     if (msg.includes('desactivado') || msg.includes('bloqueado')) return ERROR_MESSAGES.ACCOUNT_DISABLED
     if (msg.includes('no encontrado') || msg.includes('not found')) return ERROR_MESSAGES.NOT_FOUND
     if (msg.includes('ya existe') || msg.includes('duplicad')) return ERROR_MESSAGES.DUPLICATE_ENTRY
