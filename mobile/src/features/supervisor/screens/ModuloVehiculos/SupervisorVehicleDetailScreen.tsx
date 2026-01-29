@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { Header } from '../../../../components/ui/Header'
 import { SupervisorHeaderMenu } from '../../../../components/ui/SupervisorHeaderMenu'
 import { PrimaryButton } from '../../../../components/ui/PrimaryButton'
-import { BRAND_COLORS } from '../../../../services/shared/types'
+import { BRAND_COLORS } from '../../../../shared/types'
 import { RouteService, Vehicle, VehicleStatus } from '../../../../services/api/RouteService'
 import { showGlobalToast } from '../../../../utils/toastService'
 

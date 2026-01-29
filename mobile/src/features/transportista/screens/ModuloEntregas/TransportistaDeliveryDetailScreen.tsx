@@ -10,7 +10,7 @@ import { AddEvidenceModal } from '../../../../components/delivery/AddEvidenceMod
 import { ReportIncidentModal } from '../../../../components/delivery/ReportIncidentModal'
 import { EvidenceGalleryModal } from '../../../../components/delivery/EvidenceGalleryModal'
 import { IncidentListModal } from '../../../../components/delivery/IncidentListModal'
-import { BRAND_COLORS } from '../../../../services/shared/types'
+import { BRAND_COLORS } from '../../../../shared/types'
 import {
   DeliveryDetail,
   DeliveryEvidence,
@@ -108,6 +108,23 @@ export function TransportistaDeliveryDetailScreen() {
       setUpdating(false)
     }
   }
+
+  const handleMarkEnRuta = async () => {
+    if (!entregaId) return
+    setUpdating(true)
+    try {
+      const updated = await DeliveryService.markEnRuta(entregaId)
+      if (!updated) {
+        showGlobalToast('No se pudo iniciar la ruta', 'error')
+        return
+      }
+      setDelivery((prev) => (prev ? { ...prev, ...updated } : null))
+      showGlobalToast('¡Ruta iniciada!', 'success')
+    } finally {
+      setUpdating(false)
+    }
+  }
+
 
   const handleNoDelivery = async () => {
     if (!entregaId) return
@@ -292,7 +309,24 @@ export function TransportistaDeliveryDetailScreen() {
           </View>
 
           {/* Delivery Actions */}
-          {canUpdate ? (
+          {estado === 'pendiente' ? (
+            <View className="mt-6">
+              <Pressable
+                onPress={handleMarkEnRuta}
+                disabled={updating}
+                className="rounded-2xl py-4 items-center flex-row justify-center"
+                style={{ backgroundColor: BRAND_COLORS.red }}
+              >
+                <Ionicons name="navigate" size={20} color="white" />
+                <Text className="ml-2 text-base font-bold text-white">
+                  {updating ? 'Iniciando...' : 'Iniciar Ruta'}
+                </Text>
+              </Pressable>
+              <Text className="text-xs text-neutral-500 text-center mt-2">
+                Presiona para indicar que estás en camino al cliente
+              </Text>
+            </View>
+          ) : estado === 'en_ruta' ? (
             <View className="mt-6 gap-4">
               <PrimaryButton
                 title={updating ? 'Completando...' : 'Marcar como entregado'}

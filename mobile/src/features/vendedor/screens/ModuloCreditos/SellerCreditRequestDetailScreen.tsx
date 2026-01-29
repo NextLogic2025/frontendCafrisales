@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-nati
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { Header } from '../../../../components/ui/Header'
 import { SellerHeaderMenu } from '../../../../components/ui/SellerHeaderMenu'
-import { BRAND_COLORS } from '../../../../services/shared/types'
+import { BRAND_COLORS } from '../../../../shared/types'
 import { OrderService, OrderDetail } from '../../../../services/api/OrderService'
 import { UserClientService, UserClient } from '../../../../services/api/UserClientService'
 import { CreditService } from '../../../../services/api/CreditService'

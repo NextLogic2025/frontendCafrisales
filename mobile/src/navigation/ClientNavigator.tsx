@@ -13,6 +13,7 @@ import { ClientCreditDetailScreen } from '../features/cliente/screens/ModuloCred
 import { ClientOrdersScreen } from '../features/cliente/screens/ModuloPedidos/ClientOrdersScreen'
 import { ClientOrderDetailScreen } from '../features/cliente/screens/ModuloPedidos/ClientOrderDetailScreen'
 import { ClientOrderAdjustmentsScreen } from '../features/cliente/screens/ModuloAjustesPedido/ClientOrderAdjustmentsScreen'
+import { ClientDeliveryTrackingScreen, ClientDeliveryHistoryScreen } from '../features/cliente/screens/ModuloEntregas'
 
 const Tab = createBottomTabNavigator()
 const Stack = createNativeStackNavigator()
@@ -38,6 +39,10 @@ export function ClientNavigator() {
       <Stack.Screen name="ClientePedidos" component={ClientOrdersScreen} />
       <Stack.Screen name="ClientePedidoDetalle" component={ClientOrderDetailScreen} />
       <Stack.Screen name="ClienteAjustesPedido" component={ClientOrderAdjustmentsScreen} />
+      {/* Entregas */}
+      <Stack.Screen name="ClienteEntregas" component={ClientDeliveryHistoryScreen} />
+      <Stack.Screen name="ClienteSeguimientoEntrega" component={ClientDeliveryTrackingScreen} />
     </Stack.Navigator>
   )
 }
+

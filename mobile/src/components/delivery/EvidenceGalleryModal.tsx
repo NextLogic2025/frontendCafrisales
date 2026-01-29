@@ -2,7 +2,7 @@ import React from 'react'
 import { View, Text, Image, Pressable, FlatList, Dimensions } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { GenericModal } from '../ui/GenericModal'
-import { BRAND_COLORS } from '../../services/shared/types'
+import { BRAND_COLORS } from '../../shared/types'
 import { DeliveryEvidence } from '../../services/api/DeliveryService'
 
 type Props = {

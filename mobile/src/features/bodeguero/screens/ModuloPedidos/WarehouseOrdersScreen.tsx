@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { Header } from '../../../../components/ui/Header'
 import { CategoryFilter } from '../../../../components/ui/CategoryFilter'
 import { SearchBar } from '../../../../components/ui/SearchBar'
-import { BRAND_COLORS } from '../../../../services/shared/types'
+import { BRAND_COLORS } from '../../../../shared/types'
 import { OrderListItem, OrderService } from '../../../../services/api/OrderService'
 import { UserClientService } from '../../../../services/api/UserClientService'
 

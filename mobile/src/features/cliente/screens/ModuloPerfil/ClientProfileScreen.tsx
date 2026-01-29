@@ -3,6 +3,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import { Header } from '../../../../components/ui/Header'
 import { UserService, type UserProfile } from '../../../../services/api/UserService'
 import { UserClientService } from '../../../../services/api/UserClientService'
+import { ZoneService } from '../../../../services/api/ZoneService'
 import { signOut } from '../../../../services/auth/authClient'
 import { useToast } from '../../../../context/ToastContext'
 import { UserProfileTemplate, type CommercialData } from '../../../../components/profile/UserProfileTemplate'
@@ -24,15 +25,25 @@ export function ClientProfileScreen() {
                 const myClient = await UserClientService.getClient(user.id)
 
                 if (myClient) {
-                    const zoneName = myClient.zona_id ? `Zona #${myClient.zona_id}` : 'General'
+                    // Fetch zone name
+                    let zoneName = 'Sin zona'
+                    if (myClient.zona_id) {
+                        const zone = await ZoneService.getZoneById(myClient.zona_id)
+                        zoneName = zone?.nombre || `Zona #${myClient.zona_id}`
+                    }
+
+                    // Vendor - clients can't fetch vendor details, just show status
                     const vendorName = myClient.vendedor_asignado_id ? 'Asignado' : 'No asignado'
+
+                    // Use canal_nombre from backend
+                    const canalName = myClient.canal_nombre || 'General'
 
                     setCommercialData({
                         identificacion: myClient.ruc ?? undefined,
                         tipo_identificacion: myClient.ruc ? 'RUC' : undefined,
                         razon_social: myClient.nombre_comercial ?? undefined,
                         nombre_comercial: myClient.nombre_comercial ?? undefined,
-                        lista_precios: 'General',
+                        lista_precios: canalName,
                         vendedor_asignado: vendorName,
                         zona_comercial: zoneName,
                         tiene_credito: false,

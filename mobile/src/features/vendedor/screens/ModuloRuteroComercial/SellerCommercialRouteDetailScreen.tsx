@@ -6,7 +6,7 @@ import { Header } from '../../../../components/ui/Header'
 import { SellerHeaderMenu } from '../../../../components/ui/SellerHeaderMenu'
 import { GenericModal } from '../../../../components/ui/GenericModal'
 import { PrimaryButton } from '../../../../components/ui/PrimaryButton'
-import { BRAND_COLORS } from '../../../../services/shared/types'
+import { BRAND_COLORS } from '../../../../shared/types'
 import { CommercialRoute, CommercialStop, RouteService, RouteHistoryEntry } from '../../../../services/api/RouteService'
 import { UserClient, UserClientService } from '../../../../services/api/UserClientService'
 import { showGlobalToast } from '../../../../utils/toastService'
@@ -62,6 +62,17 @@ export function SellerCommercialRouteDetailScreen() {
     setLoading(true)
     try {
       const data = await RouteService.getCommercialRoute(ruteroId)
+      console.log('[Rutero] Datos recibidos:', {
+        id: data?.id,
+        estado: data?.estado,
+        totalParadas: data?.paradas?.length || 0,
+        paradasSinCheckout: data?.paradas?.filter((p: any) => !p.checkout_en)?.length || 0,
+        paradas: data?.paradas?.map((p: any) => ({
+          id: p.id?.slice(0, 8),
+          checkout_en: p.checkout_en,
+          checkin_en: p.checkin_en
+        }))
+      })
       setRutero(data)
     } finally {
       setLoading(false)
@@ -117,6 +128,18 @@ export function SellerCommercialRouteDetailScreen() {
 
   const handleComplete = async () => {
     if (!ruteroId) return
+    // Validate all stops are completed before calling API
+    const stops = rutero?.paradas || []
+    const pendingStops = stops.filter((s) => !s.checkout_en)
+    console.log('[Rutero] Intentando completar, paradas pendientes:', pendingStops.length)
+    if (pendingStops.length > 0) {
+      showGlobalToast(`Tienes ${pendingStops.length} parada(s) pendiente(s)`, 'warning')
+      return
+    }
+    if (stops.length === 0) {
+      showGlobalToast('No hay paradas en este rutero', 'warning')
+      return
+    }
     setSaving(true)
     try {
       const updated = await RouteService.completeCommercialRoute(ruteroId)
@@ -177,7 +200,8 @@ export function SellerCommercialRouteDetailScreen() {
   const paradas = rutero?.paradas || []
   const estado = rutero?.estado || 'borrador'
   const badge = statusBadge(estado)
-  const allVisited = paradas.length > 0 && paradas.every((stop) => stop.checkout_en)
+  const pendingCount = paradas.filter((stop) => !stop.checkout_en).length
+  const allVisited = paradas.length > 0 && pendingCount === 0
 
   return (
     <View className="flex-1 bg-neutral-50">
@@ -238,9 +262,12 @@ export function SellerCommercialRouteDetailScreen() {
                 disabled={!allVisited || saving}
               />
               {!allVisited ? (
-                <Text className="text-xs text-neutral-500 mt-2">
-                  Completa todas las paradas antes de finalizar.
-                </Text>
+                <View className="flex-row items-center mt-2">
+                  <Ionicons name="warning-outline" size={14} color={BRAND_COLORS.red} />
+                  <Text className="text-xs text-neutral-600 ml-1">
+                    {pendingCount} parada(s) pendiente(s) de completar
+                  </Text>
+                </View>
               ) : null}
             </View>
           ) : null}
@@ -252,7 +279,7 @@ export function SellerCommercialRouteDetailScreen() {
             </View>
 
             {paradas.length === 0 ? (
-              <Text className="text-xs text-neutral-500 mt-3">AÃºn no hay paradas asignadas.</Text>
+              <Text className="text-xs text-neutral-500 mt-3">Aún no hay paradas asignadas.</Text>
             ) : (
               <View className="mt-3 gap-3">
                 {paradas.map((stop) => {
@@ -274,7 +301,10 @@ export function SellerCommercialRouteDetailScreen() {
                         </View>
                       </View>
                       {client?.direccion ? (
-                        <Text className="text-xs text-neutral-500 mt-2">DirecciÃ³n: {client.direccion}</Text>
+                        <View className="flex-row items-center mt-2">
+                          <Ionicons name="location-outline" size={12} color="#6B7280" />
+                          <Text className="text-xs text-neutral-500 ml-1">{client.direccion}</Text>
+                        </View>
                       ) : null}
                       {stop.objetivo ? (
                         <Text className="text-xs text-neutral-500 mt-2">Objetivo: {stop.objetivo}</Text>

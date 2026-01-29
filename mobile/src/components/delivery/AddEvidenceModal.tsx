@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons'
 import * as ImagePicker from 'expo-image-picker'
 import { GenericModal } from '../ui/GenericModal'
 import { PrimaryButton } from '../ui/PrimaryButton'
-import { BRAND_COLORS } from '../../services/shared/types'
+import { BRAND_COLORS } from '../../shared/types'
 import { DeliveryService, EvidencePayload, DeliveryEvidence } from '../../services/api/DeliveryService'
 import { showGlobalToast } from '../../utils/toastService'
 

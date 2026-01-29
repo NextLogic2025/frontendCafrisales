@@ -3,7 +3,7 @@ import { View, Text, Pressable, TextInput } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { GenericModal } from '../ui/GenericModal'
 import { PrimaryButton } from '../ui/PrimaryButton'
-import { BRAND_COLORS } from '../../services/shared/types'
+import { BRAND_COLORS } from '../../shared/types'
 import { DeliveryService, IncidentPayload, DeliveryIncident } from '../../services/api/DeliveryService'
 import { showGlobalToast } from '../../utils/toastService'
 

@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Pressable, ScrollView, Text, View } from 'react-native'
-import { BRAND_COLORS } from '../../services/shared/types'
+import { BRAND_COLORS } from '../../shared/types'
 import { SearchBar } from './SearchBar'
 
 type Category = {

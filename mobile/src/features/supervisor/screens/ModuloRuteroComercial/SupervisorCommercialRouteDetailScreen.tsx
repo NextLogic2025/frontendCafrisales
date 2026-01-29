@@ -7,7 +7,7 @@ import { SupervisorHeaderMenu } from '../../../../components/ui/SupervisorHeader
 import { GenericModal } from '../../../../components/ui/GenericModal'
 import { PickerModal, PickerOption } from '../../../../components/ui/PickerModal'
 import { PrimaryButton } from '../../../../components/ui/PrimaryButton'
-import { BRAND_COLORS } from '../../../../services/shared/types'
+import { BRAND_COLORS } from '../../../../shared/types'
 import { CommercialRoute, CommercialStop, RouteService, RouteHistoryEntry } from '../../../../services/api/RouteService'
 import { UserProfile, UserService } from '../../../../services/api/UserService'
 import { UserClient, UserClientService } from '../../../../services/api/UserClientService'
@@ -297,7 +297,7 @@ export function SupervisorCommercialRouteDetailScreen() {
             </View>
 
             {paradas.length === 0 ? (
-              <Text className="text-xs text-neutral-500 mt-3">AÃºn no hay paradas asignadas.</Text>
+              <Text className="text-xs text-neutral-500 mt-3">Aun no hay paradas asignadas.</Text>
             ) : (
               <View className="mt-3 gap-3">
                 {paradas.map((stop) => {
@@ -319,7 +319,7 @@ export function SupervisorCommercialRouteDetailScreen() {
                         </View>
                       </View>
                       {client?.direccion ? (
-                        <Text className="text-xs text-neutral-500 mt-2">DirecciÃ³n: {client.direccion}</Text>
+                        <Text className="text-xs text-neutral-500 mt-2">Direccion: {client.direccion}</Text>
                       ) : null}
                       {stop.objetivo ? (
                         <Text className="text-xs text-neutral-500 mt-2">Objetivo: {stop.objetivo}</Text>

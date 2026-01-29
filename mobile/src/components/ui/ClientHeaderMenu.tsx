@@ -10,9 +10,11 @@ export function ClientHeaderMenu({ extraActions = [] }: Props) {
   const navigation = useNavigation<any>()
 
   const actions: HeaderMenuAction[] = [
-    { label: 'Pedidos', icon: 'receipt-outline', onPress: () => navigation.navigate('ClientePedidos') },
-    { label: 'Creditos', icon: 'card-outline', onPress: () => navigation.navigate('ClienteCreditos') },
+    { label: 'Mis Entregas', icon: 'cube-outline', onPress: () => navigation.navigate('ClienteEntregas') },
+    { label: 'Mis Pedidos', icon: 'receipt-outline', onPress: () => navigation.navigate('ClientePedidos') },
+    { label: 'Mis Creditos', icon: 'card-outline', onPress: () => navigation.navigate('ClienteCreditos') },
   ]
 
   return <HeaderMenu actions={[...actions, ...extraActions]} />
 }
+

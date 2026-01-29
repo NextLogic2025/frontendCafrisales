@@ -1,7 +1,7 @@
 import React from 'react'
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { BRAND_COLORS } from '../../services/shared/types'
+import { BRAND_COLORS } from '../../shared/types'
 import type { CatalogProduct } from '../../services/api/CatalogProductService'
 
 type Props = {
@@ -38,28 +38,21 @@ export function CatalogProductGridCard({ product, categoryName, priceLabel, onPr
           {categoryName ?? 'Catalogo general'}
         </Text>
 
-        <View className="flex-row items-center mt-3">
-          <View className="flex-1 mr-2">
-            <View className="px-2.5 py-1 rounded-full border border-red-100 bg-red-50">
-              <Text className="text-[11px] font-semibold text-red-600" numberOfLines={1} ellipsizeMode="tail">
-                {priceLabel ?? 'Precio a confirmar'}
-              </Text>
-            </View>
-          </View>
+        <View className="mt-3">
           {onQuickAdd ? (
             <Pressable
               onPress={(event) => {
                 event.stopPropagation()
                 onQuickAdd()
               }}
-              className="px-3 py-2 rounded-xl bg-brand-red"
-              style={{ minWidth: 72, alignItems: 'center' }}
+              className="py-2.5 rounded-xl bg-brand-red items-center"
             >
-              <Text className="text-white text-[11px] font-bold">Agregar</Text>
+              <Text className="text-white text-xs font-bold">Agregar</Text>
             </Pressable>
           ) : (
-            <View className="w-8 h-8 rounded-full items-center justify-center bg-neutral-100 border border-neutral-200">
-              <Ionicons name="chevron-forward" size={16} color={BRAND_COLORS.red} />
+            <View className="py-2.5 rounded-xl bg-neutral-100 border border-neutral-200 flex-row items-center justify-center">
+              <Text className="text-xs font-semibold text-neutral-600 mr-1">Ver detalle</Text>
+              <Ionicons name="chevron-forward" size={14} color="#525252" />
             </View>
           )}
         </View>

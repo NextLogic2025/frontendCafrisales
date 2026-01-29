@@ -6,7 +6,7 @@ import { jwtDecode } from 'jwt-decode'
 import { Header } from '../../../../components/ui/Header'
 import { SearchBar } from '../../../../components/ui/SearchBar'
 import { SellerHeaderMenu } from '../../../../components/ui/SellerHeaderMenu'
-import { BRAND_COLORS } from '../../../../services/shared/types'
+import { BRAND_COLORS } from '../../../../shared/types'
 import { getValidToken } from '../../../../services/auth/authClient'
 import { UserClient, UserClientService } from '../../../../services/api/UserClientService'
 

@@ -4,7 +4,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Header } from '../../../../components/ui/Header'
-import { BRAND_COLORS } from '../../../../services/shared/types'
+import { BRAND_COLORS } from '../../../../shared/types'
 import { OrderListItem, OrderService } from '../../../../services/api/OrderService'
 import { UserClientService } from '../../../../services/api/UserClientService'
 
@@ -37,7 +37,7 @@ export function WarehouseHistoryScreen() {
       }
       const pairs = await Promise.all(
         uniqueClientIds.map(async (clienteId) => {
-          const client = await UserClientService.getClient(clienteId)
+          const client = await UserClientService.getClient(clienteId as string)
           return [clienteId, client?.nombre_comercial || client?.ruc || clienteId] as const
         }),
       )
@@ -69,13 +69,13 @@ export function WarehouseHistoryScreen() {
 
       <View className="px-5 pt-4">
         <LinearGradient
-          colors={['#0F172A', '#1E293B']}
+          colors={dataByTab.length === 0 ? ['#7F1D1D', '#991B1B'] : ['#0F172A', '#1E293B']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{ borderRadius: 18, padding: 14, marginBottom: 14 }}
         >
           <Text className="text-xs text-slate-200">Resumen</Text>
-          <Text className="text-lg font-bold text-white mt-1">
+          <Text className={`text-lg font-bold mt-1 ${dataByTab.length === 0 ? 'text-red-100' : 'text-white'}`}>
             {dataByTab.length} pedidos {activeTab === 'validado' ? 'validados' : activeTab === 'ajustado' ? 'ajustados' : 'cancelados'}
           </Text>
         </LinearGradient>

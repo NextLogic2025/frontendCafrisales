@@ -10,6 +10,8 @@ export function SupervisorHeaderMenu({ extraActions = [] }: Props) {
   const navigation = useNavigation<any>()
 
   const actions: HeaderMenuAction[] = [
+    { label: 'Entregas', icon: 'cube-outline', onPress: () => navigation.navigate('SupervisorEntregas') },
+    { label: 'Incidencias', icon: 'alert-circle-outline', onPress: () => navigation.navigate('SupervisorIncidencias') },
     { label: 'Zonas', icon: 'map-outline', onPress: () => navigation.navigate('SupervisorZones') },
     { label: 'Canales', icon: 'pricetag-outline', onPress: () => navigation.navigate('SupervisorChannels') },
     { label: 'Catalogo', icon: 'cube-outline', onPress: () => navigation.navigate('SupervisorProducts') },
@@ -18,9 +20,10 @@ export function SupervisorHeaderMenu({ extraActions = [] }: Props) {
     { label: 'Promociones', icon: 'sparkles-outline', onPress: () => navigation.navigate('SupervisorPromociones') },
     { label: 'Creditos', icon: 'card-outline', onPress: () => navigation.navigate('SupervisorCreditos') },
     { label: 'Vehiculos', icon: 'car-sport-outline', onPress: () => navigation.navigate('SupervisorVehiculos') },
-    { label: 'Ruteros logÃ­sticos', icon: 'navigate-outline', onPress: () => navigation.navigate('SupervisorRuteros') },
+    { label: 'Ruteros logisticos', icon: 'navigate-outline', onPress: () => navigation.navigate('SupervisorRuteros') },
     { label: 'Ruteros comerciales', icon: 'walk-outline', onPress: () => navigation.navigate('SupervisorRuterosComerciales') },
   ]
 
   return <HeaderMenu actions={[...actions, ...extraActions]} />
 }
+

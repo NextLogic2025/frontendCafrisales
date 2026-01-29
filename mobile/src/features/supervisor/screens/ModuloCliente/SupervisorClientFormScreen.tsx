@@ -10,7 +10,7 @@ import { PrimaryButton } from '../../../../components/ui/PrimaryButton'
 import { PickerModal, PickerOption } from '../../../../components/ui/PickerModal'
 import { LocationPickerMap } from '../../../../components/ui/LocationPickerMap'
 import { KeyboardFormLayout } from '../../../../components/ui/KeyboardFormLayout'
-import { BRAND_COLORS } from '../../../../services/shared/types'
+import { BRAND_COLORS } from '../../../../shared/types'
 import { Zone, ZoneService } from '../../../../services/api/ZoneService'
 import { Channel, ChannelService } from '../../../../services/api/ChannelService'
 import { UserClient, UserClientService } from '../../../../services/api/UserClientService'
@@ -95,7 +95,7 @@ export function SupervisorClientFormScreen() {
     const selectedZone = zones.find((item) => item.id === zonaId)
     const geometry = selectedZone?.zonaGeom ?? selectedZone?.zona_geom ?? null
     if (geometry) {
-      setZonePolygons(extractPolygons(geometry))
+      setZonePolygons(extractPolygons(geometry as Parameters<typeof extractPolygons>[0]))
       return
     }
 
@@ -103,7 +103,7 @@ export function SupervisorClientFormScreen() {
     ZoneService.getZoneById(zonaId).then((zoneData) => {
       if (!active) return
       const nextGeometry = zoneData?.zonaGeom ?? zoneData?.zona_geom ?? null
-      setZonePolygons(extractPolygons(nextGeometry))
+      setZonePolygons(extractPolygons(nextGeometry as Parameters<typeof extractPolygons>[0]))
     })
 
     return () => {

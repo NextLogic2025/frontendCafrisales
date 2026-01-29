@@ -7,7 +7,7 @@ import { SupervisorHeaderMenu } from '../../../../components/ui/SupervisorHeader
 import { GenericModal } from '../../../../components/ui/GenericModal'
 import { SearchBar } from '../../../../components/ui/SearchBar'
 import { CategoryFilter } from '../../../../components/ui/CategoryFilter'
-import { BRAND_COLORS } from '../../../../services/shared/types'
+import { BRAND_COLORS } from '../../../../shared/types'
 import { CreditService, CreditListItem } from '../../../../services/api/CreditService'
 import { UserClientService } from '../../../../services/api/UserClientService'
 import { UserService, UserProfile } from '../../../../services/api/UserService'

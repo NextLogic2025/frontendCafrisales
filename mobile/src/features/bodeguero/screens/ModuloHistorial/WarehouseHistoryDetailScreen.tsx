@@ -3,7 +3,7 @@ import { ActivityIndicator, ScrollView, Text, View } from 'react-native'
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Header } from '../../../../components/ui/Header'
-import { BRAND_COLORS } from '../../../../services/shared/types'
+import { BRAND_COLORS } from '../../../../shared/types'
 import { OrderDetail, OrderService, OrderValidation } from '../../../../services/api/OrderService'
 
 export function WarehouseHistoryDetailScreen() {

@@ -60,7 +60,7 @@ export async function signIn(email: string, password: string) {
   if (!res.ok) {
     const backendMsg = typeof data?.message === 'string' ? data.message.toLowerCase() : ''
 
-    if (res.status === 401 || backendMsg.includes('credenciales') || backendMsg.includes('invÃ¡lid') || backendMsg.includes('invalid')) {
+    if (res.status === 401 || backendMsg.includes('credenciales') || backendMsg.includes('invalid') || backendMsg.includes('invalid')) {
       throw new Error(ERROR_MESSAGES.INVALID_CREDENTIALS)
     }
     if (backendMsg.includes('desactivado') || backendMsg.includes('bloqueado')) {
@@ -100,11 +100,11 @@ export async function signIn(email: string, password: string) {
 
   const user = data?.usuario || data?.usuario_id || role
     ? {
-        id: data?.usuario?.id || data?.usuario_id,
-        email: data?.usuario?.email || email,
-        nombre: data?.usuario?.nombre,
-        role,
-      }
+      id: data?.usuario?.id || data?.usuario_id,
+      email: data?.usuario?.email || email,
+      nombre: data?.usuario?.nombre,
+      role,
+    }
     : undefined
 
   return { token: accessToken, user }
@@ -141,41 +141,41 @@ async function refreshAccessToken(): Promise<string | null> {
   if (refreshPromise) return refreshPromise
 
   refreshPromise = (async () => {
-  const refreshToken = await getRefreshToken()
-  if (!refreshToken) {
-    await signOut()
+    const refreshToken = await getRefreshToken()
+    if (!refreshToken) {
+      await signOut()
+      return null
+    }
+
+    const authBaseUrl = env.auth.baseUrl || env.api.baseUrl
+    const url = authBaseUrl + AUTH_PATHS.refresh
+    const cleanRefreshToken = normalizeTokenString(refreshToken)
+
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: cleanRefreshToken }),
+      })
+
+      if (!res.ok) {
+        throw new Error('Refresh failed')
+      }
+
+      const data = (await res.json().catch(() => null)) as RefreshApiResponse | null
+      const newAccessToken = data?.access_token
+      const newRefreshToken = data?.refresh_token
+
+      if (newAccessToken) {
+        await setToken(newAccessToken)
+        if (newRefreshToken) await setRefreshToken(newRefreshToken)
+        return newAccessToken
+      }
+    } catch (error) {
+      logErrorForDebugging(error, 'refreshAccessToken')
+      await clearTokens()
+    }
     return null
-  }
-
-  const authBaseUrl = env.auth.baseUrl || env.api.baseUrl
-  const url = authBaseUrl + AUTH_PATHS.refresh
-  const cleanRefreshToken = normalizeTokenString(refreshToken)
-
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refresh_token: cleanRefreshToken }),
-    })
-
-    if (!res.ok) {
-      throw new Error('Refresh failed')
-    }
-
-    const data = (await res.json().catch(() => null)) as RefreshApiResponse | null
-    const newAccessToken = data?.access_token
-    const newRefreshToken = data?.refresh_token
-
-    if (newAccessToken) {
-      await setToken(newAccessToken)
-      if (newRefreshToken) await setRefreshToken(newRefreshToken)
-      return newAccessToken
-    }
-  } catch (error) {
-    logErrorForDebugging(error, 'refreshAccessToken')
-    await clearTokens()
-  }
-  return null
   })().finally(() => {
     refreshPromise = null
   })

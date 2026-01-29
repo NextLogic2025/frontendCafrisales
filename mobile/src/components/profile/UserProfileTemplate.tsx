@@ -2,7 +2,7 @@
 import React, { useState } from 'react'
 import { View, Text, ScrollView, TouchableOpacity, Pressable, ActivityIndicator, TextInput, Image } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { BRAND_COLORS } from '../../services/shared/types'
+import { BRAND_COLORS } from '../../shared/types'
 import { FeedbackModal, FeedbackType } from '../ui/FeedbackModal'
 
 // Interfaces
@@ -345,8 +345,6 @@ export function UserProfileTemplate({
                 {isClient && commercialInfo && (
                     <SectionContainer title="Información Comercial" icon="business-outline">
                         <View className="bg-neutral-50 p-4 rounded-xl mb-3">
-                            <InfoRow label="Razón Social" value={commercialInfo.razon_social || '-'} icon="document-text" />
-                            <View className="h-3" />
                             <InfoRow label="Nombre Comercial" value={commercialInfo.nombre_comercial || '-'} icon="storefront" />
                         </View>
 
@@ -369,7 +367,7 @@ export function UserProfileTemplate({
 
                         <View className="flex-row" style={{ marginLeft: -4, marginRight: -4 }}>
                             <View className="flex-1" style={{ marginLeft: 4, marginRight: 4 }}>
-                                <InfoRow label="Lista de Precios" value={commercialInfo.lista_precios || 'General'} icon="pricetag" />
+                                <InfoRow label="Canal" value={commercialInfo.lista_precios || 'General'} icon="pricetag" />
                             </View>
                             <View className="flex-1" style={{ marginLeft: 4, marginRight: 4 }}>
                                 <InfoRow label="Zona" value={commercialInfo.zona_comercial || 'Sin Zona'} icon="map" />
@@ -377,65 +375,6 @@ export function UserProfileTemplate({
                         </View>
 
                         <InfoRow label="Vendedor Asignado" value={commercialInfo.vendedor_asignado || 'No asignado'} icon="person-circle" />
-
-                        <View className="h-[1px] bg-neutral-200 my-4" />
-
-                        {/* Credit Info */}
-                        <View className="bg-neutral-50 p-4 rounded-xl">
-                            <View className="flex-row items-center mb-3">
-                                <Ionicons name="card-outline" size={18} color={BRAND_COLORS.red} />
-                                <Text className="text-neutral-700 font-bold text-sm ml-2">Información de Crédito</Text>
-                            </View>
-
-                            <View className="flex-row" style={{ marginLeft: -4, marginRight: -4 }}>
-                                <View className="flex-1" style={{ marginLeft: 4, marginRight: 4 }}>
-                                    <InfoRow
-                                        label="Estado"
-                                        value={commercialInfo.tiene_credito ? 'Habilitado' : 'Deshabilitado'}
-                                        valueColor={commercialInfo.tiene_credito ? 'text-green-600' : 'text-neutral-500'}
-                                    />
-                                </View>
-                                {commercialInfo.tiene_credito && (
-                                    <View className="flex-1" style={{ marginLeft: 4, marginRight: 4 }}>
-                                        <InfoRow
-                                            label="Días de Plazo"
-                                            value={commercialInfo.dias_plazo ? `${commercialInfo.dias_plazo} días` : '-'}
-                                        />
-                                    </View>
-                                )}
-                            </View>
-
-                            {commercialInfo.tiene_credito && (
-                                <>
-                                    <View className="h-3" />
-                                    <View className="flex-row" style={{ marginLeft: -4, marginRight: -4 }}>
-                                        <View className="flex-1" style={{ marginLeft: 4, marginRight: 4 }}>
-                                            <InfoRow
-                                                label="Límite de Crédito"
-                                                value={commercialInfo.limite_credito
-                                                    ? new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(commercialInfo.limite_credito)
-                                                    : '-'
-                                                }
-                                            />
-                                        </View>
-                                        <View className="flex-1" style={{ marginLeft: 4, marginRight: 4 }}>
-                                            <InfoRow
-                                                label="Saldo Actual"
-                                                value={commercialInfo.saldo_actual != null
-                                                    ? new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(commercialInfo.saldo_actual)
-                                                    : '-'
-                                                }
-                                                valueColor={
-                                                    commercialInfo.saldo_actual != null && commercialInfo.limite_credito != null && commercialInfo.saldo_actual > commercialInfo.limite_credito
-                                                        ? 'text-red-600'
-                                                        : 'text-neutral-800'
-                                                }
-                                            />
-                                        </View>
-                                    </View>
-                                </>
-                            )}
-                        </View>
                     </SectionContainer>
                 )}
 

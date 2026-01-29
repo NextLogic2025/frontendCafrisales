@@ -1,7 +1,7 @@
 import React from 'react'
-import { View, Text, ScrollView, RefreshControl } from 'react-native'
+import { View, Text, ScrollView, RefreshControl, ActivityIndicator } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { BRAND_COLORS } from '../../../../services/shared/types'
+import { BRAND_COLORS } from '../../../../shared/types'
 
 import { Header } from '../../../../components/ui/Header'
 import { SupervisorHeaderMenu } from '../../../../components/ui/SupervisorHeaderMenu'
@@ -9,6 +9,9 @@ import { getUserName } from '../../../../storage/authStorage'
 import { UserService } from '../../../../services/api/UserService'
 import { DashboardCard } from '../../../../components/ui/DashboardCard'
 import { QuickActionsGrid } from '../../../../components/ui/QuickActionsGrid'
+import { UserClientService } from '../../../../services/api/UserClientService'
+import { OrderService } from '../../../../services/api/OrderService'
+import { DeliveryService } from '../../../../services/api/DeliveryService'
 
 type KPI = {
     label: string
@@ -25,24 +28,58 @@ type AlertItem = {
 }
 
 const DEFAULT_KPIS: KPI[] = [
-    { label: 'Clientes', value: 0, icon: 'people-outline', color: BRAND_COLORS.red },
-    { label: 'Activos', value: 0, icon: 'checkmark-circle-outline', color: '#10B981' },
-    { label: 'Alertas', value: 0, icon: 'alert-circle-outline', color: '#F59E0B' }
+    { label: 'Clientes', value: '-', icon: 'people-outline', color: BRAND_COLORS.red },
+    { label: 'Pedidos Activos', value: '-', icon: 'cart-outline', color: '#10B981' },
+    { label: 'Incidencias', value: '-', icon: 'alert-circle-outline', color: '#F59E0B' }
 ]
 
 export function SupervisorDashboardScreen() {
     const [kpis, setKpis] = React.useState<KPI[]>(DEFAULT_KPIS)
     const [alerts, setAlerts] = React.useState<AlertItem[]>([])
     const [isLoading, setIsLoading] = React.useState(false)
-    const [userName, setUserName] = React.useState('')
+    const [userName, setUserName] = React.useState('Supervisor')
 
     const loadData = React.useCallback(async () => {
         setIsLoading(true)
         try {
-            const storedName = await getUserName()
-            if (storedName) setUserName(storedName)
+            // 1. Profile Name
             const profile = await UserService.getProfile()
             if (profile?.name) setUserName(profile.name)
+            else {
+                const storedName = await getUserName()
+                if (storedName) setUserName(storedName)
+            }
+
+            // 2. Fetch Data in Parallel
+            const [clients, orders, incidents] = await Promise.all([
+                UserClientService.getClients('activo'),
+                OrderService.getOrders(),
+                DeliveryService.getIncidents({ resuelto: 'false' })
+            ])
+
+            // 3. Process KPIs
+            const activeOrders = orders.filter(o =>
+                o.estado !== 'entregado' &&
+                o.estado !== 'cancelado' &&
+                o.estado !== 'rechazado'
+            ).length
+
+            setKpis([
+                { label: 'Clientes', value: clients.length, icon: 'people-outline', color: BRAND_COLORS.red },
+                { label: 'Pedidos Activos', value: activeOrders, icon: 'cart-outline', color: '#10B981' },
+                { label: 'Incidencias', value: incidents.length, icon: 'alert-circle-outline', color: '#F59E0B' }
+            ])
+
+            // 4. Process Alerts (from Incidents)
+            const mappedAlerts: AlertItem[] = incidents.slice(0, 5).map(inc => ({
+                id: inc.id,
+                message: inc.descripcion,
+                type: inc.severidad === 'critica' || inc.severidad === 'alta' ? 'critical' : 'warning',
+                timestamp: inc.reportado_en ? new Date(inc.reportado_en).toLocaleDateString() : 'Hoy'
+            }))
+
+            setAlerts(mappedAlerts)
+
         } catch (error) {
             console.error('Error loading dashboard data', error)
         } finally {
@@ -86,7 +123,7 @@ export function SupervisorDashboardScreen() {
                 <QuickActionsGrid />
 
                 <View className="mb-24">
-                    <Text className="text-lg font-bold text-neutral-800 mb-3 px-1">Alertas Recientes</Text>
+                    <Text className="text-lg font-bold text-neutral-800 mb-3 px-1">Alertas e Incidencias</Text>
                     {alerts.length > 0 ? (
                         alerts.map(alert => (
                             <View
@@ -108,7 +145,7 @@ export function SupervisorDashboardScreen() {
                     ) : (
                         <View className="bg-white p-8 rounded-xl border border-neutral-200 items-center justify-center border-dashed">
                             <Ionicons name="checkmark-circle-outline" size={48} color="#10B981" />
-                            <Text className="text-neutral-400 mt-2">No hay alertas activas</Text>
+                            <Text className="text-neutral-400 mt-2">No hay incidencias pendientes</Text>
                         </View>
                     )}
                 </View>

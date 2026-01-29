@@ -44,6 +44,7 @@ import { SupervisorRouteEditScreen } from '../features/supervisor/screens/Modulo
 import { SupervisorCommercialRoutesScreen } from '../features/supervisor/screens/ModuloRuteroComercial/SupervisorCommercialRoutesScreen'
 import { SupervisorCommercialRouteFormScreen } from '../features/supervisor/screens/ModuloRuteroComercial/SupervisorCommercialRouteFormScreen'
 import { SupervisorCommercialRouteDetailScreen } from '../features/supervisor/screens/ModuloRuteroComercial/SupervisorCommercialRouteDetailScreen'
+import { SupervisorDeliveriesListScreen, SupervisorDeliveryDetailScreen, SupervisorIncidentsListScreen } from '../features/supervisor/screens/ModuloEntregas'
 
 const Tab = createBottomTabNavigator()
 const Stack = createNativeStackNavigator()
@@ -103,6 +104,11 @@ export function SupervisorNavigator() {
             <Stack.Screen name="SupervisorRuterosComerciales" component={SupervisorCommercialRoutesScreen} />
             <Stack.Screen name="SupervisorRuteroComercialForm" component={SupervisorCommercialRouteFormScreen} />
             <Stack.Screen name="SupervisorRuteroComercialDetalle" component={SupervisorCommercialRouteDetailScreen} />
+            {/* Entregas e Incidencias */}
+            <Stack.Screen name="SupervisorEntregas" component={SupervisorDeliveriesListScreen} />
+            <Stack.Screen name="SupervisorEntregaDetalle" component={SupervisorDeliveryDetailScreen} />
+            <Stack.Screen name="SupervisorIncidencias" component={SupervisorIncidentsListScreen} />
         </Stack.Navigator>
     )
 }
+

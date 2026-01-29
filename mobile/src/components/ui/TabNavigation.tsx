@@ -1,7 +1,7 @@
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs'
 import { Text, View, Pressable, Platform } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { BRAND_COLORS } from '../../services/shared/types'
+import { BRAND_COLORS } from '../../shared/types'
 import { useCartOptional } from '../../context/CartContext'
 import { useStableInsets } from '../../hooks/useStableInsets'
 
