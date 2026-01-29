@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useDeferredValue } from 'react'
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
@@ -15,6 +15,9 @@ export function SellerClientsScreen() {
   const [clients, setClients] = React.useState<UserClient[]>([])
   const [loading, setLoading] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState('')
+
+  // useDeferredValue para búsqueda sin bloquear UI
+  const deferredSearch = useDeferredValue(searchQuery.trim().toLowerCase())
 
   const fetchData = React.useCallback(async () => {
     setLoading(true)
@@ -44,18 +47,17 @@ export function SellerClientsScreen() {
   )
 
   const filteredClients = React.useMemo(() => {
-    const query = searchQuery.trim().toLowerCase()
+    if (!deferredSearch) return clients
     return clients.filter((client) => {
-      if (!query) return true
       const fullName = [client.nombres, client.apellidos].filter(Boolean).join(' ')
       return (
-        client.nombre_comercial.toLowerCase().includes(query) ||
-        fullName.toLowerCase().includes(query) ||
-        (client.ruc || '').toLowerCase().includes(query) ||
-        (client.email || '').toLowerCase().includes(query)
+        client.nombre_comercial.toLowerCase().includes(deferredSearch) ||
+        fullName.toLowerCase().includes(deferredSearch) ||
+        (client.ruc || '').toLowerCase().includes(deferredSearch) ||
+        (client.email || '').toLowerCase().includes(deferredSearch)
       )
     })
-  }, [clients, searchQuery])
+  }, [clients, deferredSearch])
 
   const renderItem = ({ item }: { item: UserClient }) => {
     const contactName = [item.nombres, item.apellidos].filter(Boolean).join(' ').trim()

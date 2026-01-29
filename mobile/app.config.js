@@ -33,8 +33,12 @@ export default {
             bundleIdentifier: "com.cafrilosa.mobile"
         },
         plugins: [
-            "@react-native-community/datetimepicker"
+            "@react-native-community/datetimepicker",
+            "expo-secure-store"
         ],
+        experiments: {
+            reactCompiler: true
+        },
         extra: {
             eas: {
                 projectId: "19ed7eaa-a763-4e6e-a3bc-ccd138e5be86"

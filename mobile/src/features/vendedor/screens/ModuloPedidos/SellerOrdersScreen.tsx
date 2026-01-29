@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useDeferredValue } from 'react'
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, Text, View } from 'react-native'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
@@ -44,6 +44,10 @@ export function SellerOrdersScreen() {
   const [createdByMeOnly, setCreatedByMeOnly] = React.useState(false)
   const [vendedorId, setVendedorId] = React.useState<string | null>(null)
 
+  // useDeferredValue para búsqueda sin bloquear UI
+  const deferredSearch = useDeferredValue(searchText.trim().toLowerCase())
+  const isSearchStale = searchText.trim().toLowerCase() !== deferredSearch
+
   const loadOrders = React.useCallback(async () => {
     setLoading(true)
     try {
@@ -82,20 +86,19 @@ export function SellerOrdersScreen() {
     }, [loadOrders]),
   )
 
-  const normalizedSearch = searchText.trim().toLowerCase()
-  const matchesSearch = (value: string) => value.toLowerCase().includes(normalizedSearch)
+  const matchesSearch = (value: string) => value.toLowerCase().includes(deferredSearch)
 
-  const filteredOrders = orders.filter((order) => {
+  const filteredOrders = React.useMemo(() => orders.filter((order) => {
     if (createdByMeOnly && vendedorId) {
       const createdByMe = (order as any).creado_por_id === vendedorId || (order as any).creado_por === vendedorId
       if (!createdByMe) return false
     }
     if (selectedClientId && order.cliente_id !== selectedClientId) return false
-    if (!normalizedSearch) return true
+    if (!deferredSearch) return true
     const clientLabel = order.cliente_id ? clientNameMap[order.cliente_id] || order.cliente_id : ''
     const pedidoLabel = order.numero_pedido || order.id
     return matchesSearch(clientLabel || '') || matchesSearch(pedidoLabel || '')
-  })
+  }), [orders, createdByMeOnly, vendedorId, selectedClientId, deferredSearch, clientNameMap])
 
   const ordersByStatus = filteredOrders.filter((order) => orderMatchesStatus(order, activeTab))
 

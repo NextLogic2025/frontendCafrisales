@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useDeferredValue } from 'react'
 import { View, Text, Pressable, TouchableOpacity, StyleSheet } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
@@ -40,6 +40,9 @@ export function TransportistaDeliveriesScreen() {
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>('todos')
   const [transportistaId, setTransportistaId] = React.useState<string | null>(null)
 
+  // useDeferredValue para búsqueda sin bloquear UI
+  const deferredSearch = useDeferredValue(searchQuery.trim().toLowerCase())
+
   const loadTransportistaId = React.useCallback(async () => {
     const token = await getValidToken()
     if (!token) return
@@ -72,11 +75,10 @@ export function TransportistaDeliveriesScreen() {
   )
 
   const filtered = React.useMemo(() => {
-    const query = searchQuery.trim().toLowerCase()
     return deliveries.filter((delivery) => {
       if (statusFilter !== 'todos' && delivery.estado !== statusFilter) return false
-      if (!query) return true
-      return delivery.pedido_id.toLowerCase().includes(query)
+      if (!deferredSearch) return true
+      return delivery.pedido_id.toLowerCase().includes(deferredSearch)
     })
   }, [deliveries, searchQuery, statusFilter])
 
