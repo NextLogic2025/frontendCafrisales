@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { Modal } from 'components/ui/Modal'
 import { FormField } from 'components/ui/FormField'
+import { Alert } from 'components/ui/Alert'
 import { Plus, X } from 'lucide-react'
 import type { CreateRutaVendedorPayload } from '../../services/rutasVendedorTypes'
+import { obtenerTransportistas, type Usuario } from '../../services/usuariosApi'
 import { obtenerVendedores, type Vendedor } from '../../services/usuariosApi'
-import { obtenerClientes, type Cliente } from '../../services/clientesApi'
+import { obtenerClientes, type Cliente, obtenerZonas, type ZonaComercial } from '../../services/clientesApi'
 
 interface CrearRutaModalProps {
     isOpen: boolean
@@ -24,16 +26,20 @@ export function CrearRutaModal({ isOpen, onClose, onSubmit }: CrearRutaModalProp
 
     // Form state
     const [vendedorId, setVendedorId] = useState('')
+    const [zonaId, setZonaId] = useState('')
     const [fechaProgramada, setFechaProgramada] = useState('')
     const [clientesSeleccionados, setClientesSeleccionados] = useState<ClienteSeleccionado[]>([])
 
     // Data lists
     const [vendedores, setVendedores] = useState<Vendedor[]>([])
+    const [zonas, setZonas] = useState<ZonaComercial[]>([])
     const [clientesDisponibles, setClientesDisponibles] = useState<Cliente[]>([])
+    const [todosClientes, setTodosClientes] = useState<Cliente[]>([])
 
     // UI state
     const [showClienteSelector, setShowClienteSelector] = useState(false)
     const [searchCliente, setSearchCliente] = useState('')
+    const [submitError, setSubmitError] = useState<string | null>(null)
     const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
     useEffect(() => {
@@ -47,12 +53,15 @@ export function CrearRutaModal({ isOpen, onClose, onSubmit }: CrearRutaModalProp
     const loadData = async () => {
         setLoadingData(true)
         try {
-            const [vendedoresData, clientesData] = await Promise.all([
+            const [vendedoresData, zonasData, clientesData] = await Promise.all([
                 obtenerVendedores(),
+                obtenerZonas(),
                 obtenerClientes(),
             ])
 
             setVendedores(vendedoresData)
+            setZonas(zonasData)
+            setTodosClientes(clientesData)
             setClientesDisponibles(clientesData)
         } catch (error) {
             console.error('Error loading data:', error)
@@ -63,10 +72,35 @@ export function CrearRutaModal({ isOpen, onClose, onSubmit }: CrearRutaModalProp
 
     const resetForm = () => {
         setVendedorId('')
+        setZonaId('')
         setFechaProgramada('')
         setClientesSeleccionados([])
         setShowClienteSelector(false)
         setSearchCliente('')
+    }
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setSubmitError(null)
+        setLoading(true)
+        try {
+            const payload: CreateRutaVendedorPayload = {
+                vendedor_id: vendedorId,
+                zona_id: zonaId,
+                fecha_rutero: fechaProgramada,
+                paradas: clientesSeleccionados.map(c => ({
+                    cliente_id: c.cliente_id,
+                    orden_visita: c.orden_visita,
+                })),
+            }
+
+            await onSubmit(payload)
+            onClose()
+        } catch (error: any) {
+            setSubmitError(error.message || 'Error al crear ruta')
+        } finally {
+            setLoading(false)
+        }
     }
 
     const handleAgregarCliente = (cliente: Cliente) => {
@@ -85,6 +119,19 @@ export function CrearRutaModal({ isOpen, onClose, onSubmit }: CrearRutaModalProp
         setShowClienteSelector(false)
         setSearchCliente('')
     }
+
+    // Filter clientes by zone
+    useEffect(() => {
+        if (!zonaId) {
+            setClientesDisponibles(todosClientes)
+        } else {
+            const filtered = todosClientes.filter(c => {
+                const zonaCliente = c.zona_comercial_id || (c as any).zona_id || (c.zona_comercial as any)?.id
+                return String(zonaCliente) === String(zonaId)
+            })
+            setClientesDisponibles(filtered)
+        }
+    }, [zonaId, todosClientes])
 
     const handleEliminarCliente = (clienteId: string) => {
         const nuevosSeleccionados = clientesSeleccionados
@@ -119,33 +166,6 @@ export function CrearRutaModal({ isOpen, onClose, onSubmit }: CrearRutaModalProp
         setClientesSeleccionados(reordenados)
     }
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-
-        if (!vendedorId || clientesSeleccionados.length === 0) {
-            alert('Debes seleccionar vendedor y al menos un cliente')
-            return
-        }
-
-        setLoading(true)
-        try {
-            const payload: CreateRutaVendedorPayload = {
-                vendedor_id: vendedorId,
-                fecha_programada: fechaProgramada || undefined,
-                clientes: clientesSeleccionados.map(c => ({
-                    cliente_id: c.cliente_id,
-                    orden_visita: c.orden_visita,
-                })),
-            }
-
-            await onSubmit(payload)
-            onClose()
-        } catch (error: any) {
-            alert(error.message || 'Error al crear ruta')
-        } finally {
-            setLoading(false)
-        }
-    }
 
     const clientesFiltrados = clientesDisponibles.filter(c => {
         if (!searchCliente) return true
@@ -172,6 +192,8 @@ export function CrearRutaModal({ isOpen, onClose, onSubmit }: CrearRutaModalProp
                 </div>
             ) : (
                 <form onSubmit={handleSubmit} className="space-y-6">
+                    {submitError && <Alert type="error" message={submitError} />}
+
                     {/* Vendedor */}
                     <FormField
                         label="Vendedor"
@@ -183,6 +205,21 @@ export function CrearRutaModal({ isOpen, onClose, onSubmit }: CrearRutaModalProp
                             ...vendedores.map(v => ({
                                 label: v.nombre,
                                 value: v.id,
+                            })),
+                        ]}
+                    />
+
+                    {/* Zona */}
+                    <FormField
+                        label="Zona Comercial"
+                        type="select"
+                        value={zonaId}
+                        onChange={setZonaId}
+                        options={[
+                            { label: 'Seleccionar zona...', value: '' },
+                            ...zonas.map(z => ({
+                                label: z.nombre,
+                                value: String(z.id),
                             })),
                         ]}
                     />

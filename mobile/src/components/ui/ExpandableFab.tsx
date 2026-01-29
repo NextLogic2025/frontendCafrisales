@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons'
 import * as React from 'react'
 import { Animated, Modal, Pressable, Text, View } from 'react-native'
 
-import { BRAND_COLORS } from '../../shared/types'
+import { BRAND_COLORS } from '../../services/shared/types'
 import { useStableInsets } from '../../hooks/useStableInsets'
 
 const ACTION_ITEM_SPACING = 62

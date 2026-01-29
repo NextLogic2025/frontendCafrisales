@@ -7,7 +7,7 @@ import { SupervisorHeaderMenu } from '../../../../components/ui/SupervisorHeader
 import { GenericModal } from '../../../../components/ui/GenericModal'
 import { SearchBar } from '../../../../components/ui/SearchBar'
 import { CategoryFilter } from '../../../../components/ui/CategoryFilter'
-import { BRAND_COLORS } from '../../../../shared/types'
+import { BRAND_COLORS } from '../../../../services/shared/types'
 import { CreditService, CreditListItem } from '../../../../services/api/CreditService'
 import { UserClientService } from '../../../../services/api/UserClientService'
 import { UserService, UserProfile } from '../../../../services/api/UserService'
@@ -180,8 +180,8 @@ export function SupervisorCreditsScreen() {
             activeTab === 'pendientes'
               ? filteredPendientes
               : activeTab === 'rechazados'
-              ? filteredRechazados
-              : filteredPagados
+                ? filteredRechazados
+                : filteredPagados
           }
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
@@ -196,15 +196,15 @@ export function SupervisorCreditsScreen() {
                 {activeTab === 'pendientes'
                   ? 'Sin creditos pendientes'
                   : activeTab === 'rechazados'
-                  ? 'Sin creditos rechazados'
-                  : 'Sin creditos pagados'}
+                    ? 'Sin creditos rechazados'
+                    : 'Sin creditos pagados'}
               </Text>
               <Text className="text-sm text-neutral-500 text-center">
                 {activeTab === 'pendientes'
                   ? 'No hay creditos pendientes para mostrar.'
                   : activeTab === 'rechazados'
-                  ? 'No hay creditos rechazados para mostrar.'
-                  : 'No hay creditos pagados para mostrar.'}
+                    ? 'No hay creditos rechazados para mostrar.'
+                    : 'No hay creditos pagados para mostrar.'}
               </Text>
             </View>
           }

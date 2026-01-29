@@ -1,417 +1,161 @@
-import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
-import type { ReactNode } from 'react'
-import { useJsApiLoader } from '@react-google-maps/api'
-import { CalendarDays, Flag, MapPin, MoveRight, Navigation, RefreshCcw, Users } from 'lucide-react'
-
+import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Filter, Flag, RefreshCcw } from 'lucide-react'
 import { PageHero } from '../../../../components/ui/PageHero'
-import { LoadingSpinner } from '../../../../components/ui/LoadingSpinner'
-import { ClienteDetailModal, getClienteDisplayName } from '../Clientes/ClienteDetailModal'
-import RouteCard from './RouteCard'
-import MapPanel from './MapPanel'
-import VendedorLista from './VendedorLista'
-import VendedorMapa from './VendedorMapa'
-import { getClienteCoords } from './helpers'
-import { DIAS_SEMANA, PRIORIDAD_COLORS, type DiaSemana, type RuteroPlanificado } from '../../../supervisor/services/types'
-import type { Cliente } from '../../../supervisor/services/clientesApi'
-import ResumenCard from './ResumenCard'
-import { DIA_LABEL, FRECUENCIA_LABEL, formatHora, titleCase, buildDirectionsUrl, diaActual } from './utils'
-
-export interface RutaConCliente {
-  plan: RuteroPlanificado
-  cliente: Cliente
-}
-
-type DiaResumen = {
-  dia: DiaSemana
-  visitas: number
-  prioritarias: number
-}
-
-
-import { GOOGLE_MAP_LIBRARIES, GOOGLE_MAP_SCRIPT_ID, GOOGLE_MAPS_API_KEY } from '../../../../config/googleMaps'
-
-const mapStyle = { width: '100%', height: 'calc(100vh - 120px)' }
-const defaultCenter: google.maps.LatLngLiteral = { lat: -1.831239, lng: -78.183406 }
-const PRIORIDAD_ORDEN: Record<RuteroPlanificado['prioridad_visita'], number> = {
-  ALTA: 0,
-  MEDIA: 1,
-  BAJA: 2,
-}
+import { RutaVendedorCard } from '../../components/RutaVendedorCard'
+import { getMisRutas, iniciarRuta, completarRuta } from '../../../supervisor/services/rutasVendedorApi'
+import type { RutaVendedor, EstadoRuta } from '../../../supervisor/services/rutasVendedorTypes'
 
 export default function RutasPage() {
-  const cancelRef = useRef(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [diaActivo, setDiaActivo] = useState<DiaSemana>(diaActual())
-  const [rutas, setRutas] = useState<RutaConCliente[]>([])
-  const [clienteDetalle, setClienteDetalle] = useState<Cliente | null>(null)
-  const [isDetalleAbierto, setIsDetalleAbierto] = useState(false)
-  const { isLoaded, loadError } = useJsApiLoader({
-    id: GOOGLE_MAP_SCRIPT_ID,
-    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
-    libraries: GOOGLE_MAP_LIBRARIES
-  })
-
+  const navigate = useNavigate()
+  const [rutas, setRutas] = useState<RutaVendedor[]>([])
+  const [loading, setLoading] = useState(false)
+  const [filtroEstado, setFiltroEstado] = useState<'activos' | 'completados' | 'todos'>('activos')
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
   useEffect(() => {
-    cancelRef.current = false
-    return () => {
-      cancelRef.current = true
-    }
-  }, [])
+    loadRutas()
+  }, [filtroEstado])
 
-  const cargarDatos = useCallback(async () => {
+  const loadRutas = async () => {
+    setLoading(true)
     try {
-      setIsLoading(false)
-      const clientesAsignados: any[] = []
-      const rutasPlanificadas: any[] = []
-      setRutas([])
-    } catch (err: any) {
-      setError(err?.message ?? 'No se pudieron cargar las rutas')
-      setRutas([])
+      let estado: EstadoRuta | undefined
+      if (filtroEstado === 'activos') {
+        // For simplicity, we filter in JS or if the API supports multiple states
+        const data = await getMisRutas()
+        setRutas(data.filter(r => r.estado === 'publicado' || r.estado === 'en_curso'))
+      } else if (filtroEstado === 'completados') {
+        const data = await getMisRutas({ estado: 'completado' })
+        setRutas(data)
+      } else {
+        const data = await getMisRutas()
+        setRutas(data)
+      }
+    } catch (error) {
+      console.error('Error al cargar rutas:', error)
+      showToast('error', 'No se pudieron cargar tus rutas')
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
-  }, [])
-
-  useEffect(() => {
-    cargarDatos().catch(() => {
-      if (!cancelRef.current) setError('No se pudieron cargar tus rutas. Intenta nuevamente más tarde.')
-    })
-  }, [cargarDatos])
-
-  const resumen = useMemo(() => {
-    const totalVisitas = rutas.length
-    const visitasHoy = rutas.filter((item) => item.plan.dia_semana === diaActivo).length
-    const prioritarias = rutas.filter((item) => item.plan.prioridad_visita === 'ALTA').length
-    return { totalVisitas, visitasHoy, prioritarias }
-  }, [rutas, diaActivo])
-
-  // Mapeo de días para comparación robusta (como en supervisor)
-  // Mapeo de día a número y viceversa
-  // Corregido para coincidir con la base de datos
-  const DIA_MAP: Record<DiaSemana, number> = {
-    LUNES: 1,
-    MARTES: 2,
-    MIERCOLES: 3,
-    JUEVES: 4,
-    VIERNES: 5,
-  }
-  const DIA_MAP_INV: Record<number, DiaSemana> = {
-    1: 'LUNES',
-    2: 'MARTES',
-    3: 'MIERCOLES',
-    4: 'JUEVES',
-    5: 'VIERNES',
   }
 
-  // Normaliza rutas para que siempre tengan dia_semana como número
-  const rutasNormalizadas = useMemo(() => {
-    return rutas.map((item) => {
-      let diaNum: number
-
-      // Si dia_semana ya es un número, usarlo directamente
-      if (typeof item.plan.dia_semana === 'number') {
-        diaNum = item.plan.dia_semana
-      }
-      // Si es un string (DiaSemana), convertirlo a número usando DIA_MAP
-      else {
-        diaNum = DIA_MAP[item.plan.dia_semana as DiaSemana]
-      }
-
-      return {
-        ...item,
-        plan: {
-          ...item.plan,
-          dia_semana: diaNum as any, // Type assertion: la interfaz espera DiaSemana (string) pero usamos number internamente
-        },
-      }
-    })
-  }, [rutas])
-
-  const rutasPorDia = useMemo(() => {
-    return DIAS_SEMANA.reduce<Record<DiaSemana, RutaConCliente[]>>((acc, dia) => {
-      const diaNum = DIA_MAP[dia];
-      acc[dia] = rutasNormalizadas.filter((item) => item.plan.dia_semana === diaNum);
-      return acc;
-    }, {
-      LUNES: [],
-      MARTES: [],
-      MIERCOLES: [],
-      JUEVES: [],
-      VIERNES: [],
-    });
-  }, [rutasNormalizadas]);
-
-  const diasResumen: DiaResumen[] = useMemo(() => {
-    return DIAS_SEMANA.map((dia) => ({
-      dia,
-      visitas: rutasPorDia[dia].length,
-      prioritarias: rutasPorDia[dia].filter((item) => item.plan.prioridad_visita === 'ALTA').length,
-    }))
-  }, [rutasPorDia])
-
-  const rutasSeleccionadas = useMemo(() => rutasPorDia[diaActivo], [rutasPorDia, diaActivo])
-
-  const puntosMapa = useMemo(() => {
-    // Generar un marcador por dirección principal y otro por sucursal (si existen)
-    const puntos: Array<{
-      position: { lat: number; lng: number }
-      label: string
-      nombre: string
-      id: string
-      tipo: 'PRINCIPAL' | 'SUCURSAL'
-      clienteId: string
-    }> = []
-
-    rutasSeleccionadas.forEach((item, index) => {
-      const cliente = item.cliente as any
-      const plan = item.plan as any
-      const nombre = titleCase((plan.cliente_nombre ?? getClienteDisplayName(item.cliente)) || item.cliente.razon_social || item.cliente.nombre_comercial)
-      const label = String(index + 1)
-
-      // Si no hay sucursal_id, el plan corresponde a la dirección principal (matriz/cliente)
-      if (!plan.sucursal_id) {
-        const coordsPrincipal = plan.ubicacion_gps?.coordinates
-          ? { lat: plan.ubicacion_gps.coordinates[1], lng: plan.ubicacion_gps.coordinates[0] }
-          : getClienteCoords(item.cliente, undefined)
-        if (coordsPrincipal) {
-          const idPrincipal = plan.id ?? `${plan.cliente_id}-main-${plan.hora_estimada_arribo ?? plan.created_at ?? index}`
-          puntos.push({
-            position: coordsPrincipal,
-            label,
-            nombre,
-            id: `principal-${idPrincipal}`,
-            tipo: 'PRINCIPAL',
-            clienteId: item.plan.cliente_id,
-          })
-        }
-        return
-      }
-
-      // Si existe sucursal_id, añadimos únicamente el marcador de la sucursal (no la matriz),
-      // buscando coords en plan.ubicacion_gps o en cliente.sucursales
-      let coordsSucursal: { lat: number; lng: number } | null | undefined
-      if (plan.ubicacion_gps?.coordinates) {
-        coordsSucursal = { lat: plan.ubicacion_gps.coordinates[1], lng: plan.ubicacion_gps.coordinates[0] }
-      } else if (cliente?.sucursales && Array.isArray(cliente.sucursales)) {
-        const suc = cliente.sucursales.find((s: any) => String(s.id) === String(plan.sucursal_id))
-        if (suc) {
-          coordsSucursal = getClienteCoords({ ...item.cliente, ubicacion_gps: suc.ubicacion_gps, latitud: suc.latitud, longitud: suc.longitud } as Cliente, undefined)
-        }
-      }
-
-      if (coordsSucursal) {
-        const idSucursal = plan.id ?? `${plan.cliente_id}-${plan.sucursal_id}-${plan.hora_estimada_arribo ?? plan.created_at ?? index}`
-        puntos.push({
-          position: coordsSucursal,
-          label,
-          nombre: `${nombre} — ${plan.sucursal_nombre ?? 'Sucursal'}`,
-          id: `sucursal-${idSucursal}`,
-          tipo: 'SUCURSAL',
-          clienteId: item.plan.cliente_id,
-        })
-      }
-    })
-
-    return puntos
-  }, [rutasSeleccionadas])
-
-  const rutaDirecciones = useMemo(() => puntosMapa.map((punto) => punto.position), [puntosMapa])
-
-  const rutaPolyline = useMemo(() => puntosMapa.map((punto) => punto.position), [puntosMapa])
-
-  const mapaCentro = useMemo(() => puntosMapa[0]?.position ?? defaultCenter, [puntosMapa])
-  const [selectedPosition, setSelectedPosition] = useState<{ lat: number; lng: number } | null>(null)
-
-  const rutasGuardadasDia = useMemo(() => {
-    const grupos = new Map<
-      string,
-      {
-        key: string
-        zona: string
-        total: number
-        prioritarias: number
-        hora: string | null
-        prioridad: number
-      }
-    >()
-
-    rutasPorDia[diaActivo].forEach(({ plan, cliente }) => {
-      const zonaIdentificador = plan.zona_id ?? cliente.zona_comercial?.id ?? cliente.zona_comercial_id ?? 'sin-zona'
-      const key = String(zonaIdentificador)
-      const zonaLabel =
-        cliente.zona_comercial?.nombre ??
-        (plan.zona_id != null ? `Zona ${plan.zona_id}` : cliente.zona_comercial_id != null ? `Zona ${cliente.zona_comercial_id}` : 'Sin zona asignada')
-      const prioridadZona = PRIORIDAD_ORDEN[plan.prioridad_visita]
-      const grupo =
-        grupos.get(key) ?? {
-          key,
-          zona: zonaLabel,
-          total: 0,
-          prioritarias: 0,
-          hora: plan.hora_estimada ?? null,
-          prioridad: prioridadZona,
-        }
-
-      grupo.total += 1
-      if (plan.prioridad_visita === 'ALTA') {
-        grupo.prioritarias += 1
-      }
-      if (prioridadZona < grupo.prioridad) {
-        grupo.prioridad = prioridadZona
-      }
-      if (plan.hora_estimada && (!grupo.hora || plan.hora_estimada < grupo.hora)) {
-        grupo.hora = plan.hora_estimada
-      }
-      if (zonaLabel !== grupo.zona) {
-        grupo.zona = zonaLabel
-      }
-
-      grupos.set(key, grupo)
-    })
-
-    return Array.from(grupos.values()).sort((a, b) => {
-      if (a.prioridad !== b.prioridad) return a.prioridad - b.prioridad
-      if (a.hora && b.hora) return a.hora.localeCompare(b.hora)
-      if (a.hora && !b.hora) return -1
-      if (!a.hora && b.hora) return 1
-      return a.zona.localeCompare(b.zona)
-    })
-  }, [rutasPorDia, diaActivo])
-
-  const handleVerDetalle = (cliente: Cliente) => {
-    setClienteDetalle(cliente)
-    setIsDetalleAbierto(true)
+  const handleStart = async (ruta: RutaVendedor) => {
+    if (!confirm('¿Deseas iniciar esta ruta comercial?')) return
+    try {
+      await iniciarRuta(ruta.id)
+      showToast('success', 'Ruta iniciada exitosamente')
+      loadRutas()
+    } catch (error: any) {
+      showToast('error', error.message || 'Error al iniciar ruta')
+    }
   }
 
-  const cerrarDetalle = () => {
-    setIsDetalleAbierto(false)
-    setClienteDetalle(null)
+  const handleComplete = async (ruta: RutaVendedor) => {
+    if (!confirm('¿Deseas finalizar esta ruta? Se marcarán las visitas pendientes.')) return
+    try {
+      await completarRuta(ruta.id)
+      showToast('success', 'Ruta completada exitosamente')
+      loadRutas()
+    } catch (error: any) {
+      showToast('error', error.message || 'Error al completar ruta')
+    }
+  }
+
+  const handleViewDetail = (ruta: RutaVendedor) => {
+    navigate(`/vendedor/rutas/${ruta.id}`)
+  }
+
+  const showToast = (type: 'success' | 'error', message: string) => {
+    setToast({ type, message })
+    setTimeout(() => setToast(null), 3000)
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12 px-4">
       <PageHero
-        title="Mi Rutero"
-        subtitle="Consulta las visitas planificadas por tu supervisor y organiza tu día"
-        chips={[{ label: 'Rutas asignadas', variant: 'red' }]}
+        title="Mis Rutas"
+        subtitle="Gestiona tu agenda comercial y seguimiento de clientes"
+        chips={['Ventas', 'Rutas Diarias', 'Productividad']}
       />
 
-      {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
+      {/* Premium Filters Section */}
+      <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-white border border-neutral-200 p-6 rounded-3xl shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-neutral-100 rounded-2xl">
+            <Filter className="h-6 w-6 text-neutral-600" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-neutral-800 leading-tight">Filtrar Rutas</h3>
+            <p className="text-sm text-neutral-500">Organiza tus registros por estado</p>
+          </div>
+        </div>
+
+        <div className="flex p-1.5 bg-neutral-100 rounded-2xl w-full md:w-auto">
+          {(['activos', 'completados', 'todos'] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFiltroEstado(f)}
+              className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${filtroEstado === f
+                  ? 'bg-white text-brand-red shadow-lg shadow-neutral-200/50 scale-[1.02]'
+                  : 'text-neutral-500 hover:text-neutral-700'
+                }`}
+            >
+              {f.charAt(0).toUpperCase() + f.slice(1)}
+            </button>
+          ))}
+        </div>
+
+        <button
+          onClick={loadRutas}
+          className="p-3 bg-white border-2 border-neutral-100 rounded-2xl hover:border-brand-red hover:text-brand-red transition-all group"
+        >
+          <RefreshCcw className={`h-6 w-6 transition-transform group-active:rotate-180 ${loading ? 'animate-spin' : ''}`} />
+        </button>
+      </div>
+
+      {/* Grid display */}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-pulse">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-64 bg-neutral-100 rounded-3xl border-2 border-neutral-200" />
+          ))}
+        </div>
+      ) : rutas.length === 0 ? (
+        <div className="bg-white border-2 border-dashed border-neutral-200 rounded-[40px] p-20 text-center flex flex-col items-center">
+          <div className="relative mb-8">
+            <div className="absolute inset-0 bg-brand-red/10 rounded-full blur-2xl animate-pulse" />
+            <Flag className="h-24 w-24 text-neutral-300 relative z-10" />
+          </div>
+          <h3 className="text-2xl font-black text-neutral-800 mb-2">No se encontraron rutas</h3>
+          <p className="text-neutral-500 max-w-sm mx-auto">
+            No hay rutas que coincidan con el filtro seleccionado en este momento.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {rutas.map(ruta => (
+            <RutaVendedorCard
+              key={ruta.id}
+              ruta={ruta}
+              onView={handleViewDetail}
+              onStart={handleStart}
+              onComplete={handleComplete}
+            />
+          ))}
         </div>
       )}
 
-      <section className="grid gap-4 md:grid-cols-3">
-        <ResumenCard icon={<Users className="h-5 w-5" />} title="Total visitas" value={resumen.totalVisitas} />
-        <ResumenCard icon={<CalendarDays className="h-5 w-5" />} title="Programadas hoy" value={resumen.visitasHoy} />
-        <ResumenCard icon={<Flag className="h-5 w-5" />} title="Prioritarias" value={resumen.prioritarias} />
-      </section>
-
-      <section className="rounded-xl border border-neutral-200 bg-white p-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-semibold text-neutral-900">Agenda semanal</h2>
-            <p className="text-sm text-neutral-500">Selecciona un día para ver el detalle de clientes y horarios.</p>
+      {/* Toast */}
+      {toast && (
+        <div className={`fixed bottom-8 right-8 px-8 py-5 rounded-2xl shadow-2xl flex items-center gap-4 z-50 animate-in slide-in-from-right duration-500 ${toast.type === 'success' ? 'bg-neutral-900 text-white' : 'bg-red-600 text-white'
+          }`}>
+          <div className={`p-1.5 rounded-full ${toast.type === 'success' ? 'bg-green-500' : 'bg-white/20'}`}>
+            <div className="w-2 h-2 bg-white rounded-full animate-ping" />
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              void cargarDatos()
-            }}
-            className="flex items-center gap-2 rounded-lg border border-neutral-200 px-3 py-1.5 text-sm font-medium text-neutral-700 transition hover:border-brand-red hover:text-brand-red"
-          >
-            <RefreshCcw className="h-4 w-4" />
-            Actualizar
-          </button>
+          <span className="font-bold tracking-tight">{toast.message}</span>
         </div>
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          {diasResumen.map(({ dia, visitas, prioritarias: prioridades }) => {
-            const activo = dia === diaActivo
-            const label = DIA_LABEL[dia]
-            return (
-              <button
-                key={dia}
-                type="button"
-                onClick={() => setDiaActivo(dia)}
-                className={`flex flex-col rounded-xl border px-4 py-2 text-left transition ${activo
-                  ? 'border-brand-red bg-brand-red/10 text-brand-red shadow-sm'
-                  : 'border-neutral-200 bg-neutral-50 text-neutral-700 hover:border-brand-red hover:text-brand-red'
-                  }`}
-              >
-                <span className="text-xs font-semibold uppercase tracking-[0.08em]">{label.corto}</span>
-                <span className="text-lg font-bold">{visitas}</span>
-                <span className="text-xs text-neutral-500">{prioridades} prioritarias</span>
-              </button>
-            )
-          })}
-        </div>
-
-        <div className="mt-6 grid gap-6 lg:grid-cols-5">
-          <div className="space-y-4 lg:col-span-3">
-            <VendedorLista
-              rutas={rutasSeleccionadas}
-              isLoading={isLoading}
-              rutaDirecciones={rutaDirecciones}
-              onSelectPosition={(pos: { lat: number; lng: number } | null) => pos && setSelectedPosition(pos)}
-              onVerDetalle={handleVerDetalle}
-            />
-          </div>
-
-          <div className="lg:col-span-2">
-            <VendedorMapa
-              puntosMapa={puntosMapa}
-              rutaPolyline={rutaPolyline}
-              mapaCentro={mapaCentro}
-              selectedPosition={selectedPosition}
-              isLoaded={isLoaded}
-              loadError={loadError}
-              isLoading={isLoading}
-              mapContainerStyle={mapStyle}
-            />
-          </div>
-        </div>
-      </section>
-
-      <section className="rounded-xl border border-neutral-200 bg-white p-6">
-        <h2 className="text-lg font-semibold text-neutral-900">Rutas guardadas</h2>
-        <p className="text-sm text-neutral-500">Resumen para {DIA_LABEL[diaActivo].completo}.</p>
-        <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {rutasGuardadasDia.map((resumen) => (
-            <div key={`resumen-${diaActivo}-${resumen.key}`} className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">{DIA_LABEL[diaActivo].completo}</p>
-                  <p className="text-base font-bold text-neutral-900">{resumen.zona}</p>
-                </div>
-                <span className="rounded-full bg-brand-red/10 px-3 py-1 text-xs font-semibold text-brand-red">
-                  {resumen.total} {resumen.total === 1 ? 'cliente' : 'clientes'}
-                </span>
-              </div>
-              <div className="mt-3 flex items-center gap-2 text-sm text-neutral-600">
-                <MoveRight className="h-4 w-4 text-brand-red" />
-                <span>{formatHora(resumen.hora)}</span>
-              </div>
-              <div className="mt-1 flex items-center gap-2 text-xs text-neutral-500">
-                <Flag className="h-3.5 w-3.5 text-brand-red" />
-                <span>{resumen.prioritarias} prioritarias</span>
-              </div>
-            </div>
-          ))}
-          {rutasGuardadasDia.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-500">
-              No tienes rutas guardadas para {DIA_LABEL[diaActivo].completo}.
-            </div>
-          )}
-        </div>
-      </section>
-
-      <ClienteDetailModal isOpen={isDetalleAbierto} onClose={cerrarDetalle} cliente={clienteDetalle} />
+      )}
     </div>
   )
 }
-
-

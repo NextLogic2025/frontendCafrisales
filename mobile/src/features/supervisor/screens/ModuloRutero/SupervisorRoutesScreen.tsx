@@ -7,7 +7,7 @@ import { SupervisorHeaderMenu } from '../../../../components/ui/SupervisorHeader
 import { SearchBar } from '../../../../components/ui/SearchBar'
 import { GenericList } from '../../../../components/ui/GenericList'
 import { CategoryFilter } from '../../../../components/ui/CategoryFilter'
-import { BRAND_COLORS } from '../../../../shared/types'
+import { BRAND_COLORS } from '../../../../services/shared/types'
 import { RouteService, LogisticRoute } from '../../../../services/api/RouteService'
 
 type StatusFilter = 'todos' | 'borrador' | 'publicado' | 'en_curso' | 'completado' | 'cancelado'

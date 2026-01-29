@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react'
 import { View, TouchableOpacity } from 'react-native'
 import MapView, { Polygon, PROVIDER_GOOGLE, Marker } from 'react-native-maps'
-import { BRAND_COLORS } from '../../shared/types'
+import { BRAND_COLORS } from '../../services/shared/types'
 
 type LatLng = { latitude: number; longitude: number }
 

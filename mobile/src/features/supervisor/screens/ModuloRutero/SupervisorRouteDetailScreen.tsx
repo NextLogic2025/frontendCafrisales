@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { Header } from '../../../../components/ui/Header'
 import { SupervisorHeaderMenu } from '../../../../components/ui/SupervisorHeaderMenu'
 import { PrimaryButton } from '../../../../components/ui/PrimaryButton'
-import { BRAND_COLORS } from '../../../../shared/types'
+import { BRAND_COLORS } from '../../../../services/shared/types'
 import { RouteService, LogisticRoute } from '../../../../services/api/RouteService'
 import { OrderResponse, OrderService } from '../../../../services/api/OrderService'
 import { UserProfile, UserService } from '../../../../services/api/UserService'
@@ -250,8 +250,8 @@ export function SupervisorRouteDetailScreen() {
                       {clientNameMap[parada.pedido_id]
                         ? `Cliente: ${clientNameMap[parada.pedido_id]}`
                         : orderSummaryMap[parada.pedido_id]?.cliente_id
-                        ? `Cliente: ${orderSummaryMap[parada.pedido_id]?.cliente_id?.slice(0, 8)}`
-                        : `ID: ${parada.pedido_id.slice(0, 8)}`}
+                          ? `Cliente: ${orderSummaryMap[parada.pedido_id]?.cliente_id?.slice(0, 8)}`
+                          : `ID: ${parada.pedido_id.slice(0, 8)}`}
                     </Text>
                     <Text className="text-xs text-neutral-500 mt-1">
                       Total: USD {Number(orderSummaryMap[parada.pedido_id]?.total ?? 0).toFixed(2)}

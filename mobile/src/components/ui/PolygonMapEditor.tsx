@@ -2,7 +2,7 @@ import React from 'react'
 import { View, Pressable, Text, ViewStyle } from 'react-native'
 import MapView, { Marker, Polygon, Polyline, PROVIDER_GOOGLE, Region } from 'react-native-maps'
 import { Ionicons } from '@expo/vector-icons'
-import { BRAND_COLORS } from '../../shared/types'
+import { BRAND_COLORS } from '../../services/shared/types'
 import { MapPoint } from '../../utils/zoneGeometry'
 
 const LOJA_REGION: Region = {

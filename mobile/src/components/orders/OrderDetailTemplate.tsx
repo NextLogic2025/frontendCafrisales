@@ -1,6 +1,6 @@
 import React from 'react'
 import { Pressable, Text, View } from 'react-native'
-import { BRAND_COLORS } from '../../shared/types'
+import { BRAND_COLORS } from '../../services/shared/types'
 import { OrderDetail, OrderHistoryItem, OrderItemDetail, OrderResponse } from '../../services/api/OrderService'
 
 const formatMoney = (value?: number | string | null) => {

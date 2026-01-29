@@ -8,7 +8,7 @@ import { GenericModal } from '../../../../components/ui/GenericModal'
 import { TextField } from '../../../../components/ui/TextField'
 import { PrimaryButton } from '../../../../components/ui/PrimaryButton'
 import { showGlobalToast } from '../../../../utils/toastService'
-import { BRAND_COLORS } from '../../../../shared/types'
+import { BRAND_COLORS } from '../../../../services/shared/types'
 import { CatalogSku, CatalogSkuService } from '../../../../services/api/CatalogSkuService'
 import { OrderDetail, OrderItemDetail, OrderService } from '../../../../services/api/OrderService'
 import { getValidToken } from '../../../../services/auth/authClient'
@@ -396,20 +396,19 @@ export function WarehouseValidateOrderScreen() {
                   <Pressable
                     key={estado}
                     onPress={() => setFilter(estado as 'todos' | EstadoResultado)}
-                    className={`px-3 py-1.5 rounded-full border ${
-                      isActive ? 'bg-brand-red/10 border-brand-red' : 'border-neutral-200'
-                    }`}
+                    className={`px-3 py-1.5 rounded-full border ${isActive ? 'bg-brand-red/10 border-brand-red' : 'border-neutral-200'
+                      }`}
                   >
                     <Text className={`text-xs font-semibold ${isActive ? 'text-brand-red' : 'text-neutral-600'}`}>
                       {estado === 'todos'
                         ? 'Todos'
                         : estado === 'aprobado'
-                        ? 'Aprobados'
-                        : estado === 'aprobado_parcial'
-                        ? 'Parciales'
-                        : estado === 'sustituido'
-                        ? 'Sustituidos'
-                        : 'Rechazados'}
+                          ? 'Aprobados'
+                          : estado === 'aprobado_parcial'
+                            ? 'Parciales'
+                            : estado === 'sustituido'
+                              ? 'Sustituidos'
+                              : 'Rechazados'}
                     </Text>
                   </Pressable>
                 )
@@ -436,10 +435,10 @@ export function WarehouseValidateOrderScreen() {
                           {item.estado === 'aprobado'
                             ? 'Aprobado'
                             : item.estado === 'aprobado_parcial'
-                            ? 'Parcial'
-                            : item.estado === 'sustituido'
-                            ? 'Sustituido'
-                            : 'Rechazado'}
+                              ? 'Parcial'
+                              : item.estado === 'sustituido'
+                                ? 'Sustituido'
+                                : 'Rechazado'}
                         </Text>
                       </View>
                     )
@@ -454,18 +453,17 @@ export function WarehouseValidateOrderScreen() {
                       <Pressable
                         key={estado}
                         onPress={() => setEstado(item, estado)}
-                        className={`px-3 py-1.5 rounded-full border ${
-                          isActive ? `${badge.bg} ${badge.border}` : 'border-neutral-200'
-                        }`}
+                        className={`px-3 py-1.5 rounded-full border ${isActive ? `${badge.bg} ${badge.border}` : 'border-neutral-200'
+                          }`}
                       >
                         <Text className={`text-xs font-semibold ${isActive ? badge.text : 'text-neutral-600'}`}>
                           {estado === 'aprobado'
                             ? 'Aprobado'
                             : estado === 'aprobado_parcial'
-                            ? 'Parcial'
-                            : estado === 'sustituido'
-                            ? 'Sustituido'
-                            : 'Rechazado'}
+                              ? 'Parcial'
+                              : estado === 'sustituido'
+                                ? 'Sustituido'
+                                : 'Rechazado'}
                         </Text>
                       </Pressable>
                     )

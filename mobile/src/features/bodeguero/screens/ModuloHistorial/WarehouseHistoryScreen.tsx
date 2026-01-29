@@ -4,7 +4,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Header } from '../../../../components/ui/Header'
-import { BRAND_COLORS } from '../../../../shared/types'
+import { BRAND_COLORS } from '../../../../services/shared/types'
 import { OrderListItem, OrderService } from '../../../../services/api/OrderService'
 import { UserClientService } from '../../../../services/api/UserClientService'
 
@@ -132,14 +132,16 @@ export function WarehouseHistoryScreen() {
                       #{item.numero_pedido || item.id?.slice?.(0, 8)}
                     </Text>
                   </View>
-                  <View className={`px-3 py-1 rounded-full ${estado === 'validado' ? 'bg-emerald-50' :
+                  <View className={`px-3 py-1 rounded-full ${
+                    estado === 'validado' ? 'bg-emerald-50' :
                     estado === 'ajustado_bodega' || estado === 'aceptado_cliente' ? 'bg-amber-50' :
-                      'bg-red-50'
-                    }`}>
-                    <Text className={`text-xs font-semibold ${estado === 'validado' ? 'text-emerald-700' :
+                    'bg-red-50'
+                  }`}>
+                    <Text className={`text-xs font-semibold ${
+                      estado === 'validado' ? 'text-emerald-700' :
                       estado === 'ajustado_bodega' || estado === 'aceptado_cliente' ? 'text-amber-700' :
-                        'text-red-700'
-                      }`}>
+                      'text-red-700'
+                    }`}>
                       {estado.replace(/_/g, ' ').toUpperCase()}
                     </Text>
                   </View>

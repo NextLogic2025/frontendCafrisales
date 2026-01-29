@@ -7,7 +7,7 @@ import { CategoryFilter } from '../ui/CategoryFilter'
 import { EmptyState } from '../ui/EmptyState'
 import { LoadingScreen } from '../ui/LoadingScreen'
 import { CatalogProductGridCard } from '../ui/CatalogProductGridCard'
-import { BRAND_COLORS } from '../../shared/types'
+import { BRAND_COLORS } from '../../services/shared/types'
 import { CatalogCategory, CatalogCategoryService } from '../../services/api/CatalogCategoryService'
 import { CatalogProduct, CatalogProductService } from '../../services/api/CatalogProductService'
 
@@ -153,7 +153,7 @@ export function ProductCatalogTemplate({ title = 'Productos', onProductPress, on
               product={item}
               categoryName={getCategoryName(item)}
               priceLabel={getPriceLabel(item)}
-              onPress={onProductPress ? () => onProductPress(item) : () => {}}
+              onPress={onProductPress ? () => onProductPress(item) : () => { }}
               onQuickAdd={onQuickAdd ? () => onQuickAdd(item) : undefined}
             />
           </View>

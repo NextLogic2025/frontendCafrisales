@@ -10,7 +10,7 @@ import type {
     HistorialEstadoRuta,
 } from './rutasVendedorTypes'
 
-const BASE_URL = `${env.api.routes}/api/rutas-vendedor`
+const BASE_URL = `${env.api.transportista}/api/ruteros-comerciales`
 
 // ========================================
 // SUPERVISOR FUNCTIONS
@@ -23,7 +23,6 @@ export async function getRutasVendedor(filtros?: {
     estado?: EstadoRuta
     vendedor_id?: string
     fecha_desde?: string
-    fecha_hasta?: string
 }): Promise<RutaVendedor[]> {
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
@@ -32,7 +31,6 @@ export async function getRutasVendedor(filtros?: {
     if (filtros?.estado) params.append('estado', filtros.estado)
     if (filtros?.vendedor_id) params.append('vendedor_id', filtros.vendedor_id)
     if (filtros?.fecha_desde) params.append('fecha_desde', filtros.fecha_desde)
-    if (filtros?.fecha_hasta) params.append('fecha_hasta', filtros.fecha_hasta)
 
     const url = `${BASE_URL}?${params.toString()}`
     const res = await fetch(url, {
@@ -110,7 +108,7 @@ export async function updateVendedorRuta(
 
     const url = `${BASE_URL}/${rutaId}`
     const res = await fetch(url, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
@@ -136,7 +134,7 @@ export async function addClienteToRuta(
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const url = `${BASE_URL}/${rutaId}/clientes`
+    const url = `${BASE_URL}/${rutaId}/visits`
     const res = await fetch(url, {
         method: 'POST',
         headers: {
@@ -164,7 +162,7 @@ export async function removeClienteFromRuta(
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const url = `${BASE_URL}/${rutaId}/clientes/${clienteId}`
+    const url = `${BASE_URL}/${rutaId}/visits/${clienteId}`
     const res = await fetch(url, {
         method: 'DELETE',
         headers: {
@@ -189,10 +187,13 @@ export async function publicarRuta(rutaId: string): Promise<RutaVendedor> {
 
     const url = `${BASE_URL}/${rutaId}/publicar`
     const res = await fetch(url, {
-        method: 'POST',
+        method: 'PUT',
         headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({ action: 'publish' }),
     })
 
     if (!res.ok) {
@@ -215,7 +216,7 @@ export async function cancelarRuta(
 
     const url = `${BASE_URL}/${rutaId}/cancelar`
     const res = await fetch(url, {
-        method: 'POST',
+        method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
@@ -269,7 +270,7 @@ export async function getMisRutas(filtros?: {
     const params = new URLSearchParams()
     if (filtros?.estado) params.append('estado', filtros.estado)
 
-    const url = `${BASE_URL}/mis-rutas?${params.toString()}`
+    const url = `${BASE_URL}?${params.toString()}`
     const res = await fetch(url, {
         headers: {
             Authorization: `Bearer ${token}`,
@@ -293,10 +294,12 @@ export async function iniciarRuta(rutaId: string): Promise<RutaVendedor> {
 
     const url = `${BASE_URL}/${rutaId}/iniciar`
     const res = await fetch(url, {
-        method: 'POST',
+        method: 'PUT',
         headers: {
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({}),
     })
 
     if (!res.ok) {
@@ -316,10 +319,12 @@ export async function completarRuta(rutaId: string): Promise<RutaVendedor> {
 
     const url = `${BASE_URL}/${rutaId}/completar`
     const res = await fetch(url, {
-        method: 'POST',
+        method: 'PUT',
         headers: {
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({}),
     })
 
     if (!res.ok) {

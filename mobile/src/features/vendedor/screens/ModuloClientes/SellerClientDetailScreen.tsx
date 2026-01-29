@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { Header } from '../../../../components/ui/Header'
 import { SellerHeaderMenu } from '../../../../components/ui/SellerHeaderMenu'
-import { BRAND_COLORS } from '../../../../shared/types'
+import { BRAND_COLORS } from '../../../../services/shared/types'
 import { UserClient, UserClientService } from '../../../../services/api/UserClientService'
 import { Zone, ZoneService } from '../../../../services/api/ZoneService'
 import { MiniMapPreview } from '../../../../components/ui/MiniMapPreview'
@@ -153,16 +153,16 @@ export function SellerClientDetailScreen() {
                 <Text className="text-sm text-neutral-900 mt-1">{client.direccion}</Text>
               </View>
 
-            {client.telefono ? (
-              <TouchableOpacity
-                onPress={() => Linking.openURL(`tel:${client.telefono}`)}
-                activeOpacity={0.8}
-                className="mt-3 bg-neutral-50 border border-neutral-200 rounded-2xl px-4 py-3"
-              >
-                <Text className="text-[10px] uppercase text-neutral-400 font-bold">Telefono</Text>
-                <Text className="text-sm text-neutral-900 mt-1">{client.telefono}</Text>
-              </TouchableOpacity>
-            ) : null}
+              {client.telefono ? (
+                <TouchableOpacity
+                  onPress={() => Linking.openURL(`tel:${client.telefono}`)}
+                  activeOpacity={0.8}
+                  className="mt-3 bg-neutral-50 border border-neutral-200 rounded-2xl px-4 py-3"
+                >
+                  <Text className="text-[10px] uppercase text-neutral-400 font-bold">Telefono</Text>
+                  <Text className="text-sm text-neutral-900 mt-1">{client.telefono}</Text>
+                </TouchableOpacity>
+              ) : null}
             </View>
           </View>
 

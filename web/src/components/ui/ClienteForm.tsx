@@ -5,6 +5,8 @@ import { useMemo, useState, useEffect } from 'react'
 import { GOOGLE_MAP_LIBRARIES, GOOGLE_MAP_SCRIPT_ID, GOOGLE_MAPS_API_KEY } from '../../config/googleMaps'
 
 export type ClienteFormValues = {
+  id?: string
+  usuario_principal_id?: string | null
   nombres: string
   apellidos: string
   contacto_email: string
@@ -40,6 +42,7 @@ export type CanalOption = { id: number; nombre: string; codigo: string }
 export const TIPOS_IDENTIFICACION = ['RUC', 'Cédula', 'Pasaporte']
 
 export const CLIENTE_FORM_DEFAULT: ClienteFormValues = {
+  usuario_principal_id: null,
   nombres: '',
   apellidos: '',
   contacto_email: '',

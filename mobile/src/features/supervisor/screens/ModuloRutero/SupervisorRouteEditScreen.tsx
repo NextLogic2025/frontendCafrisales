@@ -6,7 +6,7 @@ import { SupervisorHeaderMenu } from '../../../../components/ui/SupervisorHeader
 import { PrimaryButton } from '../../../../components/ui/PrimaryButton'
 import { PickerModal, PickerOption } from '../../../../components/ui/PickerModal'
 import { MiniMapPreview } from '../../../../components/ui/MiniMapPreview'
-import { BRAND_COLORS } from '../../../../shared/types'
+import { BRAND_COLORS } from '../../../../services/shared/types'
 import { RouteService, LogisticRoute, Vehicle } from '../../../../services/api/RouteService'
 import { OrderListItem, OrderService } from '../../../../services/api/OrderService'
 import { Zone, ZoneService } from '../../../../services/api/ZoneService'

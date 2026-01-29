@@ -17,6 +17,7 @@ import {
     cancelarRuta,
 } from '../../services/rutasVendedorApi'
 import { obtenerVendedores, type Vendedor } from '../../services/usuariosApi'
+import { obtenerZonas, type ZonaComercial } from '../../services/clientesApi'
 
 export default function RutasPage() {
     const [rutas, setRutas] = useState<RutaVendedor[]>([])
@@ -27,6 +28,7 @@ export default function RutasPage() {
     const [filtroEstado, setFiltroEstado] = useState<EstadoRuta | ''>('')
     const [filtroVendedor, setFiltroVendedor] = useState('')
     const [vendedores, setVendedores] = useState<Vendedor[]>([])
+    const [zonas, setZonas] = useState<ZonaComercial[]>([]) // Added zones state
 
     // Modals
     const [isCrearModalOpen, setIsCrearModalOpen] = useState(false)
@@ -34,37 +36,57 @@ export default function RutasPage() {
 
     useEffect(() => {
         loadData()
-    }, [])
-
-    useEffect(() => {
-        loadRutas()
-    }, [filtroEstado, filtroVendedor])
+    }, [filtroEstado, filtroVendedor]) // Modified dependencies
 
     const loadData = async () => {
+        setIsLoading(true) // Added
         try {
-            const vendedoresData = await obtenerVendedores()
+            const [vendedoresData, zonasData] = await Promise.all([ // Modified to fetch in parallel
+                obtenerVendedores(),
+                obtenerZonas(), // Added call to obtenerZonas
+            ])
             setVendedores(vendedoresData)
-            await loadRutas()
+            setZonas(zonasData) // Set zones state
+
+            await loadRutas(vendedoresData, zonasData) // Pass data to loadRutas
         } catch (error) {
             console.error('Error loading data:', error)
             showToast('error', 'Error al cargar datos')
+        } finally { // Added finally block
+            setIsLoading(false)
         }
     }
 
-    const loadRutas = async () => {
-        setIsLoading(true)
+    const loadRutas = async (vendedoresList: Vendedor[], zonasList: ZonaComercial[]) => { // Modified to accept lists
         try {
             const filtros: any = {}
             if (filtroEstado) filtros.estado = filtroEstado
             if (filtroVendedor) filtros.vendedor_id = filtroVendedor
 
             const data = await getRutasVendedor(filtros)
-            setRutas(data)
+
+            // Populate routes with vendor and zone data
+            const populated = data.map(r => {
+                const vendedor = vendedoresList.find(v => v.id === r.vendedor_id)
+                const zona = zonasList.find(z => String(z.id) === String(r.zona_id)) // Assuming r.zona_id exists and Zona has an id
+                return {
+                    ...r,
+                    vendedor: r.vendedor || (vendedor ? {
+                        id: vendedor.id,
+                        nombre: vendedor.nombre,
+                        email: '' // Vendedor doesn't have email in this list
+                    } : undefined),
+                    zona: r.zona || (zona ? { // Populate zona if needed
+                        id: zona.id,
+                        nombre: zona.nombre,
+                    } : undefined),
+                }
+            })
+
+            setRutas(populated)
         } catch (error) {
             console.error('Error loading rutas:', error)
             showToast('error', 'Error al cargar rutas')
-        } finally {
-            setIsLoading(false)
         }
     }
 
@@ -77,7 +99,7 @@ export default function RutasPage() {
         try {
             await createRutaVendedor(payload)
             showToast('success', 'Ruta creada exitosamente')
-            loadRutas()
+            loadRutas(vendedores, zonas)
         } catch (error: any) {
             throw error
         }
@@ -89,7 +111,7 @@ export default function RutasPage() {
         try {
             await publicarRuta(ruta.id)
             showToast('success', 'Ruta publicada exitosamente')
-            loadRutas()
+            loadRutas(vendedores, zonas)
         } catch (error: any) {
             showToast('error', error.message || 'Error al publicar ruta')
         }
@@ -103,7 +125,7 @@ export default function RutasPage() {
             const payload: CancelarRutaPayload = { motivo }
             await cancelarRuta(ruta.id, payload)
             showToast('success', 'Ruta cancelada exitosamente')
-            loadRutas()
+            loadRutas(vendedores, zonas)
         } catch (error: any) {
             showToast('error', error.message || 'Error al cancelar ruta')
         }

@@ -13,6 +13,8 @@ import { OrdersHeader } from './components/OrdersHeader'
 import { OrdersTable } from './components/OrdersTable'
 import { OrderDetailsModal } from './components/OrderDetailsModal'
 import { CancelOrderModal } from './components/CancelOrderModal'
+import { respondToAdjustment } from '../../../vendedor/services/pedidosApi'
+import { Pedido } from '../../../types'
 
 export default function PaginaPedidos() {
 	const navigate = useNavigate()
@@ -47,6 +49,36 @@ export default function PaginaPedidos() {
 				console.error('Error en handleConfirmCancel:', err)
 			}
 			setPedidoACancelar(null)
+		}
+	}
+
+	const handleRespondAdjustment = async (pedido: Pedido, action: 'acepta' | 'rechaza') => {
+		// If we don't have validation info in the list item, we should open the detail modal
+		// to fetch it and let the user review before confirming.
+		if (!pedido.validaciones || pedido.validaciones.length === 0) {
+			setPedidoSeleccionado(pedido)
+			return
+		}
+
+		// Find latest validation
+		const latestValidation = pedido.validaciones.sort((a, b) =>
+			new Date(b.creado_en).getTime() - new Date(a.creado_en).getTime()
+		)[0]
+
+		if (!latestValidation) {
+			setPedidoSeleccionado(pedido)
+			return
+		}
+
+		try {
+			await respondToAdjustment(pedido.id, latestValidation.id, action)
+			setSuccessMessage(action === 'acepta' ? 'Pedido confirmado' : 'Pedido rechazado')
+			// Refresh list
+			window.dispatchEvent(new CustomEvent('pedidoCreado', { detail: { message: action === 'acepta' ? 'Pedido confirmado' : 'Pedido rechazado' } }))
+		} catch (error: any) {
+			console.error(error)
+			// If error, maybe open modal to show details? or alert
+			alert(error.message || 'Error al procesar la respuesta')
 		}
 	}
 
@@ -98,6 +130,7 @@ export default function PaginaPedidos() {
 									handleRequestCancel(id, pedido.numero_pedido || pedido.orderNumber)
 								}
 							}}
+							onRespondAdjustment={handleRespondAdjustment}
 						/>
 
 						<Pagination

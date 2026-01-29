@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons'
 
 import { Header } from '../../../../components/ui/Header'
 import { ClientHeaderMenu } from '../../../../components/ui/ClientHeaderMenu'
-import { BRAND_COLORS } from '../../../../shared/types'
+import { BRAND_COLORS } from '../../../../services/shared/types'
 import { CreditService, CreditDetailResponse } from '../../../../services/api/CreditService'
 import { OrderService, OrderDetail } from '../../../../services/api/OrderService'
 import { CreditDetailTemplate } from '../../../../components/credit/CreditDetailTemplate'

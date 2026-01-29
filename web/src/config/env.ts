@@ -16,6 +16,7 @@ export const env = {
     warehouse: normalizeBaseUrl(readEnv('VITE_WAREHOUSE_BASE_URL')),
     transportista: normalizeBaseUrl(readEnv('VITE_TRANSPORTISTA_BASE_URL')),
     routes: normalizeBaseUrl(readEnv('VITE_ROUTES_BASE_URL')),
+    zonas: normalizeBaseUrl(readEnv('VITE_ZONAS_BASE_URL')),
   },
   googleMaps: {
     apiKey: readEnv('VITE_GOOGLE_MAPS_API_KEY'),

@@ -8,7 +8,7 @@ import { SearchBar } from '../../../../components/ui/SearchBar'
 import { GenericList } from '../../../../components/ui/GenericList'
 import { CategoryFilter } from '../../../../components/ui/CategoryFilter'
 import { FeedbackModal, FeedbackType } from '../../../../components/ui/FeedbackModal'
-import { BRAND_COLORS } from '../../../../shared/types'
+import { BRAND_COLORS } from '../../../../services/shared/types'
 import { Channel, ChannelService, ChannelStatusFilter } from '../../../../services/api/ChannelService'
 
 const CHANNEL_CODE_PREFIX = 'CANAL-'

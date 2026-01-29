@@ -22,6 +22,11 @@ export interface RutaVendedor {
     completado_en?: string
     cancelado_en?: string
     motivo_cancelacion?: string
+    zona_id?: string
+    zona?: {
+        id: string | number
+        nombre: string
+    }
 }
 
 export interface ParadaRuta {
@@ -57,10 +62,12 @@ export type EstadoRuta = 'borrador' | 'publicado' | 'en_curso' | 'completado' | 
 
 export interface CreateRutaVendedorPayload {
     vendedor_id: string
-    fecha_programada?: string
-    clientes: {
+    fecha_rutero: string
+    zona_id: string
+    paradas: {
         cliente_id: string
         orden_visita: number
+        objetivo?: string
     }[]
 }
 

@@ -7,9 +7,10 @@ interface OrdersTableProps {
     pedidos: Pedido[]
     onViewDetail: (pedido: Pedido) => void
     onCancelOrder: (id: string) => void
+    onRespondAdjustment?: (pedido: Pedido, action: 'acepta' | 'rechaza') => void
 }
 
-export function OrdersTable({ pedidos, onViewDetail, onCancelOrder }: OrdersTableProps) {
+export function OrdersTable({ pedidos, onViewDetail, onCancelOrder, onRespondAdjustment }: OrdersTableProps) {
     return (
         <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
             <table className="w-full">
@@ -43,6 +44,29 @@ export function OrdersTable({ pedidos, onViewDetail, onCancelOrder }: OrdersTabl
                             <td className="px-4 py-3 text-right flex items-center justify-end gap-2">
                                 {(() => {
                                     const rawStatus = String(pedido.estado || pedido.status || '').toLowerCase()
+                                    const isAjustado = rawStatus === 'ajustado_bodega' || rawStatus === 'ajustado'
+
+                                    if (isAjustado && onRespondAdjustment) {
+                                        return (
+                                            <>
+                                                <button
+                                                    onClick={() => onRespondAdjustment(pedido, 'acepta')}
+                                                    className="px-2 py-1 text-xs font-medium text-white bg-green-600 rounded hover:bg-green-700 transition-colors"
+                                                    title="Aceptar ajuste"
+                                                >
+                                                    Aceptar
+                                                </button>
+                                                <button
+                                                    onClick={() => onRespondAdjustment(pedido, 'rechaza')}
+                                                    className="px-2 py-1 text-xs font-medium text-white bg-red-600 rounded hover:bg-red-700 transition-colors"
+                                                    title="Cancelar pedido"
+                                                >
+                                                    Cancelar
+                                                </button>
+                                            </>
+                                        )
+                                    }
+
                                     // Allow cancellation for 'pending', 'pendiente', and 'pendiente_validacion'
                                     const canCancel = ['pending', 'pendiente', 'pendiente_validacion', 'pending_validation'].includes(rawStatus)
 

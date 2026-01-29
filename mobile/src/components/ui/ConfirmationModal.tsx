@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { View, Text, Modal, Pressable, ActivityIndicator } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { BRAND_COLORS } from '../../shared/types'
+import { BRAND_COLORS } from '../../services/shared/types'
 
 export interface ConfirmationModalProps {
     visible: boolean

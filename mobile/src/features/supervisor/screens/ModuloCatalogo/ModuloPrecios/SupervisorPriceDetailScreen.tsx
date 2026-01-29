@@ -8,7 +8,7 @@ import { GenericList } from '../../../../../components/ui/GenericList'
 import { PrimaryButton } from '../../../../../components/ui/PrimaryButton'
 import { CatalogSku, CatalogSkuService } from '../../../../../services/api/CatalogSkuService'
 import { CatalogPriceService, CatalogSkuPrice } from '../../../../../services/api/CatalogPriceService'
-import { BRAND_COLORS } from '../../../../../shared/types'
+import { BRAND_COLORS } from '../../../../../services/shared/types'
 
 export function SupervisorPriceDetailScreen() {
   const navigation = useNavigation<any>()

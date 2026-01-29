@@ -7,7 +7,7 @@ import { jwtDecode } from 'jwt-decode'
 import { Header } from '../../../../components/ui/Header'
 import { ClientHeaderMenu } from '../../../../components/ui/ClientHeaderMenu'
 import { CategoryFilter } from '../../../../components/ui/CategoryFilter'
-import { BRAND_COLORS } from '../../../../shared/types'
+import { BRAND_COLORS } from '../../../../services/shared/types'
 import { CreditListItem, CreditService } from '../../../../services/api/CreditService'
 import { getValidToken } from '../../../../services/auth/authClient'
 
@@ -155,8 +155,8 @@ export function ClientCreditsScreen() {
             activeTab === 'pendientes'
               ? filteredPendientes
               : activeTab === 'rechazados'
-              ? filteredRechazados
-              : filteredPagados
+                ? filteredRechazados
+                : filteredPagados
           }
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
@@ -171,15 +171,15 @@ export function ClientCreditsScreen() {
                 {activeTab === 'pendientes'
                   ? 'Sin creditos pendientes'
                   : activeTab === 'rechazados'
-                  ? 'Sin creditos rechazados'
-                  : 'Sin creditos pagados'}
+                    ? 'Sin creditos rechazados'
+                    : 'Sin creditos pagados'}
               </Text>
               <Text className="text-sm text-neutral-500 text-center">
                 {activeTab === 'pendientes'
                   ? 'No tienes creditos en curso.'
                   : activeTab === 'rechazados'
-                  ? 'No tienes creditos rechazados.'
-                  : 'No tienes creditos pagados para mostrar.'}
+                    ? 'No tienes creditos rechazados.'
+                    : 'No tienes creditos pagados para mostrar.'}
               </Text>
             </View>
           }
