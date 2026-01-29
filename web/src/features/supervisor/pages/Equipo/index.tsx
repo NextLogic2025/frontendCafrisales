@@ -54,22 +54,24 @@ export default function EquipoPage() {
   }
 
   const handleDeactivate = async (usuario: Usuario) => {
-    if (!confirm(`¿Deseas desactivar a ${usuario.nombre}?`)) return
     try {
       await updateEstadoUsuario(usuario.id, 'inactivo')
+      // Optimistically update local list so UI reflects change immediately
+      setUsuarios((prev) => prev.map((u) => (u.id === usuario.id ? { ...u, activo: false } : u)))
       setGlobalMessage({ type: 'success', message: 'Usuario desactivado exitosamente' })
-      cargarEquipo()
+      // Optimistic update performed; not auto-reloading to avoid overwriting UI
     } catch (error: any) {
       setGlobalMessage({ type: 'error', message: error.message || 'Error al desactivar usuario' })
     }
   }
 
   const handleActivate = async (usuario: Usuario) => {
-    if (!confirm(`¿Deseas activar a ${usuario.nombre}?`)) return
     try {
       await updateEstadoUsuario(usuario.id, 'activo')
+      // Optimistically update local list so UI reflects change immediately
+      setUsuarios((prev) => prev.map((u) => (u.id === usuario.id ? { ...u, activo: true } : u)))
       setGlobalMessage({ type: 'success', message: 'Usuario activado exitosamente' })
-      cargarEquipo()
+      // Optimistic update performed; not auto-reloading to avoid overwriting UI
     } catch (error: any) {
       setGlobalMessage({ type: 'error', message: error.message || 'Error al activar usuario' })
     }

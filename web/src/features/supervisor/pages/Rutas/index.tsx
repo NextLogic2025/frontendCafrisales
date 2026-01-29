@@ -1,313 +1,220 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ZonaMapaGoogle } from '../../components/ZonaMapaGoogle';
-import { PageHero } from 'components/ui/PageHero';
-import { Modal } from 'components/ui/Modal';
-import { FormField } from 'components/ui/FormField';
-import { Plus, Map } from 'lucide-react';
-import { ZonaSelector } from '../../components/ZonaSelector';
-
-type DiaSemana = 'LUNES' | 'MARTES' | 'MIERCOLES' | 'JUEVES' | 'VIERNES';
-
-interface Ruta {
-  id?: string;
-  cliente_id: string;
-  prioridad_visita: string;
-  frecuencia: string;
-  hora_estimada?: string;
-  sucursal_nombre?: string | null;
-  ubicacion_gps?: {
-    type: 'Point';
-    coordinates: [number, number];
-  } | null;
-}
+import React, { useState, useEffect } from 'react'
+import { Plus, Filter } from 'lucide-react'
+import { SectionHeader } from 'components/ui/SectionHeader'
+import { PageHero } from 'components/ui/PageHero'
+import { Button } from 'components/ui/Button'
+import { Alert } from 'components/ui/Alert'
+import { LoadingSpinner } from 'components/ui/LoadingSpinner'
+import { FormField } from 'components/ui/FormField'
+import { RutaCard } from '../../components/RutaCard'
+import { CrearRutaModal } from './CrearRutaModal'
+import { DetalleRutaModal } from './DetalleRutaModal'
+import type { RutaVendedor, EstadoRuta, CreateRutaVendedorPayload, CancelarRutaPayload } from '../../services/rutasVendedorTypes'
+import {
+    getRutasVendedor,
+    createRutaVendedor,
+    publicarRuta,
+    cancelarRuta,
+} from '../../services/rutasVendedorApi'
+import { obtenerVendedores, type Vendedor } from '../../services/usuariosApi'
 
 export default function RutasPage() {
-  // Estado para zona seleccionada y día seleccionado
-  const [zonaSeleccionada, setZonaSeleccionada] = useState('');
-  const diasSemana = [
-    'Lunes',
-    'Martes',
-    'Miércoles',
-    'Jueves',
-    'Viernes',
-  ];
-  const [diaSeleccionado, setDiaSeleccionado] = useState(diasSemana[0]);
-  const [rutas, setRutas] = useState<Ruta[]>([]);
-  const [loadingRutas, setLoadingRutas] = useState(false);
-  const [poligonoZona, setPoligonoZona] = useState<Array<{ lat: number; lng: number }>>([]);
-  const [puntosMapa, setPuntosMapa] = useState<Array<{ lat: number; lng: number; nombre?: string }>>([]);
-  const [zonas, setZonas] = useState<any[]>([]);
+    const [rutas, setRutas] = useState<RutaVendedor[]>([])
+    const [isLoading, setIsLoading] = useState(true)
+    const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
-  // Estado para edición de ruta
-  const [rutaEditando, setRutaEditando] = useState<Ruta | null>(null);
-  const [editForm, setEditForm] = useState({
-    zona_id: '',
-    dia_semana: '',
-    frecuencia: '',
-    prioridad_visita: '',
-    orden_sugerido: '',
-    hora_estimada_arribo: '',
-    activo: true,
-  });
-  const [editLoading, setEditLoading] = useState(false);
+    // Filters
+    const [filtroEstado, setFiltroEstado] = useState<EstadoRuta | ''>('')
+    const [filtroVendedor, setFiltroVendedor] = useState('')
+    const [vendedores, setVendedores] = useState<Vendedor[]>([])
 
-  // Estado para notificaciones toast
-  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+    // Modals
+    const [isCrearModalOpen, setIsCrearModalOpen] = useState(false)
+    const [detalleRuta, setDetalleRuta] = useState<RutaVendedor | null>(null)
 
-  const navigate = useNavigate();
+    useEffect(() => {
+        loadData()
+    }, [])
 
-  // Cargar todas las zonas al inicio
-  useEffect(() => {
-    setZonas([]);
-  }, []);
+    useEffect(() => {
+        loadRutas()
+    }, [filtroEstado, filtroVendedor])
 
-  useEffect(() => {
-    async function cargarRutasYPoligono() {
-      setLoadingRutas(true);
-      setRutas([]);
-      setPoligonoZona([]);
-      setPuntosMapa([]);
-      setLoadingRutas(false);
-    }
-    cargarRutasYPoligono();
-  }, [zonaSeleccionada, diaSeleccionado, zonas]);
-
-  // Cuando se abre el modal, cargar los datos actuales
-  useEffect(() => {
-    if (rutaEditando) {
-      setEditForm({
-        zona_id: zonaSeleccionada,
-        dia_semana: String(diasSemana.indexOf(diaSeleccionado) + 1),
-        frecuencia: rutaEditando.frecuencia || '',
-        prioridad_visita: rutaEditando.prioridad_visita || '',
-        orden_sugerido: '1',
-        hora_estimada_arribo: rutaEditando.hora_estimada || '',
-        activo: true,
-      });
-    }
-  }, [rutaEditando]);
-
-  return (
-    <div className="space-y-6">
-      <PageHero
-        title="Gestión de Rutas"
-        subtitle="Organiza y administra las rutas de tus equipos de ventas o supervisión"
-        chips={['Logística', 'Rutas', 'Cobertura']}
-      />
-      {/* Barra de selección de zona y días */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border border-neutral-200 rounded-xl bg-gradient-to-r from-white via-neutral-50 to-white p-5 shadow-md">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 flex-wrap w-full">
-          <ZonaSelector value={zonaSeleccionada} onChange={setZonaSeleccionada} />
-          <div className="flex gap-1 sm:gap-2 flex-wrap bg-neutral-100 rounded-lg px-2 py-1 border border-neutral-200">
-            {diasSemana.map(dia => (
-              <button
-                key={dia}
-                type="button"
-                onClick={() => setDiaSeleccionado(dia)}
-                className={
-                  `px-4 py-1.5 rounded-lg text-sm font-medium border transition-all duration-150 outline-none focus:ring-2 ` +
-                  (diaSeleccionado === dia
-                    ? 'bg-brand-red text-white border-brand-red shadow-md scale-105'
-                    : 'bg-white text-neutral-700 border-transparent hover:bg-neutral-200 hover:text-brand-red')
-                }
-                style={{ minWidth: 80 }}
-              >
-                {dia}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <button
-            className="flex items-center gap-2 rounded-lg bg-brand-red px-5 py-2 text-sm font-semibold text-white shadow hover:bg-brand-red-dark transition-all duration-150"
-            onClick={() => navigate('/supervisor/rutas/crear')}
-          >
-            <Plus className="h-4 w-4" />
-            Crear
-          </button>
-          <button
-            className="flex items-center gap-2 rounded-lg bg-brand-red px-5 py-2 text-sm font-semibold text-white shadow hover:bg-brand-red-dark transition-all duration-150"
-          // Aquí puedes poner la lógica para el mapa general
-          >
-            <Plus className="h-4 w-4" />
-            Rutas Inactivas
-          </button>
-        </div>
-      </div>
-      {/* Mapa Google debajo de la barra */}
-      <div className="w-full my-4">
-        <ZonaMapaGoogle poligono={poligonoZona} puntos={puntosMapa} zoom={13} />
-      </div>
-      {/* Listado de rutas guardadas */}
-      <div className="w-full my-4">
-        {loadingRutas ? (
-          <div className="text-center py-8 text-brand-red font-semibold">Cargando rutas...</div>
-        ) : rutas.length === 0 ? (
-          <div className="text-center py-8 text-neutral-500">
-            <Map className="mx-auto mb-4 h-12 w-12 text-neutral-400" />
-            <h3 className="text-lg font-semibold text-neutral-700">Sin rutas planificadas</h3>
-            <p className="text-sm text-neutral-500 mt-2">Aquí podrás crear, visualizar y gestionar rutas por zona y día. Selecciona clientes y zonas para comenzar.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="font-semibold text-brand-red text-lg">Rutas guardadas para la zona y día seleccionados:</div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {rutas.map(ruta => (
-                <div key={ruta.id} className="bg-white border border-neutral-200 rounded-xl shadow-sm p-4 flex flex-col gap-2">
-                  <div className="font-semibold text-brand-red text-lg mb-1">Ruta</div>
-                  <div className="text-sm text-neutral-700"><span className="font-medium">Sucursal:</span> {ruta.sucursal_nombre || 'No definida'}</div>
-                  <div className="text-sm text-neutral-700"><span className="font-medium">Prioridad:</span> {ruta.prioridad_visita}</div>
-                  <div className="text-sm text-neutral-700"><span className="font-medium">Frecuencia:</span> {ruta.frecuencia}</div>
-                  <div className="text-sm text-neutral-700"><span className="font-medium">Hora estimada:</span> {ruta.hora_estimada || 'No definida'}</div>
-                  <button
-                    className="mt-2 px-4 py-1 rounded bg-brand-red text-white font-semibold hover:bg-brand-red-dark"
-                    onClick={() => setRutaEditando(ruta)}
-                  >
-                    Editar
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-      {/* Modal de edición */}
-      <Modal
-        isOpen={!!rutaEditando}
-        title="Editar Ruta"
-        onClose={() => setRutaEditando(null)}
-        headerGradient="red"
-        maxWidth="md"
-      >
-        <form
-          onSubmit={async e => {
-            e.preventDefault();
-            setEditLoading(true);
-            try {
-              // Mock success
-              setRutaEditando(null);
-              setToast({ type: 'success', message: '¡Ruta editada con éxito!' });
-              setTimeout(() => setToast(null), 3000);
-            } catch (err) {
-              setToast({ type: 'error', message: 'Error al editar la ruta' });
-              setTimeout(() => setToast(null), 3000);
-            }
-            setEditLoading(false);
-          }}
-          className="space-y-4"
-        >
-          <FormField
-            label="Prioridad"
-            type="select"
-            value={editForm.prioridad_visita}
-            onChange={value => setEditForm(f => ({ ...f, prioridad_visita: value }))}
-            options={[
-              { label: 'ALTA', value: 'ALTA' },
-              { label: 'MEDIA', value: 'MEDIA' },
-              { label: 'BAJA', value: 'BAJA' },
-            ]}
-          />
-          <FormField
-            label="Día de la semana"
-            type="select"
-            value={editForm.dia_semana}
-            onChange={value => setEditForm(f => ({ ...f, dia_semana: value }))}
-            options={[
-              { label: 'Lunes', value: '1' },
-              { label: 'Martes', value: '2' },
-              { label: 'Miércoles', value: '3' },
-              { label: 'Jueves', value: '4' },
-              { label: 'Viernes', value: '5' },
-            ]}
-          />
-          <FormField
-            label="Frecuencia"
-            type="select"
-            value={editForm.frecuencia}
-            onChange={value => setEditForm(f => ({ ...f, frecuencia: value }))}
-            options={[
-              { label: 'SEMANAL', value: 'SEMANAL' },
-              { label: 'QUINCENAL', value: 'QUINCENAL' },
-              { label: 'MENSUAL', value: 'MENSUAL' },
-            ]}
-          />
-          <FormField
-            label="Hora estimada de arribo"
-            type="select"
-            value={editForm.hora_estimada_arribo}
-            onChange={value => setEditForm(f => ({ ...f, hora_estimada_arribo: value }))}
-            options={[
-              { label: '08:00', value: '08:00:00' },
-              { label: '09:00', value: '09:00:00' },
-              { label: '10:00', value: '10:00:00' },
-              { label: '11:00', value: '11:00:00' },
-              { label: '12:00', value: '12:00:00' },
-              { label: '13:00', value: '13:00:00' },
-              { label: '14:00', value: '14:00:00' },
-              { label: '15:00', value: '15:00:00' },
-              { label: '16:00', value: '16:00:00' },
-              { label: '17:00', value: '17:00:00' },
-              { label: '18:00', value: '18:00:00' },
-            ]}
-          />
-          <div className="flex gap-3 mt-6">
-            <button
-              type="submit"
-              className="flex-1 bg-brand-red text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-brand-red-dark transition-all duration-150 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={editLoading}
-            >
-              {editLoading ? 'Guardando...' : 'Guardar'}
-            </button>
-            <button
-              type="button"
-              className="flex-1 bg-neutral-200 text-neutral-700 px-6 py-2.5 rounded-lg font-semibold hover:bg-neutral-300 transition-all duration-150"
-              onClick={() => setRutaEditando(null)}
-            >
-              Cancelar
-            </button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* Toast Notification */}
-      {toast && (
-        <div
-          className={`fixed bottom-6 right-6 px-6 py-4 rounded-lg shadow-2xl flex items-center gap-3 z-50 ${toast.type === 'success'
-            ? 'bg-green-500 text-white'
-            : 'bg-red-500 text-white'
-            }`}
-          style={{
-            animation: 'slideInRight 0.3s ease-out',
-          }}
-        >
-          <div className="flex items-center gap-3">
-            {toast.type === 'success' ? (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            ) : (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            )}
-            <span className="font-semibold">{toast.message}</span>
-          </div>
-        </div>
-      )}
-
-      <style>{`
-        @keyframes slideInRight {
-          from {
-            transform: translateX(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
+    const loadData = async () => {
+        try {
+            const vendedoresData = await obtenerVendedores()
+            setVendedores(vendedoresData)
+            await loadRutas()
+        } catch (error) {
+            console.error('Error loading data:', error)
+            showToast('error', 'Error al cargar datos')
         }
-      `}</style>
-    </div>
-  )
+    }
+
+    const loadRutas = async () => {
+        setIsLoading(true)
+        try {
+            const filtros: any = {}
+            if (filtroEstado) filtros.estado = filtroEstado
+            if (filtroVendedor) filtros.vendedor_id = filtroVendedor
+
+            const data = await getRutasVendedor(filtros)
+            setRutas(data)
+        } catch (error) {
+            console.error('Error loading rutas:', error)
+            showToast('error', 'Error al cargar rutas')
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const showToast = (type: 'success' | 'error', message: string) => {
+        setToast({ type, message })
+        setTimeout(() => setToast(null), 3000)
+    }
+
+    const handleCrearRuta = async (payload: CreateRutaVendedorPayload) => {
+        try {
+            await createRutaVendedor(payload)
+            showToast('success', 'Ruta creada exitosamente')
+            loadRutas()
+        } catch (error: any) {
+            throw error
+        }
+    }
+
+    const handlePublicar = async (ruta: RutaVendedor) => {
+        if (!confirm('¿Publicar esta ruta? El vendedor podrá verla y ejecutarla.')) return
+
+        try {
+            await publicarRuta(ruta.id)
+            showToast('success', 'Ruta publicada exitosamente')
+            loadRutas()
+        } catch (error: any) {
+            showToast('error', error.message || 'Error al publicar ruta')
+        }
+    }
+
+    const handleCancelar = async (ruta: RutaVendedor) => {
+        const motivo = prompt('Motivo de cancelación:')
+        if (!motivo) return
+
+        try {
+            const payload: CancelarRutaPayload = { motivo }
+            await cancelarRuta(ruta.id, payload)
+            showToast('success', 'Ruta cancelada exitosamente')
+            loadRutas()
+        } catch (error: any) {
+            showToast('error', error.message || 'Error al cancelar ruta')
+        }
+    }
+
+    const handleVerDetalle = (ruta: RutaVendedor) => {
+        setDetalleRuta(ruta)
+    }
+
+    return (
+        <div className="space-y-6">
+            <PageHero
+                title="Rutas de Vendedor"
+                subtitle="Gestiona las rutas de visita de los vendedores a clientes"
+                chips={['Planificación', 'Asignación', 'Seguimiento']}
+            />
+
+            {toast && (
+                <Alert
+                    type={toast.type}
+                    message={toast.message}
+                    onClose={() => setToast(null)}
+                />
+            )}
+
+            <SectionHeader
+                title="Rutas"
+                subtitle="Crea y gestiona rutas de vendedor"
+            />
+
+            {/* Filters and Actions */}
+            <div className="flex flex-col md:flex-row gap-4 items-end">
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                        label="Filtrar por Estado"
+                        type="select"
+                        value={filtroEstado}
+                        onChange={(val) => setFiltroEstado(val as EstadoRuta | '')}
+                        options={[
+                            { label: 'Todos los estados', value: '' },
+                            { label: 'Borrador', value: 'borrador' },
+                            { label: 'Publicado', value: 'publicado' },
+                            { label: 'En Curso', value: 'en_curso' },
+                            { label: 'Completado', value: 'completado' },
+                            { label: 'Cancelado', value: 'cancelado' },
+                        ]}
+                    />
+
+                    <FormField
+                        label="Filtrar por Vendedor"
+                        type="select"
+                        value={filtroVendedor}
+                        onChange={setFiltroVendedor}
+                        options={[
+                            { label: 'Todos los vendedores', value: '' },
+                            ...vendedores.map(v => ({
+                                label: v.nombre,
+                                value: v.id,
+                            })),
+                        ]}
+                    />
+                </div>
+
+                <Button
+                    onClick={() => setIsCrearModalOpen(true)}
+                    className="flex items-center gap-2 bg-brand-red text-white hover:bg-brand-red/90 shadow-lg"
+                >
+                    <Plus className="h-4 w-4" />
+                    Crear Ruta
+                </Button>
+            </div>
+
+            {/* Rutas List */}
+            {isLoading ? (
+                <div className="flex justify-center py-12">
+                    <LoadingSpinner />
+                </div>
+            ) : rutas.length === 0 ? (
+                <div className="text-center py-12 bg-neutral-50 rounded-xl border-2 border-dashed border-neutral-300">
+                    <p className="text-neutral-600 text-lg">No hay rutas disponibles</p>
+                    <p className="text-neutral-500 text-sm mt-2">
+                        Crea una nueva ruta para comenzar
+                    </p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {rutas.map(ruta => (
+                        <RutaCard
+                            key={ruta.id}
+                            ruta={ruta}
+                            role="supervisor"
+                            onView={handleVerDetalle}
+                            onPublish={handlePublicar}
+                            onCancel={handleCancelar}
+                        />
+                    ))}
+                </div>
+            )}
+
+            {/* Modals */}
+            <CrearRutaModal
+                isOpen={isCrearModalOpen}
+                onClose={() => setIsCrearModalOpen(false)}
+                onSubmit={handleCrearRuta}
+            />
+
+            <DetalleRutaModal
+                isOpen={!!detalleRuta}
+                onClose={() => setDetalleRuta(null)}
+                ruta={detalleRuta}
+            />
+        </div>
+    )
 }

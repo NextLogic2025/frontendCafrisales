@@ -270,7 +270,10 @@ export async function getUsers(): Promise<Usuario[]> {
       const email = user?.email || ''
       // Prefer api user role, fallback to list role
       const roleName = (user?.rol || member.rol || 'Usuario').toLowerCase()
-      const active = member.activo ?? (user?.estado ? user.estado === 'activo' : true)
+      // Prefer the explicit user.estado when available (PATCH /usuarios/:id)
+      // because staff lists may be derived and lag behind. Fall back to
+      // member.activo if user.estado is not provided.
+      const active = (user?.estado ? user.estado === 'activo' : undefined) ?? (member.activo ?? true)
       // Mobile logic: "name = email || code || 'Sin nombre'" if no explicit name?
       // Actually mobile fetches profile too? 
       // Mobile `normalizeUser` does: `name: fullName || user.email || 'Sin nombre'`
@@ -320,5 +323,169 @@ export async function getUsers(): Promise<Usuario[]> {
   } catch (error) {
     console.error('Error fetching users:', error)
     return []
+  }
+}
+
+/**
+ * Get list of transportistas (drivers) for logistics routes
+ */
+export async function obtenerTransportistas(): Promise<Usuario[]> {
+  const users = await getUsers()
+  return users.filter(u => u.rol.nombre.toLowerCase() === 'transportista' && u.activo)
+}
+
+// ========================================
+// USER EDIT FUNCTIONALITY
+// ========================================
+
+export interface UserProfile {
+  nombres: string
+  apellidos: string
+  telefono?: string
+}
+
+export interface UpdateUserPayload {
+  email?: string
+  estado?: 'activo' | 'inactivo'
+  rol?: string
+  perfil?: {
+    nombres?: string
+    apellidos?: string
+    telefono?: string
+  }
+  vendedor?: { codigo_empleado: string; supervisor_id?: string }
+  bodeguero?: { codigo_empleado: string }
+  transportista?: {
+    codigo_empleado: string
+    numero_licencia: string
+    licencia_vence_en?: string
+  }
+  supervisor?: { codigo_empleado: string }
+}
+
+/**
+ * Get user profile data
+ */
+export async function getUserProfile(userId: string): Promise<UserProfile> {
+  const token = await getValidToken()
+  if (!token) throw new Error('No hay sesión activa')
+
+  const url = `${env.api.usuarios}/api/usuarios/${userId}/perfil`
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => null)
+    throw new Error(errorData?.message || 'Error al obtener perfil del usuario')
+  }
+
+  return await res.json()
+}
+
+/**
+ * Get user by ID
+ */
+export async function getUserById(userId: string): Promise<any> {
+  const token = await getValidToken()
+  if (!token) throw new Error('No hay sesión activa')
+
+  const url = `${env.api.usuarios}/api/usuarios/${userId}`
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => null)
+    throw new Error(errorData?.message || 'Error al obtener usuario')
+  }
+
+  return await res.json()
+}
+
+/**
+ * Update user with complete data including role-specific fields
+ */
+export async function updateUsuarioCompleto(
+  userId: string,
+  data: UpdateUserPayload
+): Promise<any> {
+  const token = await getValidToken()
+  if (!token) throw new Error('No hay sesión activa')
+
+  const url = `${env.api.usuarios}/api/usuarios/${userId}`
+
+  const res = await fetch(url, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => null)
+    throw new Error(errorData?.message || 'Error al actualizar el usuario')
+  }
+
+  return await res.json()
+}
+
+/**
+ * Update user password
+ */
+export async function updateUsuarioPassword(
+  userId: string,
+  password: string
+): Promise<void> {
+  const token = await getValidToken()
+  if (!token) throw new Error('No hay sesión activa')
+
+  const url = `${env.api.auth}/api/auth/usuarios/${userId}/password`
+
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ password }),
+  })
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => null)
+    throw new Error(errorData?.message || 'Error al actualizar la contraseña')
+  }
+}
+
+/**
+ * Update user email in auth service
+ */
+export async function updateUsuarioEmail(
+  userId: string,
+  email: string
+): Promise<void> {
+  const token = await getValidToken()
+  if (!token) throw new Error('No hay sesión activa')
+
+  const url = `${env.api.auth}/api/auth/usuarios/${userId}/email`
+
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ email }),
+  })
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => null)
+    throw new Error(errorData?.message || 'Error al actualizar el email')
   }
 }
