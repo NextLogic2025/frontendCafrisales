@@ -257,7 +257,7 @@ export default function DetalleRutaPage() {
     }
 
     return (
-        <div className="space-y-6 max-w-5xl mx-auto pb-12 px-4">
+        <div className="space-y-6">
             <PageHero
                 title={`Ruta de Venta #${ruta.id.slice(0, 8)}`}
                 subtitle="Gestiona tus visitas y organiza tu recorrido comercial"

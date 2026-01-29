@@ -72,7 +72,7 @@ export default function RutasPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12 px-4">
+    <div className="space-y-6">
       <PageHero
         title="Mis Rutas"
         subtitle="Gestiona tu agenda comercial y seguimiento de clientes"
@@ -97,8 +97,8 @@ export default function RutasPage() {
               key={f}
               onClick={() => setFiltroEstado(f)}
               className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${filtroEstado === f
-                  ? 'bg-white text-brand-red shadow-lg shadow-neutral-200/50 scale-[1.02]'
-                  : 'text-neutral-500 hover:text-neutral-700'
+                ? 'bg-white text-brand-red shadow-lg shadow-neutral-200/50 scale-[1.02]'
+                : 'text-neutral-500 hover:text-neutral-700'
                 }`}
             >
               {f.charAt(0).toUpperCase() + f.slice(1)}

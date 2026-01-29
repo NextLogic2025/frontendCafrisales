@@ -1,9 +1,4 @@
 export { default as DashboardPage } from './Dashboard'
-export { default as InventarioPage } from './Inventario'
-export { default as RecepcionesPage } from './Recepciones'
-export { default as DespachosPage } from './Despachos'
-export { default as DevolucionesPage } from './Devoluciones'
-export { default as TrazabilidadPage } from './Trazabilidad'
-export { default as ReportesPage } from './Reportes'
+
 export { default as PerfilPage } from './Perfil'
 export { default as PedidosPage } from './Pedidos/pedidos'

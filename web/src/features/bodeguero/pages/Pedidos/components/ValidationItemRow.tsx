@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Check, AlertTriangle, XCircle, RefreshCw, Search } from 'lucide-react'
 import { EstadoItemResultado } from '../../../services/validationsApi'
 import type { DetallePedido } from '../../../../supervisor/services/pedidosApi'
-import type { CatalogSku } from '../../../../supervisor/services/skusApi'
+import type { CatalogSku } from '../../../supervisor/services/skusApi'
 
 interface ValidationItemRowProps {
     item: DetallePedido

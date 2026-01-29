@@ -15,7 +15,7 @@ import { useNavigate } from 'react-router-dom'
 
 import { EstadoFactura, EstadoPedido } from '../../types'
 import { useCliente } from '../../hooks/useCliente'
-import { useSocket } from '../../../../hooks/useSocket'
+import { useNotificationsContext } from '../../../../context/notifications/NotificationsProvider'
 import { LoadingSpinner } from 'components/ui/LoadingSpinner'
 import { Alert } from 'components/ui/Alert'
 import { MetricCard, SectionCard, QuickActionButton, EmptyState } from 'components/ui/Cards'
@@ -40,7 +40,7 @@ export default function PaginaPanelCliente() {
 	} = useCliente()
 
 	// Get real-time notifications from WebSocket
-	const { notifications } = useSocket()
+	const { notifications } = useNotificationsContext()
 
 	useEffect(() => {
 		fetchPerfilCliente()
@@ -237,13 +237,19 @@ export default function PaginaPanelCliente() {
 	)
 }
 function formatEstadoPedido(estado: EstadoPedido) {
-	const labels: Record<EstadoPedido, string> = {
+	const labels: Partial<Record<EstadoPedido, string>> = {
 		[EstadoPedido.PENDING]: 'Pendiente',
 		[EstadoPedido.APPROVED]: 'Aprobado',
 		[EstadoPedido.IN_PREPARATION]: 'En preparación',
 		[EstadoPedido.IN_TRANSIT]: 'En ruta',
 		[EstadoPedido.DELIVERED]: 'Entregado',
 		[EstadoPedido.CANCELLED]: 'Cancelado',
+		// map some backend localized values too
+		[EstadoPedido.PENDIENTE]: 'Pendiente',
+		[EstadoPedido.EN_PREPARACION]: 'En preparación',
+		[EstadoPedido.EN_RUTA]: 'En ruta',
+		[EstadoPedido.ENTREGADO]: 'Entregado',
+		[EstadoPedido.CANCELADO]: 'Cancelado',
 	}
-	return labels[estado]
+	return labels[estado] ?? String(estado)
 }

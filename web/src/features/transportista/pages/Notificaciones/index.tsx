@@ -1,38 +1,97 @@
-import { Bell } from 'lucide-react'
-import { SectionHeader } from 'components/ui/SectionHeader'
-import { Alert } from 'components/ui/Alert'
-import { EmptyContent } from 'components/ui/EmptyContent'
+import { Bell, Package, CheckCircle, Truck, MapPin, AlertTriangle } from 'lucide-react'
 import { PageHero } from 'components/ui/PageHero'
+import { EmptyContent } from 'components/ui/EmptyContent'
+import { useNotificationsContext } from '../../../../context/notifications/NotificationsProvider'
+import { Alert as AlertComponent } from 'components/ui/Alert'
+import { Button } from 'components/ui/Button'
+
+// Helper function to get icon based on notification type
+function getNotificationIcon(type: string) {
+  const typeStr = String(type).toLowerCase()
+  if (typeStr.includes('pedido') || typeStr.includes('order')) return Package
+  if (typeStr.includes('entrega') || typeStr.includes('delivered')) return CheckCircle
+  if (typeStr.includes('ruta') || typeStr.includes('route')) return MapPin
+  if (typeStr.includes('camino')) return Truck
+  if (typeStr.includes('cambio') || typeStr.includes('ajustado')) return AlertTriangle
+  return Bell
+}
+
+// Helper function to get color based on notification type
+function getNotificationColor(type: string) {
+  const typeStr = String(type).toLowerCase()
+  if (typeStr.includes('entregado') || typeStr.includes('completed')) return { bg: 'bg-green-50', text: 'text-green-600' }
+  if (typeStr.includes('cancelado') || typeStr.includes('rejected')) return { bg: 'bg-red-50', text: 'text-red-600' }
+  if (typeStr.includes('cambio') || typeStr.includes('ajustado')) return { bg: 'bg-orange-50', text: 'text-orange-600' }
+  if (typeStr.includes('ruta') || typeStr.includes('route')) return { bg: 'bg-blue-50', text: 'text-blue-600' }
+  if (typeStr.includes('pedido')) return { bg: 'bg-purple-50', text: 'text-purple-600' }
+  return { bg: 'bg-neutral-50', text: 'text-neutral-600' }
+}
 
 export default function NotificacionesPage() {
+  const { notifications, isConnected, clearNotifications } = useNotificationsContext()
+
+  // Mostrar TODAS las notificaciones
+  const allNotifications = notifications
+
   return (
     <div className="space-y-6">
       <PageHero
         title="Notificaciones"
         subtitle="Alertas operativas: pedidos listos, cambios de ruta y nuevas devoluciones"
         chips={[
-          'Pedidos listos',
-          'Cambios de ruta',
-          'Nuevas devoluciones',
+          isConnected ? 'Conectado' : 'Desconectado',
+          `${allNotifications.length} Nuevas`,
         ]}
       />
 
-      <SectionHeader 
-        title="Notificaciones" 
-        subtitle="Alertas operativas y cambios de ruta" 
-      />
+      {!isConnected && (
+        <AlertComponent
+          type="info"
+          title="Desconectado"
+          message="Conectando con el servidor de notificaciones..."
+        />
+      )}
 
-      <Alert
-        type="info"
-        title="Sin datos aún"
-        message="Vista preparada para mostrar notificaciones de pedidos listos, cambios de ruta, y nuevas devoluciones (sin datos quemados)."
-      />
-
-      <EmptyContent
-        icon={Bell}
-        title="No hay notificaciones"
-        subtitle="Recibirás alertas sobre pedidos listos, cambios de ruta y asignaciones."
-      />
+      {allNotifications.length > 0 ? (
+        <div className="space-y-4">
+          <div className="flex justify-end">
+            <Button variant="ghost" size="sm" onClick={clearNotifications}>
+              Limpiar todo
+            </Button>
+          </div>
+          {allNotifications.map((notif, index) => {
+            const Icon = getNotificationIcon(notif.type)
+            const colors = getNotificationColor(notif.type)
+            return (
+              <div key={notif.id ?? index} className="flex items-start gap-4 p-4 bg-white border border-neutral-200 rounded-xl shadow-sm animate-in fade-in slide-in-from-top-2">
+                <div className={`p-2 rounded-full ${colors.bg} ${colors.text}`}>
+                  <Icon size={20} />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-semibold text-neutral-900">{notif.title || 'Sin título'}</h4>
+                  <p className="text-sm text-neutral-600 mt-1">{notif.message}</p>
+                  <span className="text-xs text-neutral-400 mt-2 block">
+                    {notif.timestamp
+                      ? new Date(notif.timestamp).toLocaleString('es-ES', {
+                        dateStyle: 'short',
+                        timeStyle: 'short'
+                      })
+                      : 'Recién recibido'}
+                  </span>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl border border-neutral-200 p-8">
+          <EmptyContent
+            icon={Bell}
+            title="No hay notificaciones"
+            subtitle="Recibirás alertas sobre pedidos listos, cambios de ruta y asignaciones."
+          />
+        </div>
+      )}
     </div>
   )
 }
