@@ -29,6 +29,8 @@ export interface Pedido {
     cliente?: {
         razon_social: string
         identificacion?: string
+        direccion_texto?: string
+        ubicacion_gps?: { type: 'Point'; coordinates: [number, number] }
     }
     vendedor?: {
         nombreCompleto?: string
@@ -111,7 +113,9 @@ export async function obtenerPedidoPorId(id: string): Promise<Pedido | null> {
             if (clienteInfo) {
                 rawPedido.cliente = {
                     razon_social: clienteInfo.razon_social,
-                    identificacion: clienteInfo.identificacion
+                    identificacion: clienteInfo.identificacion,
+                    direccion_texto: clienteInfo.direccion_texto,
+                    ubicacion_gps: clienteInfo.ubicacion_gps
                 }
             }
         } catch (e) {

@@ -23,17 +23,14 @@ export function OrderDetailsModal({
 
     useEffect(() => {
         let isMounted = true
+        // Start with passed data
         setDetalle(pedido)
-        if (pedido.items.length > 0) {
-            setDetalleError(null)
-            setCargandoDetalle(false)
-            return () => {
-                isMounted = false
-            }
-        }
-
-        setCargandoDetalle(true)
         setDetalleError(null)
+
+        // Always fetch fresh details to ensure we have validations and latest status
+        // especially important when opening from list view where data might be partial
+        setCargandoDetalle(true)
+
         const loadDetalle = async () => {
             try {
                 const enriched = await fetchDetallePedido(pedido.id)
@@ -41,13 +38,17 @@ export function OrderDetailsModal({
                 setDetalle(enriched)
             } catch (err) {
                 if (!isMounted) return
+                // Only show error if we strictly needed the data? 
+                // We show alert/error state in UI
                 const message = err instanceof Error ? err.message : 'No se pudo cargar el detalle del pedido'
                 setDetalleError(message)
             } finally {
                 if (isMounted) setCargandoDetalle(false)
             }
         }
+
         loadDetalle()
+
         return () => {
             isMounted = false
         }
@@ -173,7 +174,7 @@ export function OrderDetailsModal({
                                                                 Solicitado: {requestedQty} {item.unit}
                                                             </p>
                                                             <p className="text-xs font-bold text-orange-600">
-                                                                Enviado: {item.quantity} {item.unit} × {hasDiscount ? (
+                                                                Enviado: {item.cantidad ?? item.quantity} {item.unit} × {hasDiscount ? (
                                                                     <span className="text-green-600">
                                                                         ${Number(item.precio_unitario_final || item.unitPrice || 0).toFixed(2)}
                                                                         <span className="ml-1 text-[10px] bg-green-50 px-1 py-0.5 rounded italic">(-{item.descuento_item_valor}{item.descuento_item_tipo === 'porcentaje' ? '%' : '$'})</span>
@@ -190,7 +191,7 @@ export function OrderDetailsModal({
                                                         </>
                                                     ) : (
                                                         <p className="text-xs text-neutral-500">
-                                                            {item.quantity} {item.unit} × {hasDiscount ? (
+                                                            {item.cantidad ?? item.quantity} {item.unit} × {hasDiscount ? (
                                                                 <span className="text-green-600 font-semibold">
                                                                     ${Number(item.precio_unitario_final || item.unitPrice || 0).toFixed(2)}
                                                                     <span className="ml-1 text-[10px] bg-green-50 px-1 py-0.5 rounded italic font-normal text-green-700">(-{item.descuento_item_valor}{item.descuento_item_tipo === 'porcentaje' ? '%' : '$'})</span>
@@ -245,21 +246,21 @@ export function OrderDetailsModal({
                     >
                         Cerrar
                     </button>
-                    {isAjustado && latestValidation ? (
+                    {isAjustado ? (
                         <>
                             <button
                                 onClick={() => handleResponse('rechaza')}
-                                disabled={responding}
+                                disabled={!latestValidation || responding}
                                 className="flex-1 rounded-xl px-4 py-3 text-center text-sm font-semibold text-white transition-colors bg-red-600 hover:bg-red-700 disabled:opacity-50"
                             >
-                                {responding ? 'Procesando...' : 'Rechazar Cambio'}
+                                {responding ? 'Procesando...' : 'Cancelar'}
                             </button>
                             <button
                                 onClick={() => handleResponse('acepta')}
-                                disabled={responding}
+                                disabled={!latestValidation || responding}
                                 className="flex-1 rounded-xl px-4 py-3 text-center text-sm font-semibold text-white transition-colors bg-green-600 hover:bg-green-700 disabled:opacity-50"
                             >
-                                {responding ? 'Procesando...' : 'Aceptar Cambio'}
+                                {responding ? 'Procesando...' : 'Aceptar'}
                             </button>
                         </>
                     ) : puedeCancelar && (

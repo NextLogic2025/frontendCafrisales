@@ -7,6 +7,8 @@ import { RuteroCard } from '../../../supervisor/components/RuteroCard'
 import { HistorialModal } from '../../../supervisor/components/HistorialModal'
 import type { RuteroLogistico, EstadoRutero } from '../../../supervisor/services/types'
 import { getRuterosAsignados, iniciarRutero, completarRutero } from '../../services/logisticsApi'
+import { getVehicles } from '../../../supervisor/services/vehiclesApi'
+import { getUserById } from '../../../supervisor/services/usuariosApi'
 
 export default function RutasPage() {
   const navigate = useNavigate()
@@ -32,7 +34,53 @@ export default function RutasPage() {
       }
 
       const data = await getRuterosAsignados(estados ? { estado: estados } : undefined)
-      setRuteros(data)
+
+      // Enrich data manually if backend doesn't return relations
+      const enrichedData = await Promise.all(data.map(async (r) => {
+        let vehiculo = r.vehiculo
+        let transportista = r.transportista
+
+        // 1. Fetch Vehicle if missing and we have ID
+        if (!vehiculo && r.vehiculo_id) {
+          try {
+            // Fetch all vehicles efficiently (or cached) - optimize this later if needed
+            const allVehicles = await getVehicles()
+            const found = allVehicles.find(v => v.id === r.vehiculo_id)
+            if (found) {
+              vehiculo = {
+                id: found.id,
+                placa: found.placa,
+                modelo: found.modelo,
+                capacidad_kg: found.capacidad_kg,
+                estado: found.estado
+              }
+            }
+          } catch (e) {
+            console.error('Error fetching vehicle', e)
+          }
+        }
+
+        // 2. Fetch Transportista if missing and we have ID
+        if (!transportista && r.transportista_id) {
+          try {
+            const u = await getUserById(r.transportista_id)
+            if (u) {
+              transportista = {
+                id: u.id,
+                nombre: u.perfil?.nombres || 'Sin nombre',
+                apellido: u.perfil?.apellidos || '',
+                email: u.email
+              }
+            }
+          } catch (e) {
+            console.error('Error fetching transportista', e)
+          }
+        }
+
+        return { ...r, vehiculo, transportista }
+      }))
+
+      setRuteros(enrichedData)
     } catch (error) {
       console.error('Error al cargar ruteros:', error)
       showToast('error', 'Error al cargar ruteros asignados')
@@ -97,8 +145,8 @@ export default function RutasPage() {
           <button
             onClick={() => setFiltroEstado('activos')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${filtroEstado === 'activos'
-                ? 'bg-brand-red text-white shadow-md'
-                : 'bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-100'
+              ? 'bg-brand-red text-white shadow-md'
+              : 'bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-100'
               }`}
           >
             Activos
@@ -106,8 +154,8 @@ export default function RutasPage() {
           <button
             onClick={() => setFiltroEstado('completados')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${filtroEstado === 'completados'
-                ? 'bg-brand-red text-white shadow-md'
-                : 'bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-100'
+              ? 'bg-brand-red text-white shadow-md'
+              : 'bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-100'
               }`}
           >
             Completados
@@ -115,8 +163,8 @@ export default function RutasPage() {
           <button
             onClick={() => setFiltroEstado('todos')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${filtroEstado === 'todos'
-                ? 'bg-brand-red text-white shadow-md'
-                : 'bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-100'
+              ? 'bg-brand-red text-white shadow-md'
+              : 'bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-100'
               }`}
           >
             Todos

@@ -107,16 +107,32 @@ export function ParadasList({
                                 </div>
                             )}
 
-                            {/* Total del pedido */}
-                            {parada.pedido?.total !== undefined && (
-                                <div className="flex items-center gap-2 text-sm">
-                                    <Package className="h-4 w-4 text-neutral-400" />
-                                    <span className="text-neutral-600">Total:</span>
-                                    <span className="font-semibold text-brand-red">
-                                        ${parada.pedido.total.toFixed(2)}
-                                    </span>
-                                </div>
-                            )}
+                            {/* Total and Actions */}
+                            <div className="flex items-center justify-between mt-2">
+                                {parada.pedido?.total !== undefined && (
+                                    <div className="flex items-center gap-2 text-sm">
+                                        <Package className="h-4 w-4 text-neutral-400" />
+                                        <span className="text-neutral-600">Total:</span>
+                                        <span className="font-semibold text-brand-red">
+                                            ${parada.pedido.total.toFixed(2)}
+                                        </span>
+                                    </div>
+                                )}
+
+                                {parada.pedido?.ubicacion_gps && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            const [lng, lat] = parada.pedido!.ubicacion_gps!.coordinates
+                                            window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`, '_blank')
+                                        }}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-semibold hover:bg-blue-100 transition-colors"
+                                    >
+                                        <MapPin className="h-3.5 w-3.5" />
+                                        Abrir en Maps
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
