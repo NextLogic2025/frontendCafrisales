@@ -1,17 +1,16 @@
 import { BarChart3, Bell, CheckCircle2, AlertCircle } from 'lucide-react'
 import { PageHero } from 'components/ui/PageHero'
 import { EmptyContent } from 'components/ui/EmptyContent'
-import { useSocket } from '../../../../hooks/useSocket'
+import { useNotificationsContext } from '../../../../context/notifications/NotificationsProvider'
 import { Alert } from 'components/ui/Alert'
 import { Button } from 'components/ui/Button'
 
 export default function NotificacionesPage() {
-    const { notifications, isConnected, clearNotifications } = useSocket()
+    const { notifications, isConnected, clearNotifications, pushNotification } = useNotificationsContext()
 
-    // Filter for Supervisor specific notifications if needed, 
-    // or assume all notifications sent to this user are relevant.
-    // Backend sends type: 'ALERT_SUPERVISOR'
-    const alerts = notifications.filter(n => n.type === 'ALERT_SUPERVISOR')
+    // Mostrar TODAS las notificaciones sin filtrar por tipo
+    // El backend ya filtra por usuario autenticado
+    const alerts = notifications
 
     return (
         <div className="space-y-6">
@@ -24,9 +23,23 @@ export default function NotificacionesPage() {
                 ]}
             />
 
+            <div className="flex justify-end">
+                <Button size="sm" variant="outline" onClick={() => {
+                    // Simulate a notification (useful for testing UI)
+                    pushNotification({
+                        id: `sim-${Date.now()}`,
+                        title: 'Pedido de prueba',
+                        message: 'Pedido #SIM1234 requiere atención',
+                        tipo: 'ALERT_SUPERVISOR',
+                    })
+                }}>
+                    Simular notificación
+                </Button>
+            </div>
+
             {!isConnected && (
                 <Alert
-                    type="warning"
+                    type="info"
                     title="Desconectado"
                     message="No hay conexión con el servidor de notificaciones. Intentando reconectar..."
                 />
@@ -40,15 +53,18 @@ export default function NotificacionesPage() {
                         </Button>
                     </div>
                     {alerts.map((notif, index) => (
-                        <div key={index} className="flex items-start gap-4 p-4 bg-white border border-neutral-200 rounded-xl shadow-sm animate-in fade-in slide-in-from-top-2">
+                        <div key={notif.id ?? index} className="flex items-start gap-4 p-4 bg-white border border-neutral-200 rounded-xl shadow-sm animate-in fade-in slide-in-from-top-2">
                             <div className="p-2 bg-red-50 rounded-full text-brand-red">
                                 <AlertCircle size={20} />
                             </div>
                             <div className="flex-1">
-                                <h4 className="font-semibold text-neutral-900">{notif.title}</h4>
+                                <div className="flex items-center justify-between">
+                                    <h4 className="font-semibold text-neutral-900">{notif.title || 'Sin título'}</h4>
+                                    <span className="text-xs text-neutral-400">{notif.type}</span>
+                                </div>
                                 <p className="text-sm text-neutral-600 mt-1">{notif.message}</p>
                                 <span className="text-xs text-neutral-400 mt-2 block">
-                                    {new Date().toLocaleTimeString()}
+                                    {notif.timestamp ? new Date(notif.timestamp).toLocaleString() : ''}
                                 </span>
                             </div>
                         </div>

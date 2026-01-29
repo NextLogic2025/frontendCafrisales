@@ -13,7 +13,11 @@ export function useNotification() {
   const [notifications, setNotifications] = useState<Notification[]>([])
 
   const show = useCallback((message: string, type: NotificationType = 'info', duration: number = 3000) => {
-    const id = Date.now().toString()
+    // Generate a collision-resistant id. Prefer `crypto.randomUUID()` when available,
+    // fallback to a timestamp + random suffix.
+    const id = (typeof crypto !== 'undefined' && (crypto as any).randomUUID)
+      ? (crypto as any).randomUUID()
+      : `${Date.now()}-${Math.floor(Math.random() * 1e9)}`
     const notification: Notification = {
       id,
       type,
