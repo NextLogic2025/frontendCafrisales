@@ -56,6 +56,7 @@ const TransportistaPage = React.lazy(() => import('../features/transportista/Tra
 const TransportistaInicio = React.lazy(() => import('../features/transportista/pages/Inicio'))
 const TransportistaPedidosAsignados = React.lazy(() => import('../features/transportista/pages/PedidosAsignados'))
 const TransportistaRutas = React.lazy(() => import('../features/transportista/pages/Rutas'))
+const TransportistaDetalleRutero = React.lazy(() => import('../features/transportista/pages/Rutas/DetalleRuteroPage'))
 const TransportistaEntregas = React.lazy(() => import('../features/transportista/pages/Entregas'))
 const TransportistaDevoluciones = React.lazy(() => import('../features/transportista/pages/Devoluciones'))
 const TransportistaHistorial = React.lazy(() => import('../features/transportista/pages/Historial'))
@@ -68,9 +69,7 @@ const SupervisorConductores = React.lazy(() => import('../features/supervisor/pa
 const SupervisorEquipo = React.lazy(() => import('../features/supervisor/pages/Equipo'))
 const SupervisorCatalogo = React.lazy(() => import('../features/supervisor/pages/Catalogo'))
 const SupervisorZonas = React.lazy(() => import('../features/supervisor/pages/Zonas'))
-const SupervisorRutas = React.lazy(() => import('../features/supervisor/pages/Rutas'))
-const SupervisorRouteCreatePage = React.lazy(() => import('../features/supervisor/pages/Rutas/crearRuta'))
-const SupervisorRouteCreatePaso2Page = React.lazy(() => import('../features/supervisor/pages/Rutas/crearRutapaso2'))
+const SupervisorRutas = React.lazy(() => import('../features/supervisor/pages/Rutas/index'))
 const SupervisorPedidos = React.lazy(() => import('../features/supervisor/pages/Pedidos'))
 const SupervisorBodega = React.lazy(() => import('../features/supervisor/pages/Bodega'))
 const SupervisorEntregas = React.lazy(() => import('../features/supervisor/pages/Entregas'))
@@ -80,6 +79,7 @@ const SupervisorAlertas = React.lazy(() => import('../features/supervisor/pages/
 const SupervisorNotificaciones = React.lazy(() => import('../features/supervisor/pages/Notificaciones')) // User created this file
 const SupervisorPerfil = React.lazy(() => import('../features/supervisor/pages/Perfil'))
 const SupervisorPromociones = React.lazy(() => import('../features/supervisor/pages/Pedidos/PromocionesSupervisor'))
+const SupervisorRuterosLogisticos = React.lazy(() => import('../features/supervisor/pages/RuterosLogisticos'))
 
 export default function AppRouter() {
   return (
@@ -176,7 +176,10 @@ export default function AppRouter() {
         >
           <Route index element={<TransportistaInicio />} />
           <Route path="pedidos" element={<TransportistaPedidosAsignados />} />
-          <Route path="rutas" element={<TransportistaRutas />} />
+          <Route path="rutas">
+            <Route index element={<TransportistaRutas />} />
+            <Route path=":id" element={<TransportistaDetalleRutero />} />
+          </Route>
           <Route path="entregas" element={<TransportistaEntregas />} />
           <Route path="devoluciones" element={<TransportistaDevoluciones />} />
           <Route path="historial" element={<TransportistaHistorial />} />
@@ -200,16 +203,11 @@ export default function AppRouter() {
           <Route path="equipo" element={<SupervisorEquipo />} />
           <Route path="catalogo" element={<SupervisorCatalogo />} />
           <Route path="zonas" element={<SupervisorZonas />} />
-          <Route path="rutas">
-            <Route index element={<SupervisorRutas />} />
-            <Route path="crear" >
-              <Route index element={<SupervisorRouteCreatePage />} />
-              <Route path="paso2" element={<SupervisorRouteCreatePaso2Page />} />
-            </Route>
-          </Route>
+          <Route path="rutas" element={<SupervisorRutas />} />
           <Route path="pedidos" element={<SupervisorPedidos />} />
           <Route path="promociones" element={<SupervisorPromociones />} />
           <Route path="bodega" element={<SupervisorBodega />} />
+          <Route path="ruteros-logisticos" element={<SupervisorRuterosLogisticos />} />
           <Route path="entregas" element={<SupervisorEntregas />} />
           <Route path="devoluciones" element={<SupervisorDevoluciones />} />
           <Route path="reportes" element={<SupervisorReportes />} />

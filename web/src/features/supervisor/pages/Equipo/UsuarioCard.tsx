@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Mail, Shield, CheckCircle, XCircle, Edit2, UserX, UserCheck } from 'lucide-react'
 import { Button } from 'components/ui/Button'
 import { type Usuario } from '../../services/usuariosApi'
@@ -12,12 +13,23 @@ const ROLE_COLORS: Record<string, string> = {
 interface UsuarioCardProps {
   usuario: Usuario
   onEdit: (usuario: Usuario) => void
-  onDeactivate: (usuario: Usuario) => void
-  onActivate: (usuario: Usuario) => void
+  onDeactivate: (usuario: Usuario) => Promise<void>
+  onActivate: (usuario: Usuario) => Promise<void>
 }
 
 export function UsuarioCard({ usuario, onEdit, onDeactivate, onActivate }: UsuarioCardProps) {
   const roleColor = ROLE_COLORS[usuario.rol.nombre] || 'bg-gray-100 text-gray-800'
+  const [localActivo, setLocalActivo] = useState<boolean>(usuario.activo)
+  const [isProcessing, setIsProcessing] = useState<boolean>(false)
+
+  // Keep localActivo in sync when parent updates usuario
+  useEffect(() => {
+    setLocalActivo(usuario.activo)
+  }, [usuario.activo])
+
+  useEffect(() => {
+    // localActivo updated
+  }, [localActivo])
 
   return (
     <div className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md min-h-[340px]">
@@ -64,11 +76,11 @@ export function UsuarioCard({ usuario, onEdit, onDeactivate, onActivate }: Usuar
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <span
             className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${
-              usuario.activo ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+              localActivo ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
             }`}
           >
-            {usuario.activo ? <CheckCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-            {usuario.activo ? 'Activo' : 'Inactivo'}
+            {localActivo ? <CheckCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+            {localActivo ? 'Activo' : 'Inactivo'}
           </span>
 
           {usuario.emailVerificado && (
@@ -94,21 +106,49 @@ export function UsuarioCard({ usuario, onEdit, onDeactivate, onActivate }: Usuar
           <Edit2 className="h-4 w-4" />
           Editar
         </Button>
-        {usuario.activo ? (
+        {localActivo ? (
           <Button
-            onClick={() => onDeactivate(usuario)}
-            className="flex flex-1 items-center justify-center gap-2 bg-orange-600 text-white hover:bg-orange-700"
+            type="button"
+            onClick={async () => {
+              if (!confirm(`¿Deseas desactivar a ${usuario.nombre}?`)) return
+              setLocalActivo(false)
+              setIsProcessing(true)
+              try {
+                await onDeactivate(usuario)
+              } catch (e) {
+                setLocalActivo(true)
+              } finally {
+                setIsProcessing(false)
+              }
+            }}
+            className={`flex flex-1 items-center justify-center gap-2 ${isProcessing ? 'opacity-70' : ''} bg-orange-600 text-white hover:bg-orange-700`}
+            style={{ backgroundColor: '#fb923c' }}
+            disabled={isProcessing}
           >
             <UserX className="h-4 w-4" />
-            Desactivar
+            {isProcessing ? 'Procesando...' : 'Desactivar'}
           </Button>
         ) : (
           <Button
-            onClick={() => onActivate(usuario)}
-            className="flex flex-1 items-center justify-center gap-2 bg-green-600 text-white hover:bg-green-700"
+            type="button"
+            onClick={async () => {
+              if (!confirm(`¿Deseas activar a ${usuario.nombre}?`)) return
+              setLocalActivo(true)
+              setIsProcessing(true)
+              try {
+                await onActivate(usuario)
+              } catch (e) {
+                setLocalActivo(false)
+              } finally {
+                setIsProcessing(false)
+              }
+            }}
+            className={`flex flex-1 items-center justify-center gap-2 ${isProcessing ? 'opacity-70' : ''} bg-green-600 text-white hover:bg-green-700`}
+            style={{ backgroundColor: '#16a34a' }}
+            disabled={isProcessing}
           >
             <UserCheck className="h-4 w-4" />
-            Activar
+            {isProcessing ? 'Procesando...' : 'Activar'}
           </Button>
         )}
       </div>
