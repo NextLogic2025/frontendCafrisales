@@ -83,13 +83,20 @@ export default function VendedorCredito() {
         setLoading(true)
         try {
             if (filter === 'SOLICITUDES') {
-                const orders = await getOrders()
+                const [orders, allCredits] = await Promise.all([
+                    getOrders(),
+                    getCredits() // Fetch all credits to identify which orders are already processed
+                ])
+
+                const processedOrderIds = new Set(allCredits.map(c => c.pedido_id))
+
                 // Filter: Created by 'cliente' (implied?), 'credito', 'pendiente_validacion'
-                // Actually backend returns all Orders. We must filter.
+                // And explicitly exclude orders that already have a credit record
                 const requests = orders.filter(o =>
                     o.estado === 'pendiente_validacion' &&
                     // @ts-ignore
-                    o.metodo_pago === 'credito'
+                    o.metodo_pago === 'credito' &&
+                    !processedOrderIds.has(o.id)
                 )
 
                 const mapped: CreditListItem[] = requests.map(r => ({
