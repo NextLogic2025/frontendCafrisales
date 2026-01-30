@@ -1,20 +1,20 @@
 steps:
-  # 1. Instalar dependencias (Desde la RAÍZ para que encuentre ../shared)
+  # Paso 0: Instalar dependencias
   - name: 'node:20'
     entrypoint: 'npm'
-    args: ['ci', '--prefix', 'web'] # --prefix le dice que el package.json está en web
-    
-  # 2. Construir la web
+    args: ['ci', '--prefix', 'web'] # Mantén tu prefix web si así lo tenías
+
+  # Paso 1: Construir (Build)
   - name: 'node:20'
     entrypoint: 'npm'
     args: ['run', 'build', '--prefix', 'web']
     env:
-      - 'VITE_API_BASE_URL=${_VITE_API_URL}'
+      - 'VITE_API_URL=$_VITE_API_URL' # Esto inyecta la variable que configuramos
 
-  # 3. Desplegar a Firebase
-  - name: 'gcr.io/$PROJECT_ID/firebase'
-    args: ['deploy', '--project=$PROJECT_ID', '--only=hosting']
-    dir: 'web' # Aquí sí entramos a web para desplegar
+  # Paso 2: Desplegar a Firebase (EL NUEVO CAMBIO)
+  - name: 'node:20'
+    entrypoint: 'npx'
+    args: ['firebase-tools', 'deploy', '--project', '$PROJECT_ID', '--only', 'hosting']
 
 options:
   logging: CLOUD_LOGGING_ONLY
