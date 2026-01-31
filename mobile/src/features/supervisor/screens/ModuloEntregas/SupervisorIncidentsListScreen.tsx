@@ -13,10 +13,15 @@ import { showGlobalToast } from '../../../../utils/toastService'
 
 type SeverityFilter = 'todas' | 'critica' | 'alta' | 'media' | 'baja'
 
+const formatLabel = (value?: string | null) => {
+    if (!value) return ''
+    return value.replace(/_/g, ' ').replace(/\s+/g, ' ').trim()
+}
+
 const severityBadge = (severidad: string) => {
     switch (severidad) {
         case 'critica':
-            return { bg: '#FEE2E2', text: '#991B1B', label: 'Crítica', icon: 'warning' }
+            return { bg: '#FEE2E2', text: '#991B1B', label: 'Critica', icon: 'warning' }
         case 'alta':
             return { bg: '#FEF3C7', text: '#92400E', label: 'Alta', icon: 'alert-circle' }
         case 'media':
@@ -48,6 +53,10 @@ export function SupervisorIncidentsListScreen() {
                 resuelto: showPendingOnly ? 'false' : undefined,
                 severidad: severityFilter !== 'todas' ? severityFilter : undefined,
             })
+            if (data === null) {
+                showGlobalToast('No se pudo cargar incidencias', 'error')
+                return
+            }
             setIncidents(data)
         } finally {
             setLoading(false)
@@ -97,7 +106,7 @@ export function SupervisorIncidentsListScreen() {
 
     const severityOptions = [
         { id: 'todas', name: 'Todas' },
-        { id: 'critica', name: 'Críticas' },
+        { id: 'critica', name: 'Criticas' },
         { id: 'alta', name: 'Altas' },
         { id: 'media', name: 'Medias' },
         { id: 'baja', name: 'Bajas' },
@@ -118,7 +127,7 @@ export function SupervisorIncidentsListScreen() {
                         <View className="flex-row items-center">
                             <Ionicons name="warning" size={24} color="#991B1B" />
                             <Text className="ml-2 text-base font-bold text-red-800">
-                                {kpis.criticas} incidencia(s) crítica(s) pendiente(s)
+                                {kpis.criticas} incidencia(s) critica(s) pendiente(s)
                             </Text>
                         </View>
                     </View>
@@ -171,7 +180,7 @@ export function SupervisorIncidentsListScreen() {
                                             <Ionicons name={badge.icon as any} size={20} color={badge.text} />
                                         </View>
                                         <View style={styles.cardContent}>
-                                            <Text style={styles.title}>{incident.tipo_incidencia}</Text>
+                                            <Text style={styles.title}>{formatLabel(incident.tipo_incidencia)}</Text>
                                             <Text style={styles.subtitle} numberOfLines={2}>
                                                 {incident.descripcion}
                                             </Text>
@@ -205,7 +214,7 @@ export function SupervisorIncidentsListScreen() {
 
                                     {incident.resolucion && (
                                         <View className="mt-2 p-3 rounded-xl bg-emerald-50">
-                                            <Text className="text-xs font-semibold text-emerald-700">Resolución:</Text>
+                                            <Text className="text-xs font-semibold text-emerald-700">Resolucion:</Text>
                                             <Text className="text-sm text-emerald-800 mt-1">{incident.resolucion}</Text>
                                         </View>
                                     )}
@@ -221,19 +230,19 @@ export function SupervisorIncidentsListScreen() {
                 visible={showResolveModal}
                 type="success"
                 title="Resolver Incidencia"
-                message={`¿Cómo se resolvió "${selectedIncident?.tipo_incidencia}"?`}
+                message={`Como se resolvio "${formatLabel(selectedIncident?.tipo_incidencia)}"?`}
                 onClose={() => setShowResolveModal(false)}
                 showCancel
                 cancelText="Cancelar"
-                confirmText={resolving ? 'Guardando...' : 'Confirmar Resolución'}
+                confirmText={resolving ? 'Guardando...' : 'Confirmar resolucion'}
                 onConfirm={handleResolve}
             >
                 <View className="w-full mb-4">
                     <TextField
-                        label="Descripción de la resolución"
+                        label="Descripcion de la resolucion"
                         value={resolucion}
                         onChangeText={setResolucion}
-                        placeholder="Ingresa cómo se resolvió la incidencia..."
+                        placeholder="Ingresa como se resolvio la incidencia..."
                     />
                 </View>
             </FeedbackModal>

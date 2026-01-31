@@ -312,6 +312,18 @@ const rawService = {
     }
   },
 
+  async markLogisticsStopPrepared(routeId: string, pedidoId: string): Promise<LogisticStop | null> {
+    try {
+      return await ApiService.put<LogisticStop>(
+        `${ROUTE_API_URL}/ruteros-logisticos/${routeId}/paradas/${pedidoId}/preparar`,
+        {},
+      )
+    } catch (error) {
+      logErrorForDebugging(error, 'RouteService.markLogisticsStopPrepared', { routeId, pedidoId })
+      return null
+    }
+  },
+
   async publishLogisticsRoute(id: string): Promise<LogisticRoute | null> {
     try {
       return await ApiService.put<LogisticRoute>(`${ROUTE_API_URL}/ruteros-logisticos/${id}/publicar`, {})

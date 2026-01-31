@@ -17,6 +17,7 @@ import { SellerOrdersScreen } from '../features/vendedor/screens/ModuloPedidos/S
 import { SellerOrderDetailScreen } from '../features/vendedor/screens/ModuloPedidos/SellerOrderDetailScreen'
 import { SellerCommercialRoutesScreen } from '../features/vendedor/screens/ModuloRuteroComercial/SellerCommercialRoutesScreen'
 import { SellerCommercialRouteDetailScreen } from '../features/vendedor/screens/ModuloRuteroComercial/SellerCommercialRouteDetailScreen'
+import { NotificationsScreen } from '../features/shared/screens/NotificationsScreen'
 
 const Tab = createBottomTabNavigator()
 const Stack = createNativeStackNavigator()
@@ -46,6 +47,7 @@ export function SellerNavigator() {
       <Stack.Screen name="SellerPedidoDetalle" component={SellerOrderDetailScreen} />
       <Stack.Screen name="SellerRuterosComerciales" component={SellerCommercialRoutesScreen} />
       <Stack.Screen name="SellerRuteroComercialDetalle" component={SellerCommercialRouteDetailScreen} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} />
     </Stack.Navigator>
   )
 }

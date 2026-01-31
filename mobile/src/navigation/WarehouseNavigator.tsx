@@ -11,6 +11,7 @@ import { WarehouseValidateOrderScreen } from '../features/bodeguero/screens/Modu
 import { WarehouseHistoryScreen } from '../features/bodeguero/screens/ModuloHistorial/WarehouseHistoryScreen'
 import { WarehouseHistoryDetailScreen } from '../features/bodeguero/screens/ModuloHistorial/WarehouseHistoryDetailScreen'
 import { WarehouseDeliveriesListScreen } from '../features/bodeguero/screens/ModuloEntregas'
+import { NotificationsScreen } from '../features/shared/screens/NotificationsScreen'
 
 const Tab = createBottomTabNavigator()
 const Stack = createNativeStackNavigator()
@@ -23,6 +24,7 @@ function WarehouseTabs() {
         >
             <Tab.Screen name="Inicio" component={WarehouseHomeScreen} />
             <Tab.Screen name="Pedidos" component={WarehouseOrdersScreen} />
+            <Tab.Screen name="Preparación" component={WarehouseDeliveriesListScreen} />
             <Tab.Screen name="Historial" component={WarehouseHistoryScreen} />
             <Tab.Screen name="Perfil" component={WarehouseProfileScreen} />
         </Tab.Navigator>
@@ -37,7 +39,7 @@ export function WarehouseNavigator() {
             <Stack.Screen name="WarehouseValidarPedido" component={WarehouseValidateOrderScreen} />
             <Stack.Screen name="WarehouseHistorialDetalle" component={WarehouseHistoryDetailScreen} />
             <Stack.Screen name="WarehouseEntregas" component={WarehouseDeliveriesListScreen} />
+            <Stack.Screen name="Notifications" component={NotificationsScreen} />
         </Stack.Navigator>
     )
 }
-

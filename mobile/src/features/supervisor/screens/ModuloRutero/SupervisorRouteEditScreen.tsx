@@ -178,6 +178,11 @@ export function SupervisorRouteEditScreen() {
     return `#${orderId.slice(0, 8)}`
   }
 
+  const isAssignableOrder = (order?: OrderListItem) => {
+    if (!order?.estado) return true
+    return ['validado', 'aceptado_cliente'].includes(order.estado)
+  }
+
   const handleSave = async () => {
     if (!ruteroId || !rutero) return
     if (rutero.estado !== 'borrador') {
@@ -288,12 +293,19 @@ export function SupervisorRouteEditScreen() {
               <View className="mt-3 gap-3">
                 {orders.map((order) => {
                   const isSelected = selectedOrders.includes(order.id)
+                  const isAssignable = isAssignableOrder(order)
                   const label = formatOrderLabel(order, order.id)
                   const clientInfo = orderClientMap[order.id]
                   return (
                     <Pressable
                       key={order.id}
-                      onPress={() => toggleOrder(order.id)}
+                      onPress={() => {
+                        if (!isAssignable) {
+                          showGlobalToast('Pedido ya asignado o no disponible', 'warning')
+                          return
+                        }
+                        toggleOrder(order.id)
+                      }}
                       className={`rounded-2xl border px-4 py-3 ${isSelected ? 'border-brand-red bg-red-50' : 'border-neutral-200 bg-white'}`}
                     >
                       <Text className="text-xs text-neutral-500">Pedido</Text>
@@ -309,6 +321,11 @@ export function SupervisorRouteEditScreen() {
                       <Text className="text-xs text-neutral-500 mt-1">
                         Total: USD {(Number(order.total ?? 0)).toFixed(2)}
                       </Text>
+                      {!isAssignable ? (
+                        <Text className="text-[11px] text-amber-700 mt-2">
+                          Estado: {order.estado?.replace(/_/g, ' ')} (no disponible)
+                        </Text>
+                      ) : null}
                       {isSelected ? (
                         <Text className="text-[11px] text-brand-red mt-2">Orden #{selectedOrders.indexOf(order.id) + 1}</Text>
                       ) : null}

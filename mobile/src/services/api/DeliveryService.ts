@@ -251,7 +251,7 @@ const rawService = {
     }
   },
 
-  async getIncidents(params?: { resuelto?: string; severidad?: string }): Promise<DeliveryIncident[]> {
+  async getIncidents(params?: { resuelto?: string; severidad?: string }): Promise<DeliveryIncident[] | null> {
     try {
       const search = new URLSearchParams()
       if (params?.resuelto) search.set('resuelto', params.resuelto)
@@ -260,7 +260,7 @@ const rawService = {
       return await ApiService.get<DeliveryIncident[]>(`${DELIVERY_API_URL}/incidencias${query ? `?${query}` : ''}`)
     } catch (error) {
       logErrorForDebugging(error, 'DeliveryService.getIncidents')
-      return []
+      return null
     }
   },
 

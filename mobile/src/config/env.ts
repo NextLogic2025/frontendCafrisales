@@ -33,6 +33,7 @@ const envSchema = z.object({
   EXPO_PUBLIC_ZONE_API_URL: z.string().url(),
   EXPO_PUBLIC_ROUTE_API_URL: z.string().url().optional(),
   EXPO_PUBLIC_DELIVERY_API_URL: z.string().url().optional(),
+  EXPO_PUBLIC_NOTIFICATIONS_API_URL: z.string().url().optional(),
   EXPO_PUBLIC_GOOGLE_MAPS_API_KEY: z.string().optional(),
 })
 
@@ -48,6 +49,7 @@ const parsedEnv = envSchema.safeParse({
   EXPO_PUBLIC_ZONE_API_URL: getRawEnv('EXPO_PUBLIC_ZONE_API_URL'),
   EXPO_PUBLIC_ROUTE_API_URL: getRawEnv('EXPO_PUBLIC_ROUTE_API_URL'),
   EXPO_PUBLIC_DELIVERY_API_URL: getRawEnv('EXPO_PUBLIC_DELIVERY_API_URL'),
+  EXPO_PUBLIC_NOTIFICATIONS_API_URL: getRawEnv('EXPO_PUBLIC_NOTIFICATIONS_API_URL'),
   EXPO_PUBLIC_GOOGLE_MAPS_API_KEY: getRawEnv('EXPO_PUBLIC_GOOGLE_MAPS_API_KEY'),
 })
 
@@ -71,6 +73,7 @@ const {
   EXPO_PUBLIC_ZONE_API_URL,
   EXPO_PUBLIC_ROUTE_API_URL,
   EXPO_PUBLIC_DELIVERY_API_URL,
+  EXPO_PUBLIC_NOTIFICATIONS_API_URL,
   EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,
 } = parsedEnv.data
 
@@ -89,6 +92,7 @@ export const env = {
     zoneUrl: normalizeBaseUrl(EXPO_PUBLIC_ZONE_API_URL),
     routeUrl: normalizeBaseUrl(EXPO_PUBLIC_ROUTE_API_URL ?? EXPO_PUBLIC_API_BASE_URL),
     deliveryUrl: normalizeBaseUrl(EXPO_PUBLIC_DELIVERY_API_URL ?? EXPO_PUBLIC_API_BASE_URL),
+    notificationsUrl: normalizeBaseUrl(EXPO_PUBLIC_NOTIFICATIONS_API_URL ?? EXPO_PUBLIC_API_BASE_URL),
   },
   googleMapsKey: EXPO_PUBLIC_GOOGLE_MAPS_API_KEY ?? '',
 } as const

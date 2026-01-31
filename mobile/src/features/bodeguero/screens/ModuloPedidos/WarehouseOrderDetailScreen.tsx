@@ -1,5 +1,5 @@
 import React from 'react'
-import { ActivityIndicator, ScrollView, View } from 'react-native'
+import { ActivityIndicator, ScrollView, View, Text } from 'react-native'
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native'
 import { Header } from '../../../../components/ui/Header'
 import { PrimaryButton } from '../../../../components/ui/PrimaryButton'

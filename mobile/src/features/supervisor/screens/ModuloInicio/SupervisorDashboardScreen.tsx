@@ -57,6 +57,8 @@ export function SupervisorDashboardScreen() {
                 DeliveryService.getIncidents({ resuelto: 'false' })
             ])
 
+            const incidentsSafe = incidents ?? []
+
             // 3. Process KPIs
             const activeOrders = orders.filter(o =>
                 o.estado !== 'entregado' &&
@@ -67,11 +69,11 @@ export function SupervisorDashboardScreen() {
             setKpis([
                 { label: 'Clientes', value: clients.length, icon: 'people-outline', color: BRAND_COLORS.red },
                 { label: 'Pedidos Activos', value: activeOrders, icon: 'cart-outline', color: '#10B981' },
-                { label: 'Incidencias', value: incidents.length, icon: 'alert-circle-outline', color: '#F59E0B' }
+                { label: 'Incidencias', value: incidentsSafe.length, icon: 'alert-circle-outline', color: '#F59E0B' }
             ])
 
             // 4. Process Alerts (from Incidents)
-            const mappedAlerts: AlertItem[] = incidents.slice(0, 5).map(inc => ({
+            const mappedAlerts: AlertItem[] = incidentsSafe.slice(0, 5).map(inc => ({
                 id: inc.id,
                 message: inc.descripcion,
                 type: inc.severidad === 'critica' || inc.severidad === 'alta' ? 'critical' : 'warning',

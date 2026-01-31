@@ -62,8 +62,9 @@ export function Header({
       if (navigationRef.isReady()) {
         navigationRef.navigate(notificationRoute as never);
       }
+    } else if (navigationRef.isReady()) {
+      navigationRef.navigate('Notifications' as never)
     }
-    notificationsCtx?.markAllRead()
   }
 
   const effectiveNotificationCount = useGlobalNotifications

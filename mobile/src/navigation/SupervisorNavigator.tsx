@@ -45,6 +45,7 @@ import { SupervisorCommercialRoutesScreen } from '../features/supervisor/screens
 import { SupervisorCommercialRouteFormScreen } from '../features/supervisor/screens/ModuloRuteroComercial/SupervisorCommercialRouteFormScreen'
 import { SupervisorCommercialRouteDetailScreen } from '../features/supervisor/screens/ModuloRuteroComercial/SupervisorCommercialRouteDetailScreen'
 import { SupervisorDeliveriesListScreen, SupervisorDeliveryDetailScreen, SupervisorIncidentsListScreen } from '../features/supervisor/screens/ModuloEntregas'
+import { NotificationsScreen } from '../features/shared/screens/NotificationsScreen'
 
 const Tab = createBottomTabNavigator()
 const Stack = createNativeStackNavigator()
@@ -108,7 +109,7 @@ export function SupervisorNavigator() {
             <Stack.Screen name="SupervisorEntregas" component={SupervisorDeliveriesListScreen} />
             <Stack.Screen name="SupervisorEntregaDetalle" component={SupervisorDeliveryDetailScreen} />
             <Stack.Screen name="SupervisorIncidencias" component={SupervisorIncidentsListScreen} />
+            <Stack.Screen name="Notifications" component={NotificationsScreen} />
         </Stack.Navigator>
     )
 }
-

@@ -14,6 +14,7 @@ import { ClientOrdersScreen } from '../features/cliente/screens/ModuloPedidos/Cl
 import { ClientOrderDetailScreen } from '../features/cliente/screens/ModuloPedidos/ClientOrderDetailScreen'
 import { ClientOrderAdjustmentsScreen } from '../features/cliente/screens/ModuloAjustesPedido/ClientOrderAdjustmentsScreen'
 import { ClientDeliveryTrackingScreen, ClientDeliveryHistoryScreen } from '../features/cliente/screens/ModuloEntregas'
+import { NotificationsScreen } from '../features/shared/screens/NotificationsScreen'
 
 const Tab = createBottomTabNavigator()
 const Stack = createNativeStackNavigator()
@@ -42,7 +43,7 @@ export function ClientNavigator() {
       {/* Entregas */}
       <Stack.Screen name="ClienteEntregas" component={ClientDeliveryHistoryScreen} />
       <Stack.Screen name="ClienteSeguimientoEntrega" component={ClientDeliveryTrackingScreen} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} />
     </Stack.Navigator>
   )
 }
-

@@ -104,7 +104,7 @@ export const FeedbackModal = ({
                     {children}
 
                     {/* Actions */}
-                    <View className="flex-row w-full space-x-3">
+                    <View className="flex-row w-full" style={{ columnGap: 12 }}>
                         {showCancel && (
                             <TouchableOpacity
                                 className="flex-1 py-3.5 rounded-xl border border-neutral-200 items-center justify-center bg-white"

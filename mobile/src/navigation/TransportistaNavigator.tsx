@@ -9,6 +9,7 @@ import { TransportistaRoutesScreen } from '../features/transportista/screens/Mod
 import { TransportistaRouteDetailScreen } from '../features/transportista/screens/ModuloRutas/TransportistaRouteDetailScreen'
 import { TransportistaDeliveriesScreen } from '../features/transportista/screens/ModuloEntregas/TransportistaDeliveriesScreen'
 import { TransportistaDeliveryDetailScreen } from '../features/transportista/screens/ModuloEntregas/TransportistaDeliveryDetailScreen'
+import { NotificationsScreen } from '../features/shared/screens/NotificationsScreen'
 
 const Tab = createBottomTabNavigator()
 const Stack = createNativeStackNavigator()
@@ -33,6 +34,7 @@ export function TransportistaNavigator() {
             <Stack.Screen name="TransportistaTabs" component={TransportistaTabs} />
             <Stack.Screen name="TransportistaRutaDetalle" component={TransportistaRouteDetailScreen} />
             <Stack.Screen name="TransportistaEntregaDetalle" component={TransportistaDeliveryDetailScreen} />
+            <Stack.Screen name="Notifications" component={NotificationsScreen} />
         </Stack.Navigator>
     )
 }
