@@ -2,6 +2,7 @@ import { env } from '../../config/env'
 import { ApiService } from './ApiService'
 import { createService } from './createService'
 import { logErrorForDebugging } from '../../utils/errorMessages'
+import { getValidToken } from '../auth/authClient'
 
 export type DeliveryStatus = 'pendiente' | 'en_ruta' | 'entregado_completo' | 'entregado_parcial' | 'no_entregado' | 'cancelado'
 
@@ -143,6 +144,50 @@ const rawService = {
       return await ApiService.post<DeliveryEvidence>(`${DELIVERY_API_URL}/entregas/${id}/evidencias`, payload)
     } catch (error) {
       logErrorForDebugging(error, 'DeliveryService.addEvidence', { id })
+      return null
+    }
+  },
+
+  async uploadEvidenceFile(
+    entregaId: string,
+    file: { uri: string; name: string; type: string },
+    payload: { tipo: EvidencePayload['tipo']; descripcion?: string },
+  ): Promise<DeliveryEvidence | null> {
+    try {
+      const token = await getValidToken()
+      const formData = new FormData()
+      formData.append('file', {
+        uri: file.uri,
+        name: file.name,
+        type: file.type,
+      } as any)
+      formData.append('tipo', payload.tipo)
+      if (payload.descripcion) {
+        formData.append('descripcion', payload.descripcion)
+      }
+
+      const response = await fetch(`${DELIVERY_API_URL}/evidencias/upload/${entregaId}`, {
+        method: 'POST',
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => '')
+        logErrorForDebugging(new Error(`API ${response.status}`), 'DeliveryService.uploadEvidenceFile', {
+          entregaId,
+          status: response.status,
+          errorText,
+        })
+        return null
+      }
+
+      const data = await response.json().catch(() => null)
+      return data as DeliveryEvidence
+    } catch (error) {
+      logErrorForDebugging(error, 'DeliveryService.uploadEvidenceFile', { entregaId })
       return null
     }
   },

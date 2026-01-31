@@ -15,6 +15,8 @@ import { UserClientService } from '../../../../services/api/UserClientService'
 import { ZoneService } from '../../../../services/api/ZoneService'
 import { extractPolygons, MapPoint } from '../../../../utils/zoneGeometry'
 import { showGlobalToast } from '../../../../utils/toastService'
+import { TransportistaRouteStatusCard } from './components/TransportistaRouteStatusCard'
+import { TransportistaStopCard } from './components/TransportistaStopCard'
 
 type StopMarker = {
   id: string
@@ -198,6 +200,14 @@ export function TransportistaRouteDetailScreen() {
 
   const handleStart = async () => {
     if (!ruteroId) return
+    if (!rutero?.paradas?.length) {
+      showGlobalToast('No hay paradas asignadas para iniciar', 'warning')
+      return
+    }
+    if (rutero?.estado !== 'publicado') {
+      showGlobalToast('El rutero no esta en estado publicado', 'warning')
+      return
+    }
     setUpdating(true)
     try {
       const updated = await RouteService.startLogisticsRoute(ruteroId)
@@ -216,6 +226,19 @@ export function TransportistaRouteDetailScreen() {
 
   const handleComplete = async () => {
     if (!ruteroId) return
+    if (rutero?.estado !== 'en_curso') {
+      showGlobalToast('El rutero no esta en curso', 'warning')
+      return
+    }
+    if (!deliveries.length) {
+      showGlobalToast('No hay entregas generadas. Inicia el rutero primero.', 'warning')
+      return
+    }
+    const pendientes = deliveries.filter((item) => !['entregado_completo', 'entregado_parcial', 'no_entregado', 'cancelado'].includes(item.estado))
+    if (pendientes.length) {
+      showGlobalToast(`Aun hay ${pendientes.length} entregas sin cerrar`, 'warning')
+      return
+    }
     setUpdating(true)
     try {
       const updated = await RouteService.completeLogisticsRoute(ruteroId)
@@ -231,6 +254,16 @@ export function TransportistaRouteDetailScreen() {
   }
 
   const estado = rutero?.estado || 'publicado'
+  const hasStops = Boolean(rutero?.paradas?.length)
+  const hasDeliveries = deliveries.length > 0
+  const deliveredCount = deliveries.filter((item) =>
+    ['entregado_completo', 'entregado_parcial', 'no_entregado', 'cancelado'].includes(item.estado),
+  ).length
+  const pendingCount = deliveries.filter((item) =>
+    ['pendiente', 'en_ruta'].includes(item.estado),
+  ).length
+  const canStart = estado === 'publicado' && hasStops && !updating
+  const canComplete = estado === 'en_curso' && hasDeliveries && pendingCount === 0 && !updating
   const deliveriesByOrder = React.useMemo(() => {
     return deliveries.reduce<Record<string, Delivery>>((acc, item) => {
       acc[item.pedido_id] = item
@@ -240,6 +273,8 @@ export function TransportistaRouteDetailScreen() {
 
   const statusStyle = (status?: string) => {
     switch (status) {
+      case 'sin_entrega':
+        return { label: 'Sin entrega', bg: '#FEE2E2', color: '#991B1B' }
       case 'entregado_completo':
         return { label: 'Entregado', bg: '#DCFCE7', color: '#166534' }
       case 'entregado_parcial':
@@ -318,15 +353,25 @@ export function TransportistaRouteDetailScreen() {
 
   const handleAddEvidence = async () => {
     if (!deliveryTarget) return
-    if (!evidenceUrl.trim()) {
+    const trimmedUrl = evidenceUrl.trim()
+    if (!trimmedUrl) {
       showGlobalToast('Ingresa una URL de evidencia', 'warning')
+      return
+    }
+    try {
+      const parsed = new URL(trimmedUrl)
+      if (!['http:', 'https:'].includes(parsed.protocol)) {
+        throw new Error('invalid protocol')
+      }
+    } catch {
+      showGlobalToast('La URL no es valida. Usa https://...', 'warning')
       return
     }
     setUpdating(true)
     try {
       const created = await DeliveryService.addEvidence(deliveryTarget.id, {
         tipo: evidenceType,
-        url: evidenceUrl.trim(),
+        url: trimmedUrl,
         descripcion: evidenceDesc.trim() || undefined,
       })
       if (!created) {
@@ -385,7 +430,7 @@ export function TransportistaRouteDetailScreen() {
             end={{ x: 1, y: 1 }}
             style={{ borderRadius: 22, padding: 18 }}
           >
-            <Text className="text-xs text-slate-200">Rutero logístico</Text>
+            <Text className="text-xs text-slate-200">Rutero logistico</Text>
             <Text className="text-2xl font-extrabold text-white mt-1">
               {rutero?.id?.slice(0, 8) || '---'}
             </Text>
@@ -399,6 +444,16 @@ export function TransportistaRouteDetailScreen() {
               </View>
             </View>
           </LinearGradient>
+
+          <TransportistaRouteStatusCard
+            estado={estado}
+            paradasCount={rutero?.paradas?.length || 0}
+            entregasCount={deliveries.length}
+            entregasCompletadas={deliveredCount}
+            entregasPendientes={pendingCount}
+            hasStops={hasStops}
+            hasDeliveries={hasDeliveries}
+          />
 
           <View className="bg-white rounded-2xl border border-neutral-100 p-4 shadow-sm mt-4">
             <View className="flex-row items-center justify-between">
@@ -473,108 +528,100 @@ export function TransportistaRouteDetailScreen() {
             <Text className="text-sm font-semibold text-neutral-700">Paradas</Text>
             {rutero?.paradas?.length ? (
               <View className="mt-3 gap-3">
-                {rutero.paradas.map((stop) => (
-                  <Pressable
-                    key={stop.pedido_id}
-                    onPress={() => setActiveStopId(stop.pedido_id)}
-                    className={`rounded-2xl border p-3 ${activeStopId === stop.pedido_id ? 'border-brand-red bg-red-50' : 'border-neutral-200 bg-white'}`}
-                  >
-                    <Text className="text-xs text-neutral-500">Pedido</Text>
-                    <Text className="text-sm font-semibold text-neutral-900">
-                      {markers.find((m) => m.id === stop.pedido_id)?.orderNumber || `#${stop.pedido_id.slice(0, 8)}`}
-                    </Text>
-                    {markers.find((m) => m.id === stop.pedido_id)?.label ? (
-                      <Text className="text-xs text-neutral-500 mt-1">
-                        Cliente: {markers.find((m) => m.id === stop.pedido_id)?.label}
-                      </Text>
-                    ) : null}
-                    {markers.find((m) => m.id === stop.pedido_id)?.address ? (
-                      <Text className="text-xs text-neutral-500 mt-1">
-                        Direccion: {markers.find((m) => m.id === stop.pedido_id)?.address}
-                      </Text>
-                    ) : null}
-                    <Text className="text-[11px] text-neutral-500 mt-1">Orden #{stop.orden_entrega}</Text>
-                    <View className="mt-2 flex-row items-center justify-between">
-                      <View className="px-2.5 py-1 rounded-full" style={{ backgroundColor: statusStyle(deliveriesByOrder[stop.pedido_id]?.estado).bg }}>
-                        <Text className="text-[10px] font-semibold" style={{ color: statusStyle(deliveriesByOrder[stop.pedido_id]?.estado).color }}>
-                          {statusStyle(deliveriesByOrder[stop.pedido_id]?.estado).label}
-                        </Text>
-                      </View>
-                      {estado === 'en_curso' && deliveriesByOrder[stop.pedido_id] ? (
-                        <View className="flex-row items-center gap-2">
-                          {deliveriesByOrder[stop.pedido_id].estado === 'pendiente' ? (
-                            <Pressable
-                              onPress={async () => {
-                                setUpdating(true)
-                                try {
-                                  const updated = await DeliveryService.markEnRuta(deliveriesByOrder[stop.pedido_id].id)
-                                  if (updated) {
-                                    const refresh = await DeliveryService.getDeliveries({ rutero_logistico_id: ruteroId })
-                                    setDeliveries(refresh)
-                                    showGlobalToast('Entrega iniciada', 'success')
-                                  }
-                                } finally {
-                                  setUpdating(false)
-                                }
-                              }}
-                              className="px-3 py-1 rounded-full border border-amber-200"
-                              style={{ backgroundColor: '#FEF3C7' }}
-                            >
-                              <Text className="text-[10px] font-semibold text-amber-700">Iniciar</Text>
-                            </Pressable>
-                          ) : deliveriesByOrder[stop.pedido_id].estado === 'en_ruta' ? (
-                            <>
-                              <Pressable
-                                onPress={() => openDeliveryModal('complete', deliveriesByOrder[stop.pedido_id])}
-                                className="px-3 py-1 rounded-full border border-emerald-200"
-                                style={{ backgroundColor: '#ECFDF3' }}
-                              >
-                                <Text className="text-[10px] font-semibold text-emerald-700">Entregado</Text>
-                              </Pressable>
-                              <Pressable
-                                onPress={() => openDeliveryModal('no', deliveriesByOrder[stop.pedido_id])}
-                                className="px-3 py-1 rounded-full border border-red-200"
-                                style={{ backgroundColor: '#FEE2E2' }}
-                              >
-                                <Text className="text-[10px] font-semibold text-red-700">No entregado</Text>
-                              </Pressable>
-                            </>
-                          ) : null}
-                        </View>
-                      ) : null}
-                    </View>
-                    {deliveriesByOrder[stop.pedido_id] ? (
-                      <View className="mt-3 flex-row items-center gap-2">
-                        <Pressable
-                          onPress={() => openEvidenceModal(deliveriesByOrder[stop.pedido_id])}
-                          className="px-3 py-1 rounded-full border border-amber-200"
-                          style={{ backgroundColor: '#FFFBEB' }}
-                        >
-                          <Text className="text-[10px] font-semibold text-amber-700">Evidencia</Text>
-                        </Pressable>
-                        <Pressable
-                          onPress={() => openIncidentModal(deliveriesByOrder[stop.pedido_id])}
-                          className="px-3 py-1 rounded-full border border-slate-200"
-                          style={{ backgroundColor: '#F8FAFC' }}
-                        >
-                          <Text className="text-[10px] font-semibold text-slate-600">Incidencia</Text>
-                        </Pressable>
-                      </View>
-                    ) : null}
-                  </Pressable>
-                ))}
+                {rutero.paradas.map((stop) => {
+                  const marker = markers.find((m) => m.id === stop.pedido_id)
+                  const delivery = deliveriesByOrder[stop.pedido_id]
+                  const stopStatus = statusStyle(delivery?.estado ?? 'sin_entrega')
+                  return (
+                    <TransportistaStopCard
+                      key={stop.pedido_id}
+                      pedidoId={stop.pedido_id}
+                      orden={stop.orden_entrega}
+                      isActive={activeStopId === stop.pedido_id}
+                      orderNumber={marker?.orderNumber}
+                      clientLabel={marker?.label}
+                      address={marker?.address}
+                      estadoRutero={estado}
+                      updating={updating}
+                      delivery={delivery}
+                      statusStyle={stopStatus}
+                      onSelect={() => setActiveStopId(stop.pedido_id)}
+                      onStartDelivery={async () => {
+                        if (updating || !delivery) return
+                        setUpdating(true)
+                        try {
+                          const updated = await DeliveryService.markEnRuta(delivery.id)
+                          if (updated) {
+                            const refresh = await DeliveryService.getDeliveries({ rutero_logistico_id: ruteroId })
+                            setDeliveries(refresh)
+                            showGlobalToast('Entrega iniciada', 'success')
+                          }
+                        } finally {
+                          setUpdating(false)
+                        }
+                      }}
+                      onCompleteDelivery={() => {
+                        if (updating || !delivery) return
+                        openDeliveryModal('complete', delivery)
+                      }}
+                      onNoDelivery={() => {
+                        if (updating || !delivery) return
+                        openDeliveryModal('no', delivery)
+                      }}
+                      onOpenDetail={() => {
+                        if (!delivery) return
+                        navigation.navigate('TransportistaEntregaDetalle', { entregaId: delivery.id })
+                      }}
+                      onOpenEvidence={() => {
+                        if (!delivery) return
+                        openEvidenceModal(delivery)
+                      }}
+                      onOpenIncident={() => {
+                        if (!delivery) return
+                        openIncidentModal(delivery)
+                      }}
+                    />
+                  )
+                })}                
               </View>
             ) : (
               <Text className="text-xs text-neutral-500 mt-2">No hay paradas asignadas.</Text>
             )}
+            {!deliveries.length && rutero?.estado === 'publicado' ? (
+              <View className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2">
+                <Text className="text-xs text-amber-700">
+                  Primero inicia el rutero para generar las entregas.
+                </Text>
+              </View>
+            ) : null}
           </View>
 
           <View className="mt-6 gap-3">
             {estado === 'publicado' ? (
-              <PrimaryButton title={updating ? 'Iniciando...' : 'Iniciar rutero'} onPress={handleStart} disabled={updating} />
+              <PrimaryButton
+                title={updating ? 'Iniciando...' : 'Iniciar rutero'}
+                onPress={() => {
+                  if (!canStart) {
+                    showGlobalToast('No se puede iniciar. Verifica paradas y estado.', 'warning')
+                    return
+                  }
+                  handleStart()
+                }}
+                disabled={updating}
+              />
             ) : null}
             {estado === 'en_curso' ? (
-              <PrimaryButton title={updating ? 'Completando...' : 'Completar rutero'} onPress={handleComplete} disabled={updating} />
+              <PrimaryButton
+                title={updating ? 'Completando...' : 'Completar rutero'}
+                onPress={() => {
+                  if (!canComplete) {
+                    showGlobalToast('No se puede completar. Asegura cerrar todas las entregas.', 'warning')
+                    return
+                  }
+                  handleComplete()
+                }}
+                disabled={updating}
+              />
             ) : null}
           </View>
         </ScrollView>
@@ -747,7 +794,7 @@ export function TransportistaRouteDetailScreen() {
             <TextInput
               value={incidentType}
               onChangeText={setIncidentType}
-              placeholder="Ej: Dirección incorrecta"
+              placeholder="Ej: Direccion incorrecta"
               className="border border-neutral-200 rounded-2xl px-4 py-3 text-sm text-neutral-900 bg-neutral-50"
             />
           </View>
@@ -771,7 +818,7 @@ export function TransportistaRouteDetailScreen() {
           </View>
 
           <View>
-            <Text className="text-xs text-neutral-500 mb-1">Descripción</Text>
+            <Text className="text-xs text-neutral-500 mb-1">Descripcion</Text>
             <TextInput
               value={incidentDesc}
               onChangeText={setIncidentDesc}

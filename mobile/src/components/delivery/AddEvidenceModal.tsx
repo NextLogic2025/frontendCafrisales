@@ -5,7 +5,7 @@ import * as ImagePicker from 'expo-image-picker'
 import { GenericModal } from '../ui/GenericModal'
 import { PrimaryButton } from '../ui/PrimaryButton'
 import { BRAND_COLORS } from '../../shared/types'
-import { DeliveryService, EvidencePayload, DeliveryEvidence } from '../../services/api/DeliveryService'
+import { DeliveryService, DeliveryEvidence } from '../../services/api/DeliveryService'
 import { showGlobalToast } from '../../utils/toastService'
 
 type EvidenceType = 'foto' | 'firma' | 'documento' | 'audio' | 'otro'
@@ -24,16 +24,28 @@ const EVIDENCE_TYPES: { id: EvidenceType; label: string; icon: keyof typeof Ioni
   { id: 'otro', label: 'Otro', icon: 'attach-outline' },
 ]
 
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
+const ALLOWED_MIMES = [
+  'image/jpeg',
+  'image/png',
+  'image/jpg',
+  'application/pdf',
+  'audio/mpeg',
+  'audio/wav',
+]
+
 export function AddEvidenceModal({ visible, onClose, entregaId, onEvidenceAdded }: Props) {
   const [selectedType, setSelectedType] = React.useState<EvidenceType>('foto')
   const [description, setDescription] = React.useState('')
   const [imageUri, setImageUri] = React.useState<string | null>(null)
+  const [assetMeta, setAssetMeta] = React.useState<{ name: string; type: string; size?: number } | null>(null)
   const [uploading, setUploading] = React.useState(false)
 
   const resetForm = () => {
     setSelectedType('foto')
     setDescription('')
     setImageUri(null)
+    setAssetMeta(null)
   }
 
   const handleClose = () => {
@@ -56,7 +68,13 @@ export function AddEvidenceModal({ visible, onClose, entregaId, onEvidenceAdded 
     })
 
     if (!result.canceled && result.assets?.[0]?.uri) {
-      setImageUri(result.assets[0].uri)
+      const asset = result.assets[0]
+      setImageUri(asset.uri)
+      setAssetMeta({
+        name: asset.fileName || `evidencia-${Date.now()}.jpg`,
+        type: asset.mimeType || 'image/jpeg',
+        size: asset.fileSize,
+      })
     }
   }
 
@@ -74,7 +92,13 @@ export function AddEvidenceModal({ visible, onClose, entregaId, onEvidenceAdded 
     })
 
     if (!result.canceled && result.assets?.[0]?.uri) {
-      setImageUri(result.assets[0].uri)
+      const asset = result.assets[0]
+      setImageUri(asset.uri)
+      setAssetMeta({
+        name: asset.fileName || `evidencia-${Date.now()}.jpg`,
+        type: asset.mimeType || 'image/jpeg',
+        size: asset.fileSize,
+      })
     }
   }
 
@@ -83,19 +107,38 @@ export function AddEvidenceModal({ visible, onClose, entregaId, onEvidenceAdded 
       showGlobalToast('Selecciona o toma una foto primero', 'warning')
       return
     }
+    if (!assetMeta) {
+      showGlobalToast('No se pudo leer la informacion del archivo', 'warning')
+      return
+    }
+    if (assetMeta.size && assetMeta.size > MAX_FILE_SIZE_BYTES) {
+      showGlobalToast('El archivo excede 10MB', 'warning')
+      return
+    }
+    if (!ALLOWED_MIMES.includes(assetMeta.type)) {
+      showGlobalToast('Tipo de archivo no permitido', 'warning')
+      return
+    }
+    if (['foto', 'firma'].includes(selectedType) && !assetMeta.type.startsWith('image/')) {
+      showGlobalToast('Para foto/firma solo se permiten imagenes', 'warning')
+      return
+    }
+    if (selectedType === 'documento' && assetMeta.type !== 'application/pdf') {
+      showGlobalToast('Para documentos solo se permite PDF', 'warning')
+      return
+    }
+    if (selectedType === 'audio' && !assetMeta.type.startsWith('audio/')) {
+      showGlobalToast('Para audio solo se permiten archivos de audio', 'warning')
+      return
+    }
 
     setUploading(true)
     try {
-      // En produccion, aqui subirias la imagen a un servicio de almacenamiento
-      // y obtendrias la URL. Por ahora usamos la URI local como placeholder.
-      const payload: EvidencePayload = {
-        tipo: selectedType,
-        url: imageUri,
-        mime_type: 'image/jpeg',
-        descripcion: description.trim() || undefined,
-      }
-
-      const evidence = await DeliveryService.addEvidence(entregaId, payload)
+      const evidence = await DeliveryService.uploadEvidenceFile(
+        entregaId,
+        { uri: imageUri, name: assetMeta.name, type: assetMeta.type },
+        { tipo: selectedType, descripcion: description.trim() || undefined },
+      )
       if (!evidence) {
         showGlobalToast('No se pudo guardar la evidencia', 'error')
         return

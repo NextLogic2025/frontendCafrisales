@@ -9,6 +9,8 @@ import { GenericList } from '../../../../components/ui/GenericList'
 import { CategoryFilter } from '../../../../components/ui/CategoryFilter'
 import { BRAND_COLORS } from '../../../../shared/types'
 import { Delivery, DeliveryService } from '../../../../services/api/DeliveryService'
+import { OrderService } from '../../../../services/api/OrderService'
+import { UserClientService } from '../../../../services/api/UserClientService'
 import { getValidToken } from '../../../../services/auth/authClient'
 
 type StatusFilter = 'todos' | 'pendiente' | 'en_ruta' | 'entregado_completo' | 'no_entregado'
@@ -39,6 +41,8 @@ export function TransportistaDeliveriesScreen() {
   const [searchQuery, setSearchQuery] = React.useState('')
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>('todos')
   const [transportistaId, setTransportistaId] = React.useState<string | null>(null)
+  const [clientMap, setClientMap] = React.useState<Record<string, { name: string; address?: string }>>({})
+  const clientCache = React.useRef<Record<string, { name: string; address?: string }>>({})
 
   // useDeferredValue para búsqueda sin bloquear UI
   const deferredSearch = useDeferredValue(searchQuery.trim().toLowerCase())
@@ -73,6 +77,47 @@ export function TransportistaDeliveriesScreen() {
       fetchDeliveries()
     }, [loadTransportistaId, fetchDeliveries]),
   )
+
+  React.useEffect(() => {
+    let active = true
+    const loadClients = async () => {
+      const missing = deliveries
+        .map((delivery) => delivery.pedido_id)
+        .filter((pedidoId) => !clientCache.current[pedidoId])
+      if (!missing.length) return
+      const results = await Promise.all(
+        missing.map(async (pedidoId) => {
+          try {
+            const order = await OrderService.getOrderDetail(pedidoId)
+            const clienteId = order?.pedido?.cliente_id
+            if (!clienteId) return null
+            const client = await UserClientService.getClient(clienteId)
+            if (!client) return null
+            return {
+              pedidoId,
+              name: client.nombre_comercial || client.ruc || 'Cliente',
+              address: client.direccion || undefined,
+            }
+          } catch {
+            return null
+          }
+        }),
+      )
+      const mapped: Record<string, { name: string; address?: string }> = {}
+      results.forEach((item) => {
+        if (!item) return
+        mapped[item.pedidoId] = { name: item.name, address: item.address }
+        clientCache.current[item.pedidoId] = { name: item.name, address: item.address }
+      })
+      if (active && Object.keys(mapped).length) {
+        setClientMap((prev) => ({ ...prev, ...mapped }))
+      }
+    }
+    loadClients()
+    return () => {
+      active = false
+    }
+  }, [deliveries])
 
   const filtered = React.useMemo(() => {
     return deliveries.filter((delivery) => {
@@ -130,10 +175,11 @@ export function TransportistaDeliveriesScreen() {
           emptyState={{
             icon: 'car-sport-outline',
             title: 'Sin entregas',
-            message: 'No tienes entregas asignadas.',
+            message: 'Primero inicia el rutero para generar entregas.',
           }}
           renderItem={(delivery) => {
             const badge = statusBadge(delivery.estado)
+            const clientInfo = clientMap[delivery.pedido_id]
             return (
               <Pressable
                 onPress={() => navigation.navigate('TransportistaEntregaDetalle', { entregaId: delivery.id })}
@@ -152,7 +198,12 @@ export function TransportistaDeliveriesScreen() {
                   </View>
                   <View style={styles.cardContent}>
                     <Text style={styles.title}>Pedido {delivery.pedido_id.slice(0, 8)}</Text>
-                    <Text style={styles.subtitle}>Rutero {delivery.rutero_logistico_id.slice(0, 8)}</Text>
+                    <Text style={styles.subtitle}>
+                      {clientInfo?.name ? `${clientInfo.name}` : `Rutero ${delivery.rutero_logistico_id.slice(0, 8)}`}
+                    </Text>
+                    {clientInfo?.address ? (
+                      <Text style={styles.metaText}>{clientInfo.address}</Text>
+                    ) : null}
                   </View>
                   <View style={[styles.statusBadge, { backgroundColor: badge.bg }]}>
                     <Text style={[styles.statusText, { color: badge.text }]}>
@@ -198,6 +249,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#6B7280',
     marginTop: 4,
+  },
+  metaText: {
+    fontSize: 11,
+    color: '#9CA3AF',
+    marginTop: 2,
   },
   statusBadge: {
     paddingVertical: 6,
