@@ -5,6 +5,7 @@ import { NotificationService, AppNotification } from '../services/api/Notificati
 import { showGlobalToast } from '../utils/toastService'
 import { env } from '../config/env'
 import { getToken, subscribeToTokenChanges } from '../storage/authStorage'
+import { getValidToken } from '../services/auth/authClient'
 
 type NotificationContextValue = {
   notifications: AppNotification[]
@@ -28,7 +29,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const [currentUserId, setCurrentUserId] = React.useState<string | null>(null)
 
   const syncBadge = React.useCallback(async () => {
-    const token = await getToken()
+    const token = await getValidToken()
     if (!token) {
       setBadgeCount(0)
       return
@@ -39,7 +40,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   const refresh = React.useCallback(
     async (opts?: { soloNoLeidas?: boolean }) => {
-      const token = await getToken()
+      const token = await getValidToken()
       if (!token) {
         setNotifications([])
         setBadgeCount(0)
@@ -64,7 +65,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   const markAsRead = React.useCallback(
     async (id: string) => {
-      const token = await getToken()
+      const token = await getValidToken()
       if (!token) return
       const target = notifications.find((item) => item.id === id)
       if (target?.usuarioId && currentUserId && target.usuarioId !== currentUserId) {
@@ -87,7 +88,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   )
 
   const markAllRead = React.useCallback(async () => {
-    const token = await getToken()
+    const token = await getValidToken()
     if (!token) return
     const ok = await NotificationService.markAllRead()
     if (!ok) {

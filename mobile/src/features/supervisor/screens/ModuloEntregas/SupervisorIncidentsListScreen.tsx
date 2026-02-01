@@ -49,15 +49,23 @@ export function SupervisorIncidentsListScreen() {
     const fetchIncidents = React.useCallback(async () => {
         setLoading(true)
         try {
-            const data = await DeliveryService.getIncidents({
-                resuelto: showPendingOnly ? 'false' : undefined,
-                severidad: severityFilter !== 'todas' ? severityFilter : undefined,
-            })
-            if (data === null) {
-                showGlobalToast('No se pudo cargar incidencias', 'error')
-                return
+            const deliveriesForScan = await DeliveryService.getDeliveries({ page: 1, limit: 200 })
+            const incidentLists = await Promise.all(
+                deliveriesForScan.map(async (delivery) => {
+                    const items = await DeliveryService.getIncidents({ deliveryId: delivery.id })
+                    return items ?? []
+                }),
+            )
+
+            let allIncidents = incidentLists.flat()
+            if (showPendingOnly) {
+                allIncidents = allIncidents.filter((i) => !i.resuelto_en)
             }
-            setIncidents(data)
+            if (severityFilter !== 'todas') {
+                allIncidents = allIncidents.filter((i) => i.severidad === severityFilter)
+            }
+
+            setIncidents(allIncidents)
         } finally {
             setLoading(false)
         }
@@ -73,7 +81,12 @@ export function SupervisorIncidentsListScreen() {
         if (!selectedIncident || !resolucion.trim()) return
         setResolving(true)
         try {
-            const updated = await DeliveryService.resolveIncident(selectedIncident.id, resolucion.trim())
+            const deliveryId = selectedIncident.entrega_id
+            if (!deliveryId) {
+                showGlobalToast('No se pudo resolver la incidencia', 'error')
+                return
+            }
+            const updated = await DeliveryService.resolveIncident(deliveryId, selectedIncident.id, resolucion.trim())
             if (!updated) {
                 showGlobalToast('No se pudo resolver la incidencia', 'error')
                 return

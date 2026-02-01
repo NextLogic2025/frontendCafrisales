@@ -2,6 +2,7 @@ import { env } from '../../config/env'
 import { ApiService } from './ApiService'
 import { createService } from './createService'
 import { logErrorForDebugging } from '../../utils/errorMessages'
+import { isApiError } from './ApiError'
 import { getValidToken } from '../auth/authClient'
 
 export type DeliveryStatus = 'pendiente' | 'en_ruta' | 'entregado_completo' | 'entregado_parcial' | 'no_entregado' | 'cancelado'
@@ -78,7 +79,19 @@ export type NoDeliveryPayload = {
 }
 
 const DELIVERY_BASE_URL = env.api.deliveryUrl
-const DELIVERY_API_URL = DELIVERY_BASE_URL.endsWith('/api') ? DELIVERY_BASE_URL : `${DELIVERY_BASE_URL}/api`
+const DELIVERY_API_URL =
+  DELIVERY_BASE_URL.endsWith('/api/v1')
+    ? DELIVERY_BASE_URL
+    : DELIVERY_BASE_URL.endsWith('/api')
+      ? `${DELIVERY_BASE_URL}/v1`
+      : `${DELIVERY_BASE_URL}/api/v1`
+
+const unwrapList = <T>(data: any): T[] => {
+  if (!data) return []
+  if (Array.isArray(data)) return data as T[]
+  if (Array.isArray(data.data)) return data.data as T[]
+  return []
+}
 
 const rawService = {
   async getDeliveries(params?: {
@@ -87,17 +100,49 @@ const rawService = {
     pedido_id?: string
     estado?: string
     fecha?: string
+    status?: string
+    driverId?: string
+    routeId?: string
+    fromDate?: string
+    toDate?: string
+    hasIncidents?: boolean
+    page?: number
+    limit?: number
+    silent?: boolean
   }): Promise<Delivery[]> {
     try {
       const search = new URLSearchParams()
-      if (params?.transportista_id) search.set('transportista_id', params.transportista_id)
-      if (params?.rutero_logistico_id) search.set('rutero_logistico_id', params.rutero_logistico_id)
-      if (params?.pedido_id) search.set('pedido_id', params.pedido_id)
-      if (params?.estado) search.set('estado', params.estado)
-      if (params?.fecha) search.set('fecha', params.fecha)
+      const driverId = params?.driverId || params?.transportista_id
+      const routeId = params?.routeId || params?.rutero_logistico_id
+      const status = params?.status || params?.estado
+
+      if (driverId) search.set('driverId', driverId)
+      if (routeId) search.set('routeId', routeId)
+      if (status) search.set('status', status)
+      if (params?.fromDate) search.set('fromDate', params.fromDate)
+      if (params?.toDate) search.set('toDate', params.toDate)
+      if (params?.fecha) {
+        search.set('fromDate', params.fecha)
+        search.set('toDate', params.fecha)
+      }
+      if (params?.hasIncidents !== undefined) {
+        search.set('hasIncidents', params.hasIncidents ? 'true' : 'false')
+      }
+      if (params?.page) search.set('page', String(params.page))
+      if (params?.limit) {
+        const cappedLimit = Math.min(params.limit, 100)
+        search.set('limit', String(cappedLimit))
+      }
       const query = search.toString()
-      return await ApiService.get<Delivery[]>(`${DELIVERY_API_URL}/entregas${query ? `?${query}` : ''}`)
+      const data = await ApiService.get<any>(
+        `${DELIVERY_API_URL}/deliveries${query ? `?${query}` : ''}`,
+        { silent: params?.silent }
+      )
+      return unwrapList<Delivery>(data)
     } catch (error) {
+      if (isApiError(error) && error.status === 403) {
+        return []
+      }
       logErrorForDebugging(error, 'DeliveryService.getDeliveries')
       return []
     }
@@ -105,7 +150,7 @@ const rawService = {
 
   async getDelivery(id: string): Promise<Delivery | null> {
     try {
-      return await ApiService.get<Delivery>(`${DELIVERY_API_URL}/entregas/${id}`)
+      return await ApiService.get<Delivery>(`${DELIVERY_API_URL}/deliveries/${id}`)
     } catch (error) {
       logErrorForDebugging(error, 'DeliveryService.getDelivery', { id })
       return null
@@ -114,7 +159,7 @@ const rawService = {
 
   async getDeliveryDetail(id: string): Promise<DeliveryDetail | null> {
     try {
-      return await ApiService.get<DeliveryDetail>(`${DELIVERY_API_URL}/entregas/${id}`)
+      return await ApiService.get<DeliveryDetail>(`${DELIVERY_API_URL}/deliveries/${id}`)
     } catch (error) {
       logErrorForDebugging(error, 'DeliveryService.getDeliveryDetail', { id })
       return null
@@ -123,7 +168,7 @@ const rawService = {
 
   async completeDelivery(id: string, payload: CompleteDeliveryPayload): Promise<Delivery | null> {
     try {
-      return await ApiService.post<Delivery>(`${DELIVERY_API_URL}/entregas/${id}/completar`, payload)
+      return await ApiService.post<Delivery>(`${DELIVERY_API_URL}/deliveries/${id}/complete`, payload)
     } catch (error) {
       logErrorForDebugging(error, 'DeliveryService.completeDelivery', { id })
       return null
@@ -132,7 +177,7 @@ const rawService = {
 
   async markNoDelivery(id: string, payload: NoDeliveryPayload): Promise<Delivery | null> {
     try {
-      return await ApiService.post<Delivery>(`${DELIVERY_API_URL}/entregas/${id}/no-entregado`, payload)
+      return await ApiService.post<Delivery>(`${DELIVERY_API_URL}/deliveries/${id}/fail`, payload)
     } catch (error) {
       logErrorForDebugging(error, 'DeliveryService.markNoDelivery', { id })
       return null
@@ -141,7 +186,12 @@ const rawService = {
 
   async addEvidence(id: string, payload: EvidencePayload): Promise<DeliveryEvidence | null> {
     try {
-      return await ApiService.post<DeliveryEvidence>(`${DELIVERY_API_URL}/entregas/${id}/evidencias`, payload)
+      logErrorForDebugging(
+        new Error('addEvidence now requires file upload endpoint'),
+        'DeliveryService.addEvidence',
+        { id, payload },
+      )
+      return null
     } catch (error) {
       logErrorForDebugging(error, 'DeliveryService.addEvidence', { id })
       return null
@@ -166,7 +216,7 @@ const rawService = {
         formData.append('descripcion', payload.descripcion)
       }
 
-      const response = await fetch(`${DELIVERY_API_URL}/evidencias/upload/${entregaId}`, {
+      const response = await fetch(`${DELIVERY_API_URL}/deliveries/${entregaId}/evidence`, {
         method: 'POST',
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -194,7 +244,7 @@ const rawService = {
 
   async reportIncident(id: string, payload: IncidentPayload): Promise<DeliveryIncident | null> {
     try {
-      return await ApiService.post<DeliveryIncident>(`${DELIVERY_API_URL}/entregas/${id}/incidencias`, payload)
+      return await ApiService.post<DeliveryIncident>(`${DELIVERY_API_URL}/deliveries/${id}/incidents`, payload)
     } catch (error) {
       logErrorForDebugging(error, 'DeliveryService.reportIncident', { id })
       return null
@@ -203,7 +253,9 @@ const rawService = {
 
   async getEvidenceByDelivery(id: string): Promise<DeliveryEvidence[]> {
     try {
-      return await ApiService.get<DeliveryEvidence[]>(`${DELIVERY_API_URL}/evidencias/entrega/${id}`)
+      return unwrapList<DeliveryEvidence>(
+        await ApiService.get<any>(`${DELIVERY_API_URL}/deliveries/${id}/evidence`),
+      )
     } catch (error) {
       logErrorForDebugging(error, 'DeliveryService.getEvidenceByDelivery', { id })
       return []
@@ -212,7 +264,7 @@ const rawService = {
 
   async markEnRuta(id: string): Promise<Delivery | null> {
     try {
-      return await ApiService.put<Delivery>(`${DELIVERY_API_URL}/entregas/${id}/en-ruta`, {})
+      return await ApiService.put<Delivery>(`${DELIVERY_API_URL}/deliveries/${id}/start`, {})
     } catch (error) {
       logErrorForDebugging(error, 'DeliveryService.markEnRuta', { id })
       return null
@@ -226,7 +278,7 @@ const rawService = {
     longitud?: number
   }): Promise<Delivery | null> {
     try {
-      return await ApiService.post<Delivery>(`${DELIVERY_API_URL}/entregas/${id}/completar-parcial`, payload)
+      return await ApiService.post<Delivery>(`${DELIVERY_API_URL}/deliveries/${id}/complete-partial`, payload)
     } catch (error) {
       logErrorForDebugging(error, 'DeliveryService.completePartial', { id })
       return null
@@ -235,7 +287,7 @@ const rawService = {
 
   async getHistory(id: string): Promise<Array<{ id: string; estado: string; motivo?: string; creado_en: string }>> {
     try {
-      return await ApiService.get(`${DELIVERY_API_URL}/entregas/${id}/historial`)
+      return await ApiService.get(`${DELIVERY_API_URL}/deliveries/${id}/history`)
     } catch (error) {
       logErrorForDebugging(error, 'DeliveryService.getHistory', { id })
       return []
@@ -244,29 +296,33 @@ const rawService = {
 
   async cancelDelivery(id: string, motivo: string): Promise<Delivery | null> {
     try {
-      return await ApiService.put<Delivery>(`${DELIVERY_API_URL}/entregas/${id}/cancelar`, { motivo })
+      return await ApiService.put<Delivery>(`${DELIVERY_API_URL}/deliveries/${id}/cancel`, { motivo })
     } catch (error) {
       logErrorForDebugging(error, 'DeliveryService.cancelDelivery', { id })
       return null
     }
   },
 
-  async getIncidents(params?: { resuelto?: string; severidad?: string }): Promise<DeliveryIncident[] | null> {
+  async getIncidents(params?: { deliveryId?: string }): Promise<DeliveryIncident[] | null> {
     try {
-      const search = new URLSearchParams()
-      if (params?.resuelto) search.set('resuelto', params.resuelto)
-      if (params?.severidad) search.set('severidad', params.severidad)
-      const query = search.toString()
-      return await ApiService.get<DeliveryIncident[]>(`${DELIVERY_API_URL}/incidencias${query ? `?${query}` : ''}`)
+      if (!params?.deliveryId) {
+        logErrorForDebugging(new Error('deliveryId required'), 'DeliveryService.getIncidents')
+        return []
+      }
+      const data = await ApiService.get<any>(`${DELIVERY_API_URL}/deliveries/${params.deliveryId}/incidents`)
+      return unwrapList<DeliveryIncident>(data)
     } catch (error) {
       logErrorForDebugging(error, 'DeliveryService.getIncidents')
       return null
     }
   },
 
-  async resolveIncident(id: string, resolucion: string): Promise<DeliveryIncident | null> {
+  async resolveIncident(deliveryId: string, id: string, resolucion: string): Promise<DeliveryIncident | null> {
     try {
-      return await ApiService.put<DeliveryIncident>(`${DELIVERY_API_URL}/incidencias/${id}/resolver`, { resolucion })
+      return await ApiService.put<DeliveryIncident>(
+        `${DELIVERY_API_URL}/deliveries/${deliveryId}/incidents/${id}/resolve`,
+        { resolucion },
+      )
     } catch (error) {
       logErrorForDebugging(error, 'DeliveryService.resolveIncident', { id })
       return null

@@ -279,13 +279,22 @@ export function SupervisorRouteFormScreen() {
   const selectedTransportista = transportistas.find((user) => user.id === transportistaId)
 
   React.useEffect(() => {
-    if (!selectedZone) {
-      setZonePolygon(null)
-      return
+    let cancelled = false
+    const loadZoneGeometry = async () => {
+      if (!zonaId) {
+        setZonePolygon(null)
+        return
+      }
+      const zone = await ZoneService.getZoneById(zonaId)
+      if (cancelled) return
+      const polygons = extractPolygons((zone?.zonaGeom ?? zone?.zona_geom ?? null) as any)
+      setZonePolygon(polygons[0] ?? null)
     }
-    const polygons = extractPolygons((selectedZone.zonaGeom ?? selectedZone.zona_geom ?? null) as any)
-    setZonePolygon(polygons[0] ?? null)
-  }, [selectedZone])
+    loadZoneGeometry()
+    return () => {
+      cancelled = true
+    }
+  }, [zonaId])
 
   React.useEffect(() => {
     const loadMarkers = async () => {
@@ -369,7 +378,7 @@ export function SupervisorRouteFormScreen() {
   return (
     <View className="flex-1 bg-neutral-50">
       <Header
-        title="Nuevo rutero logístico"
+        title="Nuevo rutero logistico"
         variant="standard"
         onBackPress={() => navigation.goBack()}
         rightElement={<SupervisorHeaderMenu />}
@@ -408,7 +417,7 @@ export function SupervisorRouteFormScreen() {
               ) : (
                 <View className="border border-neutral-200 rounded-2xl px-4 py-4 bg-neutral-50">
                   <Text className="text-xs text-neutral-500">
-                    Esta zona no tiene polígono configurado.
+                    Esta zona no tiene poligono configurado.
                   </Text>
                 </View>
               )}

@@ -20,7 +20,6 @@ type QuickAction = {
 const QUICK_ACTIONS: QuickAction[] = [
     { label: 'Ver Productos', icon: 'storefront-outline', color: BRAND_COLORS.red, route: 'Productos' },
     { label: 'Mis Pedidos', icon: 'receipt-outline', color: '#6366F1', route: 'ClientePedidos' },
-    { label: 'Mis Entregas', icon: 'cube-outline', color: '#10B981', route: 'ClienteEntregas' },
     { label: 'Mis Creditos', icon: 'card-outline', color: '#F59E0B', route: 'ClienteCreditos' },
 ]
 
@@ -54,7 +53,9 @@ export function ClientHomeScreen() {
 
     React.useEffect(() => {
         getUserName().then(name => {
-            if (name) setUserName(name)
+            if (!name) return
+            const normalized = name.includes('@') ? name.split('@')[0] : name
+            setUserName(normalized)
         })
     }, [])
 
@@ -176,7 +177,7 @@ export function ClientHomeScreen() {
                             return (
                                 <Pressable
                                     key={order.id}
-                                    onPress={() => navigation.navigate('ClientePedidoDetalle', { pedidoId: order.id })}
+                                    onPress={() => navigation.navigate('ClientePedidoDetalle', { orderId: order.id })}
                                     className="bg-white rounded-2xl border border-neutral-200 p-4 mb-3"
                                     style={styles.card}
                                 >
@@ -186,7 +187,7 @@ export function ClientHomeScreen() {
                                                 Pedido #{order.numero_pedido || order.id.slice(0, 8)}
                                             </Text>
                                             <Text className="text-xs text-neutral-500 mt-1">
-                                                {order.estado || 'Pendiente'}
+                                                {(order.estado || 'Pendiente').replace(/_/g, ' ')}
                                             </Text>
                                         </View>
                                         <View className="px-2.5 py-1 rounded-full" style={{ backgroundColor: status.bg }}>

@@ -47,7 +47,11 @@ type ClientConditions = {
 }
 
 const USERS_BASE_URL = env.api.usersUrl
-const USERS_API_URL = USERS_BASE_URL.endsWith('/api') ? USERS_BASE_URL : `${USERS_BASE_URL}/api`
+const USERS_API_URL = USERS_BASE_URL.endsWith('/api/v1')
+  ? USERS_BASE_URL
+  : USERS_BASE_URL.endsWith('/api')
+    ? `${USERS_BASE_URL}/v1`
+    : `${USERS_BASE_URL}/api/v1`
 
 const normalizeClient = (client: UserClient): UserClient => ({
   ...client,
@@ -135,4 +139,3 @@ const rawService = {
 }
 
 export const UserClientService = createService('UserClientService', rawService)
-

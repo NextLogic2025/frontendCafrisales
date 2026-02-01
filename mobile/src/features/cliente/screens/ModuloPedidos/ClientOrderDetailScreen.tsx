@@ -20,7 +20,7 @@ import { jwtDecode } from 'jwt-decode'
 export function ClientOrderDetailScreen() {
   const navigation = useNavigation<any>()
   const route = useRoute<any>()
-  const orderId: string | undefined = route.params?.orderId
+  const orderId: string | undefined = route.params?.orderId || route.params?.pedidoId
 
   const [loading, setLoading] = React.useState(true)
   const [orderDetail, setOrderDetail] = React.useState<OrderDetail | null>(null)

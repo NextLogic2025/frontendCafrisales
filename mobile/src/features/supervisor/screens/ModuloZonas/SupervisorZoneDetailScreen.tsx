@@ -111,7 +111,7 @@ export function SupervisorZoneDetailScreen() {
   }, [navigation, route.params?.mapPoints])
 
   const loadZones = React.useCallback(async () => {
-    const data = await ZoneService.getZones('todos')
+    const data = await ZoneService.getZonesMap('todos')
     const filtered = zone?.id ? data.filter((item) => item.id !== zone.id) : data
     setExistingZones(filtered)
   }, [zone?.id])

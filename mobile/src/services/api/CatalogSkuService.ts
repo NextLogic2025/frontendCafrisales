@@ -36,7 +36,12 @@ export type CatalogSkuPrice = {
 }
 
 const CATALOG_BASE_URL = env.api.catalogUrl
-const CATALOG_API_URL = CATALOG_BASE_URL.endsWith('/api') ? CATALOG_BASE_URL : `${CATALOG_BASE_URL}/api`
+const CATALOG_API_URL =
+  CATALOG_BASE_URL.endsWith('/api/v1')
+    ? CATALOG_BASE_URL
+    : CATALOG_BASE_URL.endsWith('/api')
+      ? `${CATALOG_BASE_URL}/v1`
+      : `${CATALOG_BASE_URL}/api/v1`
 
 const rawService = {
   async getSkus(): Promise<CatalogSku[]> {

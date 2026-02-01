@@ -45,12 +45,25 @@ export type CatalogProductPayload = {
 }
 
 const CATALOG_BASE_URL = env.api.catalogUrl
-const CATALOG_API_URL = CATALOG_BASE_URL.endsWith('/api') ? CATALOG_BASE_URL : `${CATALOG_BASE_URL}/api`
+const CATALOG_API_URL =
+  CATALOG_BASE_URL.endsWith('/api/v1')
+    ? CATALOG_BASE_URL
+    : CATALOG_BASE_URL.endsWith('/api')
+      ? `${CATALOG_BASE_URL}/v1`
+      : `${CATALOG_BASE_URL}/api/v1`
+
+const unwrapList = <T>(data: any): T[] => {
+  if (!data) return []
+  if (Array.isArray(data)) return data as T[]
+  if (Array.isArray(data.data)) return data.data as T[]
+  return []
+}
 
 const rawService = {
   async getProducts(): Promise<CatalogProduct[]> {
     try {
-      return await ApiService.get<CatalogProduct[]>(`${CATALOG_API_URL}/productos`)
+      const data = await ApiService.get<any>(`${CATALOG_API_URL}/products`)
+      return unwrapList<CatalogProduct>(data)
     } catch (error) {
       logErrorForDebugging(error, 'CatalogProductService.getProducts')
       return []
@@ -59,7 +72,7 @@ const rawService = {
 
   async getProduct(id: string): Promise<CatalogProduct | null> {
     try {
-      return await ApiService.get<CatalogProduct>(`${CATALOG_API_URL}/productos/${id}`)
+      return await ApiService.get<CatalogProduct>(`${CATALOG_API_URL}/products/${id}`)
     } catch (error) {
       logErrorForDebugging(error, 'CatalogProductService.getProduct', { id })
       return null
@@ -68,7 +81,7 @@ const rawService = {
 
   async createProduct(payload: CatalogProductPayload): Promise<CatalogProduct | null> {
     try {
-      return await ApiService.post<CatalogProduct>(`${CATALOG_API_URL}/productos`, payload)
+      return await ApiService.post<CatalogProduct>(`${CATALOG_API_URL}/products`, payload)
     } catch (error) {
       logErrorForDebugging(error, 'CatalogProductService.createProduct')
       return null
@@ -77,7 +90,7 @@ const rawService = {
 
   async updateProduct(id: string, payload: Partial<CatalogProductPayload>): Promise<CatalogProduct | null> {
     try {
-      return await ApiService.patch<CatalogProduct>(`${CATALOG_API_URL}/productos/${id}`, payload)
+      return await ApiService.patch<CatalogProduct>(`${CATALOG_API_URL}/products/${id}`, payload)
     } catch (error) {
       logErrorForDebugging(error, 'CatalogProductService.updateProduct', { id })
       return null
@@ -86,7 +99,7 @@ const rawService = {
 
   async deleteProduct(id: string): Promise<boolean> {
     try {
-      await ApiService.delete(`${CATALOG_API_URL}/productos/${id}`)
+      await ApiService.delete(`${CATALOG_API_URL}/products/${id}`)
       return true
     } catch (error) {
       logErrorForDebugging(error, 'CatalogProductService.deleteProduct', { id })

@@ -28,8 +28,6 @@ export function WarehouseHomeScreen() {
   const [loading, setLoading] = React.useState(false)
   const [pendingCount, setPendingCount] = React.useState(0)
   const [validatedCount, setValidatedCount] = React.useState(0)
-  const [pickingsPendientes, setPickingsPendientes] = React.useState(0)
-  const [pickingsListos, setPickingsListos] = React.useState(0)
 
   const loadData = React.useCallback(async () => {
     setLoading(true)
@@ -41,9 +39,6 @@ export function WarehouseHomeScreen() {
 
       setPendingCount(pending.length)
       setValidatedCount(orders.filter((o: OrderListItem) => o.estado === 'validado' || o.estado === 'APROBADO').length)
-      // Derive picking counts from order states
-      setPickingsPendientes(orders.filter((o: OrderListItem) => o.estado === 'EN_PREPARACION').length)
-      setPickingsListos(orders.filter((o: OrderListItem) => o.estado === 'DESPACHADO' || o.estado === 'LISTO_DESPACHO').length)
     } catch {
       // Silently fail
     } finally {
@@ -160,22 +155,6 @@ export function WarehouseHomeScreen() {
                 value={validatedCount}
                 icon="checkmark-circle-outline"
                 color="#10B981"
-              />
-            </View>
-            <View style={{ width: '48%' }} className="mb-3">
-              <DashboardCard
-                label="Pickings Pend."
-                value={pickingsPendientes}
-                icon="cube-outline"
-                color="#6366F1"
-              />
-            </View>
-            <View style={{ width: '48%' }} className="mb-3">
-              <DashboardCard
-                label="Listos Despacho"
-                value={pickingsListos}
-                icon="car-sport-outline"
-                color={BRAND_COLORS.red}
               />
             </View>
           </View>

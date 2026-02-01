@@ -102,7 +102,13 @@ export type CreateCommercialRoutePayload = {
 }
 
 const ROUTE_BASE_URL = env.api.routeUrl
-const ROUTE_API_URL = ROUTE_BASE_URL.endsWith('/api') ? ROUTE_BASE_URL : `${ROUTE_BASE_URL}/api`
+const ROUTE_API_URL = ROUTE_BASE_URL.endsWith('/api/v1') ? ROUTE_BASE_URL : `${ROUTE_BASE_URL}/api/v1`
+
+const unwrapPaginated = <T>(response: any): T[] => {
+  if (Array.isArray(response)) return response as T[]
+  if (response && Array.isArray(response.data)) return response.data as T[]
+  return []
+}
 
 const rawService = {
   async getVehicles(estado?: string): Promise<Vehicle[]> {
@@ -148,7 +154,8 @@ const rawService = {
       if (params?.vendedor_id) search.set('vendedor_id', params.vendedor_id)
       if (params?.fecha_desde) search.set('fecha_desde', params.fecha_desde)
       const query = search.toString()
-      return await ApiService.get<CommercialRoute[]>(`${ROUTE_API_URL}/ruteros-comerciales${query ? `?${query}` : ''}`)
+      const data = await ApiService.get<CommercialRoute[]>(`${ROUTE_API_URL}/ruteros-comerciales${query ? `?${query}` : ''}`)
+      return unwrapPaginated<CommercialRoute>(data)
     } catch (error) {
       logErrorForDebugging(error, 'RouteService.getCommercialRoutes')
       return []
@@ -249,8 +256,11 @@ const rawService = {
 
   async getLogisticsRoutes(estado?: string): Promise<LogisticRoute[]> {
     try {
-      const query = estado ? `?estado=${encodeURIComponent(estado)}` : ''
-      return await ApiService.get<LogisticRoute[]>(`${ROUTE_API_URL}/ruteros-logisticos${query}`)
+      const search = new URLSearchParams()
+      if (estado) search.set('status', estado)
+      const query = search.toString()
+      const data = await ApiService.get<LogisticRoute[]>(`${ROUTE_API_URL}/routes${query ? `?${query}` : ''}`)
+      return unwrapPaginated<LogisticRoute>(data)
     } catch (error) {
       logErrorForDebugging(error, 'RouteService.getLogisticsRoutes')
       return []
@@ -259,7 +269,7 @@ const rawService = {
 
   async getLogisticsRoute(id: string): Promise<LogisticRoute | null> {
     try {
-      return await ApiService.get<LogisticRoute>(`${ROUTE_API_URL}/ruteros-logisticos/${id}`)
+      return await ApiService.get<LogisticRoute>(`${ROUTE_API_URL}/routes/${id}`)
     } catch (error) {
       logErrorForDebugging(error, 'RouteService.getLogisticsRoute', { id })
       return null
@@ -268,7 +278,7 @@ const rawService = {
 
   async createLogisticsRoute(payload: CreateLogisticRoutePayload): Promise<LogisticRoute | null> {
     try {
-      return await ApiService.post<LogisticRoute>(`${ROUTE_API_URL}/ruteros-logisticos`, payload)
+      return await ApiService.post<LogisticRoute>(`${ROUTE_API_URL}/routes`, payload)
     } catch (error) {
       logErrorForDebugging(error, 'RouteService.createLogisticsRoute')
       return null
@@ -277,7 +287,7 @@ const rawService = {
 
   async getLogisticsRouteHistory(id: string): Promise<RouteHistoryEntry[]> {
     try {
-      return await ApiService.get<RouteHistoryEntry[]>(`${ROUTE_API_URL}/ruteros-logisticos/${id}/historial`)
+      return await ApiService.get<RouteHistoryEntry[]>(`${ROUTE_API_URL}/routes/${id}/history`)
     } catch (error) {
       logErrorForDebugging(error, 'RouteService.getLogisticsRouteHistory', { id })
       return []
@@ -286,7 +296,7 @@ const rawService = {
 
   async addLogisticsRouteOrder(id: string, payload: { pedido_id: string; orden_entrega: number }): Promise<LogisticStop | null> {
     try {
-      return await ApiService.post<LogisticStop>(`${ROUTE_API_URL}/ruteros-logisticos/${id}/orders`, payload)
+      return await ApiService.post<LogisticStop>(`${ROUTE_API_URL}/routes/${id}/orders`, payload)
     } catch (error) {
       logErrorForDebugging(error, 'RouteService.addLogisticsRouteOrder', { id })
       return null
@@ -295,7 +305,7 @@ const rawService = {
 
   async removeLogisticsRouteOrder(id: string, pedidoId: string): Promise<boolean> {
     try {
-      await ApiService.delete(`${ROUTE_API_URL}/ruteros-logisticos/${id}/orders/${pedidoId}`)
+      await ApiService.delete(`${ROUTE_API_URL}/routes/${id}/orders/${pedidoId}`)
       return true
     } catch (error) {
       logErrorForDebugging(error, 'RouteService.removeLogisticsRouteOrder', { id, pedidoId })
@@ -305,7 +315,7 @@ const rawService = {
 
   async updateLogisticsRouteVehicle(id: string, vehiculo_id: string): Promise<LogisticRoute | null> {
     try {
-      return await ApiService.put<LogisticRoute>(`${ROUTE_API_URL}/ruteros-logisticos/${id}/vehiculo`, { vehiculo_id })
+      return await ApiService.put<LogisticRoute>(`${ROUTE_API_URL}/routes/${id}/vehiculo`, { vehiculo_id })
     } catch (error) {
       logErrorForDebugging(error, 'RouteService.updateLogisticsRouteVehicle', { id })
       return null
@@ -315,7 +325,7 @@ const rawService = {
   async markLogisticsStopPrepared(routeId: string, pedidoId: string): Promise<LogisticStop | null> {
     try {
       return await ApiService.put<LogisticStop>(
-        `${ROUTE_API_URL}/ruteros-logisticos/${routeId}/paradas/${pedidoId}/preparar`,
+        `${ROUTE_API_URL}/routes/${routeId}/paradas/${pedidoId}/preparar`,
         {},
       )
     } catch (error) {
@@ -326,7 +336,7 @@ const rawService = {
 
   async publishLogisticsRoute(id: string): Promise<LogisticRoute | null> {
     try {
-      return await ApiService.put<LogisticRoute>(`${ROUTE_API_URL}/ruteros-logisticos/${id}/publicar`, {})
+      return await ApiService.put<LogisticRoute>(`${ROUTE_API_URL}/routes/${id}/publicar`, {})
     } catch (error) {
       logErrorForDebugging(error, 'RouteService.publishLogisticsRoute', { id })
       return null
@@ -335,7 +345,7 @@ const rawService = {
 
   async startLogisticsRoute(id: string): Promise<LogisticRoute | null> {
     try {
-      return await ApiService.put<LogisticRoute>(`${ROUTE_API_URL}/ruteros-logisticos/${id}/iniciar`, {})
+      return await ApiService.put<LogisticRoute>(`${ROUTE_API_URL}/routes/${id}/iniciar`, {})
     } catch (error) {
       logErrorForDebugging(error, 'RouteService.startLogisticsRoute', { id })
       return null
@@ -344,7 +354,7 @@ const rawService = {
 
   async completeLogisticsRoute(id: string): Promise<LogisticRoute | null> {
     try {
-      return await ApiService.put<LogisticRoute>(`${ROUTE_API_URL}/ruteros-logisticos/${id}/completar`, {})
+      return await ApiService.put<LogisticRoute>(`${ROUTE_API_URL}/routes/${id}/completar`, {})
     } catch (error) {
       logErrorForDebugging(error, 'RouteService.completeLogisticsRoute', { id })
       return null
@@ -353,7 +363,7 @@ const rawService = {
 
   async cancelLogisticsRoute(id: string, motivo?: string): Promise<LogisticRoute | null> {
     try {
-      return await ApiService.put<LogisticRoute>(`${ROUTE_API_URL}/ruteros-logisticos/${id}/cancelar`, {
+      return await ApiService.put<LogisticRoute>(`${ROUTE_API_URL}/routes/${id}/cancelar`, {
         motivo: motivo || undefined,
       })
     } catch (error) {
@@ -363,8 +373,30 @@ const rawService = {
   },
   async getAssignedOrderIds(): Promise<string[]> {
     try {
-      const data = await ApiService.get<{ pedido_ids: string[] }>(`${ROUTE_API_URL}/pedidos/asignados`)
-      return data?.pedido_ids || []
+      const statuses = ['publicado', 'en_curso']
+      const routesByStatus = await Promise.all(
+        statuses.map((status) =>
+          ApiService.get<LogisticRoute[]>(
+            `${ROUTE_API_URL}/routes?status=${encodeURIComponent(status)}&limit=200`,
+          ),
+        ),
+      )
+      const routes = routesByStatus.flatMap((response) => unwrapPaginated<LogisticRoute>(response))
+      const stopsByRoute = await Promise.all(
+        routes.map(async (route) => {
+          if (route.paradas && route.paradas.length > 0) return route.paradas
+          try {
+            return await ApiService.get<LogisticStop[]>(`${ROUTE_API_URL}/routes/${route.id}/stops`)
+          } catch {
+            return []
+          }
+        }),
+      )
+      const pedidoIds = new Set<string>()
+      stopsByRoute.flat().forEach((stop) => {
+        if (stop?.pedido_id) pedidoIds.add(stop.pedido_id)
+      })
+      return Array.from(pedidoIds)
     } catch (error) {
       logErrorForDebugging(error, 'RouteService.getAssignedOrderIds')
       return []

@@ -23,22 +23,38 @@ export type AppNotification = {
 }
 
 const NOTIFICATIONS_BASE_URL = env.api.notificationsUrl
-const NOTIFICATIONS_API_URL = NOTIFICATIONS_BASE_URL.endsWith('/api')
-  ? NOTIFICATIONS_BASE_URL
-  : `${NOTIFICATIONS_BASE_URL}/api`
+const NOTIFICATIONS_API_URL =
+  NOTIFICATIONS_BASE_URL.endsWith('/api/v1')
+    ? NOTIFICATIONS_BASE_URL
+    : NOTIFICATIONS_BASE_URL.endsWith('/api')
+      ? `${NOTIFICATIONS_BASE_URL}/v1`
+      : `${NOTIFICATIONS_BASE_URL}/api/v1`
+
+const unwrapList = <T>(data: any): T[] => {
+  if (!data) return []
+  if (Array.isArray(data)) return data as T[]
+  if (Array.isArray(data.data)) return data.data as T[]
+  return []
+}
 
 const rawService = {
-  async getNotifications(params?: { soloNoLeidas?: boolean; limit?: number }): Promise<AppNotification[]> {
+  async getNotifications(params?: {
+    soloNoLeidas?: boolean
+    limit?: number
+    typeId?: string
+  }): Promise<AppNotification[]> {
     try {
       const search = new URLSearchParams()
-      if (typeof params?.soloNoLeidas === 'boolean') {
-        search.set('soloNoLeidas', params.soloNoLeidas ? 'true' : 'false')
+      if (params?.soloNoLeidas === true) {
+        search.set('soloNoLeidas', 'true')
       }
       if (params?.limit) search.set('limit', String(params.limit))
+      if (params?.typeId) search.set('tipoId', params.typeId)
       const query = search.toString()
-      return await ApiService.get<AppNotification[]>(
+      const data = await ApiService.get<any>(
         `${NOTIFICATIONS_API_URL}/notifications${query ? `?${query}` : ''}`,
       )
+      return unwrapList<AppNotification>(data)
     } catch (error) {
       logErrorForDebugging(error, 'NotificationService.getNotifications')
       return []
@@ -47,7 +63,7 @@ const rawService = {
 
   async getUnreadCount(): Promise<number> {
     try {
-      const data = await ApiService.get<{ count: number }>(`${NOTIFICATIONS_API_URL}/notifications/unread/count`)
+      const data = await ApiService.get<{ count: number }>(`${NOTIFICATIONS_API_URL}/notifications/unread-count`)
       return typeof data?.count === 'number' ? data.count : 0
     } catch (error) {
       logErrorForDebugging(error, 'NotificationService.getUnreadCount')
@@ -67,7 +83,7 @@ const rawService = {
 
   async markAsRead(id: string): Promise<boolean> {
     try {
-      await ApiService.patch(`${NOTIFICATIONS_API_URL}/notifications/${id}/mark-read`, {})
+      await ApiService.patch(`${NOTIFICATIONS_API_URL}/notifications/${id}`, {})
       return true
     } catch (error) {
       logErrorForDebugging(error, 'NotificationService.markAsRead', { id })

@@ -21,7 +21,11 @@ export type ChannelPayload = {
 export type ChannelStatusFilter = 'activo' | 'inactivo' | 'todos'
 
 const USERS_BASE_URL = env.api.usersUrl
-const USERS_API_URL = USERS_BASE_URL.endsWith('/api') ? USERS_BASE_URL : `${USERS_BASE_URL}/api`
+const USERS_API_URL = USERS_BASE_URL.endsWith('/api/v1')
+  ? USERS_BASE_URL
+  : USERS_BASE_URL.endsWith('/api')
+    ? `${USERS_BASE_URL}/v1`
+    : `${USERS_BASE_URL}/api/v1`
 
 const rawService = {
   async getChannels(): Promise<Channel[]> {

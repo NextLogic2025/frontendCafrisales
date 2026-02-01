@@ -52,7 +52,7 @@ export function SupervisorZonesMapScreen() {
   const fetchZones = React.useCallback(async () => {
     setLoading(true)
     try {
-      const data = await ZoneService.getZones('todos')
+      const data = await ZoneService.getZonesMap('todos')
       setZones(data)
     } finally {
       setLoading(false)

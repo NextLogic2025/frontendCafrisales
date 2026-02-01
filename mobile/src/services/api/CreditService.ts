@@ -2,6 +2,7 @@ import { env } from '../../config/env'
 import { ApiService } from './ApiService'
 import { createService } from './createService'
 import { logErrorForDebugging } from '../../utils/errorMessages'
+import { isApiError } from './ApiError'
 
 export type ApproveCreditPayload = {
   pedido_id: string
@@ -58,7 +59,19 @@ export type RegisterPaymentPayload = {
 }
 
 const CREDIT_BASE_URL = env.api.creditUrl
-const CREDIT_API_URL = CREDIT_BASE_URL.endsWith('/api') ? CREDIT_BASE_URL : `${CREDIT_BASE_URL}/api`
+const CREDIT_API_URL =
+  CREDIT_BASE_URL.endsWith('/api/v1')
+    ? CREDIT_BASE_URL
+    : CREDIT_BASE_URL.endsWith('/api')
+      ? `${CREDIT_BASE_URL}/v1`
+      : `${CREDIT_BASE_URL}/api/v1`
+
+const unwrapList = <T>(data: any): T[] => {
+  if (!data) return []
+  if (Array.isArray(data)) return data as T[]
+  if (Array.isArray(data.data)) return data.data as T[]
+  return []
+}
 
 const toNumber = (value: number | string | undefined | null) => {
   if (value === undefined || value === null) return 0
@@ -76,7 +89,7 @@ const normalizeCredit = (credit: CreditListItem): CreditListItem => ({
 const rawService = {
   async approveCredit(payload: ApproveCreditPayload): Promise<CreditResponse | null> {
     try {
-      return await ApiService.post<CreditResponse>(`${CREDIT_API_URL}/creditos/aprobar`, payload)
+      return await ApiService.post<CreditResponse>(`${CREDIT_API_URL}/credits/approve`, payload)
     } catch (error) {
       logErrorForDebugging(error, 'CreditService.approveCredit')
       return null
@@ -85,11 +98,19 @@ const rawService = {
 
   async getCreditsBySeller(vendedorId: string, estados?: string[]): Promise<CreditListItem[]> {
     try {
-      const estadoQuery = estados && estados.length > 0 ? `&estado=${encodeURIComponent(estados.join(','))}` : ''
-      const url = `${CREDIT_API_URL}/creditos?vendedor_id=${encodeURIComponent(vendedorId)}${estadoQuery}`
-      const data = await ApiService.get<CreditListItem[]>(url)
-      return data.map(normalizeCredit)
+      const status = estados && estados.length > 0 ? estados[0] : undefined
+      const statusQuery = status ? `&status=${encodeURIComponent(status)}` : ''
+      const url = `${CREDIT_API_URL}/credits?sellerId=${encodeURIComponent(vendedorId)}${statusQuery}`
+      const data = await ApiService.get<any>(url, { silent: true })
+      return unwrapList<CreditListItem>(data).map(normalizeCredit)
     } catch (error) {
+      if (isApiError(error) && error.status === 400) {
+        try {
+          const fallbackUrl = `${CREDIT_API_URL}/credits?sellerId=${encodeURIComponent(vendedorId)}`
+          const data = await ApiService.get<any>(fallbackUrl, { silent: true })
+          return unwrapList<CreditListItem>(data).map(normalizeCredit)
+        } catch { }
+      }
       logErrorForDebugging(error, 'CreditService.getCreditsBySeller', { vendedorId })
       return []
     }
@@ -97,11 +118,19 @@ const rawService = {
 
   async getCreditsByClient(clienteId: string, estados?: string[]): Promise<CreditListItem[]> {
     try {
-      const estadoQuery = estados && estados.length > 0 ? `?estado=${encodeURIComponent(estados.join(','))}` : ''
-      const url = `${CREDIT_API_URL}/creditos/mis${estadoQuery}`
-      const data = await ApiService.get<CreditListItem[]>(url)
-      return data.map(normalizeCredit)
+      const status = estados && estados.length > 0 ? estados[0] : undefined
+      const statusQuery = status ? `?status=${encodeURIComponent(status)}` : ''
+      const url = `${CREDIT_API_URL}/credits/me${statusQuery}`
+      const data = await ApiService.get<any>(url, { silent: true })
+      return unwrapList<CreditListItem>(data).map(normalizeCredit)
     } catch (error) {
+      if (isApiError(error) && error.status === 400) {
+        try {
+          const fallbackUrl = `${CREDIT_API_URL}/credits/me`
+          const data = await ApiService.get<any>(fallbackUrl, { silent: true })
+          return unwrapList<CreditListItem>(data).map(normalizeCredit)
+        } catch { }
+      }
       logErrorForDebugging(error, 'CreditService.getCreditsByClient', { clienteId })
       return []
     }
@@ -109,7 +138,7 @@ const rawService = {
 
   async getCreditById(creditId: string): Promise<CreditDetailResponse | null> {
     try {
-      const data = await ApiService.get<CreditDetailResponse>(`${CREDIT_API_URL}/creditos/${creditId}`)
+      const data = await ApiService.get<CreditDetailResponse>(`${CREDIT_API_URL}/credits/${creditId}`)
       const credito = data.credito ? normalizeCredit(data.credito as CreditListItem) : data.credito
       const pagos = (data.pagos || []).map((p) => ({
         ...p,
@@ -131,22 +160,13 @@ const rawService = {
   async getCreditByOrder(pedidoId: string): Promise<CreditDetailResponse | null> {
     try {
       const data = await ApiService.get<CreditDetailResponse>(
-        `${CREDIT_API_URL}/creditos?pedido_id=${encodeURIComponent(pedidoId)}`,
+        `${CREDIT_API_URL}/credits?orderId=${encodeURIComponent(pedidoId)}`,
         { silent: true },
       )
-      if (!data) return null
-      const credito = data.credito ? normalizeCredit(data.credito as CreditListItem) : data.credito
-      const pagos = (data.pagos || []).map((p) => ({
-        ...p,
-        monto_pago: toNumber(p.monto_pago),
-      }))
-      const totales = data.totales
-        ? {
-            total_pagado: toNumber(data.totales.total_pagado),
-            saldo: toNumber(data.totales.saldo),
-          }
-        : undefined
-      return { ...data, credito, pagos, totales }
+      const list = unwrapList<CreditListItem>(data)
+      if (!list.length) return null
+      const creditId = list[0].id
+      return await rawService.getCreditById(creditId)
     } catch (error: any) {
       if (error?.name === 'ApiError' && error?.status === 404) {
         return null
@@ -168,7 +188,7 @@ const rawService = {
 
   async rejectCredit(creditId: string, motivo?: string): Promise<boolean> {
     try {
-      await ApiService.put(`${CREDIT_API_URL}/creditos/${creditId}/rechazar`, {
+      await ApiService.put(`${CREDIT_API_URL}/credits/${creditId}/reject`, {
         motivo: motivo || 'Credito rechazado',
       })
       return true
@@ -180,11 +200,19 @@ const rawService = {
 
   async getCreditsAll(estados?: string[]): Promise<CreditListItem[]> {
     try {
-      const estadoQuery = estados && estados.length > 0 ? `?estado=${encodeURIComponent(estados.join(','))}` : ''
-      const url = `${CREDIT_API_URL}/creditos${estadoQuery}`
-      const data = await ApiService.get<CreditListItem[]>(url)
-      return data.map(normalizeCredit)
+      const status = estados && estados.length > 0 ? estados[0] : undefined
+      const statusQuery = status ? `?status=${encodeURIComponent(status)}` : ''
+      const url = `${CREDIT_API_URL}/credits${statusQuery}`
+      const data = await ApiService.get<any>(url, { silent: true })
+      return unwrapList<CreditListItem>(data).map(normalizeCredit)
     } catch (error) {
+      if (isApiError(error) && error.status === 400) {
+        try {
+          const fallbackUrl = `${CREDIT_API_URL}/credits`
+          const data = await ApiService.get<any>(fallbackUrl, { silent: true })
+          return unwrapList<CreditListItem>(data).map(normalizeCredit)
+        } catch { }
+      }
       logErrorForDebugging(error, 'CreditService.getCreditsAll')
       return []
     }

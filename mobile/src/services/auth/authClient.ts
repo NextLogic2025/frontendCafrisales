@@ -16,8 +16,10 @@ type SignedInUser = {
 
 type SignInApiResponse = {
   access_token?: string
+  accessToken?: string
   refresh_token?: string
   token?: string
+  user?: SignedInUser
   usuario?: SignedInUser
   usuario_id?: string
   rol?: string
@@ -70,7 +72,7 @@ export async function signIn(email: string, password: string) {
     throw new Error(ERROR_MESSAGES.INVALID_CREDENTIALS)
   }
 
-  const accessToken = data?.access_token || data?.token
+  const accessToken = data?.access_token || data?.accessToken || data?.token
   const refreshToken = data?.refresh_token
 
   if (!accessToken) {
@@ -83,26 +85,29 @@ export async function signIn(email: string, password: string) {
     await setRefreshToken(refreshToken)
   }
 
-  if (data?.usuario?.nombre) {
-    await setUserName(data.usuario.nombre)
-  } else if (data?.usuario?.email) {
-    await setUserName(data.usuario.email)
+  const userPayload = data?.user || data?.usuario
+
+  if (userPayload?.nombre) {
+    await setUserName(userPayload.nombre)
+  } else if (userPayload?.email) {
+    const username = userPayload.email.split('@')[0] || userPayload.email
+    await setUserName(username)
   }
 
   const role =
     typeof data?.rol === 'string'
       ? data.rol
-      : typeof data?.usuario?.role === 'string'
-        ? data.usuario.role
-        : typeof data?.usuario?.rol === 'string'
-          ? data.usuario.rol
+      : typeof userPayload?.role === 'string'
+        ? userPayload.role
+        : typeof userPayload?.rol === 'string'
+          ? userPayload.rol
           : undefined
 
-  const user = data?.usuario || data?.usuario_id || role
+  const user = userPayload || data?.usuario_id || role
     ? {
-      id: data?.usuario?.id || data?.usuario_id,
-      email: data?.usuario?.email || email,
-      nombre: data?.usuario?.nombre,
+      id: userPayload?.id || data?.usuario_id,
+      email: userPayload?.email || email,
+      nombre: userPayload?.nombre,
       role,
     }
     : undefined
@@ -131,6 +136,13 @@ const AUTH_PATHS = {
   logout: '/auth/logout',
 } as const
 
+function normalizeAuthBaseUrl(baseUrl: string) {
+  if (!baseUrl) return baseUrl
+  if (baseUrl.endsWith('/api/v1') || baseUrl.endsWith('/auth')) return baseUrl
+  if (baseUrl.endsWith('/api')) return `${baseUrl}/v1`
+  return `${baseUrl}/api/v1`
+}
+
 function normalizeTokenString(token: string) {
   return token.trim().replace(/^"|"$/g, '')
 }
@@ -147,7 +159,7 @@ async function refreshAccessToken(): Promise<string | null> {
       return null
     }
 
-    const authBaseUrl = env.auth.baseUrl || env.api.baseUrl
+    const authBaseUrl = normalizeAuthBaseUrl(env.auth.baseUrl || env.api.baseUrl)
     const url = authBaseUrl + AUTH_PATHS.refresh
     const cleanRefreshToken = normalizeTokenString(refreshToken)
 
@@ -189,7 +201,7 @@ export async function signOut() {
     const accessToken = await getToken()
     if (refreshToken && accessToken) {
       const cleanToken = normalizeTokenString(refreshToken)
-      const authBaseUrl = env.auth.baseUrl || env.api.baseUrl
+      const authBaseUrl = normalizeAuthBaseUrl(env.auth.baseUrl || env.api.baseUrl)
       const url = authBaseUrl + AUTH_PATHS.logout
       await fetch(url, {
         method: 'POST',

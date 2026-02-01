@@ -50,13 +50,21 @@ type StaffEntry = {
 }
 
 const USERS_BASE_URL = env.api.usersUrl
-const USERS_API_URL = USERS_BASE_URL.endsWith('/api') ? USERS_BASE_URL : `${USERS_BASE_URL}/api`
+const USERS_API_URL = USERS_BASE_URL.endsWith('/api/v1')
+    ? USERS_BASE_URL
+    : USERS_BASE_URL.endsWith('/api')
+        ? `${USERS_BASE_URL}/v1`
+        : `${USERS_BASE_URL}/api/v1`
+const USERS_ENTITY_URL = `${USERS_API_URL}/users`
+const USERS_PROFILE_URL = `${USERS_API_URL}/usuarios`
 const AUTH_BASE_URL = env.auth.baseUrl || env.api.baseUrl
 const AUTH_API_URL = AUTH_BASE_URL.endsWith('/auth')
     ? AUTH_BASE_URL
-    : AUTH_BASE_URL.endsWith('/api')
+    : AUTH_BASE_URL.endsWith('/api/v1')
         ? `${AUTH_BASE_URL}/auth`
-        : `${AUTH_BASE_URL}/api/auth`
+        : AUTH_BASE_URL.endsWith('/api')
+            ? `${AUTH_BASE_URL}/v1/auth`
+            : `${AUTH_BASE_URL}/api/v1/auth`
 const AUTH_REGISTER_URL = `${AUTH_API_URL}/register`
 
 const normalizeUser = (user: UserApiUser, profile?: UserApiProfile | null): UserProfile => {
@@ -116,7 +124,7 @@ async function fetchStaffEmployees(): Promise<UserProfile[]> {
     const userFetches = await Promise.all(
         staff.map(async (member) => {
             try {
-                const user = await ApiService.get<UserApiUser>(`${USERS_API_URL}/usuarios/${member.usuario_id}`)
+                const user = await ApiService.get<UserApiUser>(`${USERS_ENTITY_URL}/${member.usuario_id}`)
                 return { id: member.usuario_id, user }
             } catch (error) {
                 logErrorForDebugging(error, 'UserService.getUsers.staffUser', { userId: member.usuario_id })
@@ -157,10 +165,10 @@ const rawService = {
             const userId = decoded.sub || decoded.userId
             if (!userId) return null
 
-            const user = await ApiService.get<UserApiUser>(`${USERS_API_URL}/usuarios/${userId}`)
+            const user = await ApiService.get<UserApiUser>(`${USERS_ENTITY_URL}/${userId}`)
             let profile: UserApiProfile | null = null
             try {
-                profile = await ApiService.get<UserApiProfile>(`${USERS_API_URL}/usuarios/me/perfil`)
+                profile = await ApiService.get<UserApiProfile>(`${USERS_PROFILE_URL}/me/perfil`)
             } catch (error) {
                 logErrorForDebugging(error, 'UserService.getProfile.profile')
             }
@@ -175,7 +183,7 @@ const rawService = {
     async updateProfile(_userId: string, data: { nombre: string; telefono: string }): Promise<boolean> {
         try {
             const nameParts = splitName(data.nombre)
-            await ApiService.put(`${USERS_API_URL}/usuarios/me/perfil`, {
+            await ApiService.put(`${USERS_PROFILE_URL}/me/perfil`, {
                 nombres: nameParts.nombres,
                 apellidos: nameParts.apellidos,
                 telefono: data.telefono || null
@@ -214,7 +222,7 @@ const rawService = {
                 }
 
                 const response = await ApiService.post<{ id?: string; userId?: string; usuario_id?: string }>(
-                    `${USERS_API_URL}/usuarios/${rol}`,
+                    `${USERS_ENTITY_URL}/${rol}`,
                     staffPayload,
                 )
                 return {
@@ -305,10 +313,10 @@ const rawService = {
 
     async getUserDetail(userId: string): Promise<UserProfile | null> {
         try {
-            const user = await ApiService.get<UserApiUser>(`${USERS_API_URL}/usuarios/${userId}`)
+            const user = await ApiService.get<UserApiUser>(`${USERS_ENTITY_URL}/${userId}`)
             let profile: UserApiProfile | null = null
             try {
-                profile = await ApiService.get<UserApiProfile>(`${USERS_API_URL}/usuarios/${userId}/perfil`, { silent: true })
+                profile = await ApiService.get<UserApiProfile>(`${USERS_PROFILE_URL}/${userId}/perfil`, { silent: true })
             } catch (error) {
                 logErrorForDebugging(error, 'UserService.getUserDetail.profile', { userId })
             }
@@ -395,7 +403,7 @@ const rawService = {
             }
 
             if (Object.keys(payload).length > 0) {
-                await ApiService.patch(`${USERS_API_URL}/usuarios/${userId}`, payload)
+                await ApiService.patch(`${USERS_ENTITY_URL}/${userId}`, payload)
             }
             return { success: true, message: 'Usuario actualizado correctamente' }
         } catch (error: any) {
@@ -406,7 +414,7 @@ const rawService = {
 
     async deleteUser(userId: string): Promise<{ success: boolean; message?: string }> {
         try {
-            await ApiService.patch(`${USERS_API_URL}/usuarios/${userId}`, { estado: 'inactivo' })
+            await ApiService.patch(`${USERS_ENTITY_URL}/${userId}`, { estado: 'inactivo' })
             return { success: true, message: 'Usuario desactivado correctamente' }
         } catch (error: any) {
             logErrorForDebugging(error, 'UserService.deleteUser', { userId })

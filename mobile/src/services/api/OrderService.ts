@@ -126,12 +126,24 @@ export type OrderValidationPayload = {
 }
 
 const ORDER_BASE_URL = env.api.orderUrl
-const ORDER_API_URL = ORDER_BASE_URL.endsWith('/api') ? ORDER_BASE_URL : `${ORDER_BASE_URL}/api`
+const ORDER_API_URL =
+  ORDER_BASE_URL.endsWith('/api/v1')
+    ? ORDER_BASE_URL
+    : ORDER_BASE_URL.endsWith('/api')
+      ? `${ORDER_BASE_URL}/v1`
+      : `${ORDER_BASE_URL}/api/v1`
+
+const unwrapList = <T>(data: any): T[] => {
+  if (!data) return []
+  if (Array.isArray(data)) return data as T[]
+  if (Array.isArray(data.data)) return data.data as T[]
+  return []
+}
 
 const rawService = {
   async createOrder(payload: CreateOrderPayload): Promise<OrderResponse | null> {
     try {
-      return await ApiService.post<OrderResponse>(`${ORDER_API_URL}/pedidos`, payload)
+      return await ApiService.post<OrderResponse>(`${ORDER_API_URL}/orders`, payload)
     } catch (error) {
       logErrorForDebugging(error, 'OrderService.createOrder')
       return null
@@ -140,7 +152,7 @@ const rawService = {
 
   async getOrderById(orderId: string): Promise<OrderResponse | null> {
     try {
-      return await ApiService.get<OrderResponse>(`${ORDER_API_URL}/pedidos/${orderId}`)
+      return await ApiService.get<OrderResponse>(`${ORDER_API_URL}/orders/${orderId}`)
     } catch (error) {
       logErrorForDebugging(error, 'OrderService.getOrderById', { orderId })
       return null
@@ -149,7 +161,7 @@ const rawService = {
 
   async getOrderDetail(orderId: string): Promise<OrderDetail | null> {
     try {
-      const data = await ApiService.get<any>(`${ORDER_API_URL}/pedidos/${orderId}`)
+      const data = await ApiService.get<any>(`${ORDER_API_URL}/orders/${orderId}`)
       if (data?.pedido) {
         return data as OrderDetail
       }
@@ -168,7 +180,8 @@ const rawService = {
 
   async getOrders(): Promise<OrderListItem[]> {
     try {
-      return await ApiService.get<OrderListItem[]>(`${ORDER_API_URL}/pedidos`)
+      const data = await ApiService.get<any>(`${ORDER_API_URL}/orders`)
+      return unwrapList<OrderListItem>(data)
     } catch (error) {
       logErrorForDebugging(error, 'OrderService.getOrders')
       return []
@@ -177,7 +190,8 @@ const rawService = {
 
   async getMyOrders(): Promise<OrderListItem[]> {
     try {
-      return await ApiService.get<OrderListItem[]>(`${ORDER_API_URL}/pedidos/my-orders`)
+      const data = await ApiService.get<any>(`${ORDER_API_URL}/orders/my-orders`)
+      return unwrapList<OrderListItem>(data)
     } catch (error) {
       logErrorForDebugging(error, 'OrderService.getMyOrders')
       return []
@@ -186,7 +200,7 @@ const rawService = {
 
   async cancelOrder(orderId: string, motivo?: string): Promise<boolean> {
     try {
-      await ApiService.patch(`${ORDER_API_URL}/pedidos/${orderId}/cancel`, {
+      await ApiService.put(`${ORDER_API_URL}/orders/${orderId}/cancel`, {
         motivo: motivo || 'Pedido cancelado por rechazo de credito',
       })
       return true
@@ -198,7 +212,7 @@ const rawService = {
 
   async updatePaymentMethod(orderId: string, metodo_pago: 'contado' | 'credito'): Promise<boolean> {
     try {
-      await ApiService.patch(`${ORDER_API_URL}/pedidos/${orderId}/metodo-pago`, { metodo_pago })
+      await ApiService.patch(`${ORDER_API_URL}/orders/${orderId}/metodo-pago`, { metodo_pago })
       return true
     } catch (error) {
       logErrorForDebugging(error, 'OrderService.updatePaymentMethod', { orderId })
@@ -209,7 +223,8 @@ const rawService = {
   async getPendingValidationOrders(limit?: number): Promise<OrderListItem[]> {
     try {
       const query = typeof limit === 'number' ? `?limit=${limit}` : ''
-      return await ApiService.get<OrderListItem[]>(`${ORDER_API_URL}/pedidos/pending-validation${query}`)
+      const data = await ApiService.get<any>(`${ORDER_API_URL}/orders/pending-validation${query}`)
+      return unwrapList<OrderListItem>(data)
     } catch (error) {
       logErrorForDebugging(error, 'OrderService.getPendingValidationOrders')
       return []
@@ -218,7 +233,7 @@ const rawService = {
 
   async validateOrder(orderId: string, payload: OrderValidationPayload): Promise<boolean> {
     try {
-      await ApiService.post(`${ORDER_API_URL}/pedidos/${orderId}/validar`, payload)
+      await ApiService.post(`${ORDER_API_URL}/orders/${orderId}/validar`, payload)
       return true
     } catch (error) {
       logErrorForDebugging(error, 'OrderService.validateOrder', { orderId })
@@ -237,7 +252,7 @@ const rawService = {
 
   async respondToAdjustment(orderId: string, payload: OrderAdjustmentPayload): Promise<boolean> {
     try {
-      await ApiService.post(`${ORDER_API_URL}/pedidos/${orderId}/responder-ajuste`, payload)
+      await ApiService.post(`${ORDER_API_URL}/orders/${orderId}/responder-ajuste`, payload)
       return true
     } catch (error) {
       logErrorForDebugging(error, 'OrderService.respondToAdjustment', { orderId })
@@ -247,7 +262,8 @@ const rawService = {
 
   async getPendingPromoApprovals(): Promise<OrderListItem[]> {
     try {
-      return await ApiService.get<OrderListItem[]>(`${ORDER_API_URL}/pedidos/promociones-pendientes`)
+      const data = await ApiService.get<any>(`${ORDER_API_URL}/orders/promociones-pendientes`)
+      return unwrapList<OrderListItem>(data)
     } catch (error) {
       logErrorForDebugging(error, 'OrderService.getPendingPromoApprovals')
       return []
@@ -261,7 +277,8 @@ const rawService = {
       search.set('fecha_entrega', params.fecha_entrega)
       if (params.estado) search.set('estado', params.estado)
       if (typeof params.limit === 'number') search.set('limit', String(params.limit))
-      return await ApiService.get<OrderListItem[]>(`${ORDER_API_URL}/pedidos/zona?${search.toString()}`)
+      const data = await ApiService.get<any>(`${ORDER_API_URL}/orders/zona?${search.toString()}`)
+      return unwrapList<OrderListItem>(data)
     } catch (error) {
       logErrorForDebugging(error, 'OrderService.getOrdersByZoneDate')
       return []
@@ -270,7 +287,7 @@ const rawService = {
 
   async approvePromotions(orderId: string, payload: { approve_all?: boolean; item_ids?: string[] }): Promise<boolean> {
     try {
-      await ApiService.patch(`${ORDER_API_URL}/pedidos/${orderId}/aprobar-promociones`, payload)
+      await ApiService.post(`${ORDER_API_URL}/orders/${orderId}/aprobar-promociones`, payload)
       return true
     } catch (error) {
       logErrorForDebugging(error, 'OrderService.approvePromotions', { orderId })
@@ -280,7 +297,7 @@ const rawService = {
 
   async rejectPromotions(orderId: string, payload: { reject_all?: boolean; item_ids?: string[] }): Promise<boolean> {
     try {
-      await ApiService.patch(`${ORDER_API_URL}/pedidos/${orderId}/rechazar-promociones`, payload)
+      await ApiService.post(`${ORDER_API_URL}/orders/${orderId}/rechazar-promociones`, payload)
       return true
     } catch (error) {
       logErrorForDebugging(error, 'OrderService.rejectPromotions', { orderId })

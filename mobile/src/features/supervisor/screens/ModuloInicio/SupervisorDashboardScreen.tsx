@@ -51,13 +51,20 @@ export function SupervisorDashboardScreen() {
             }
 
             // 2. Fetch Data in Parallel
-            const [clients, orders, incidents] = await Promise.all([
+            const [clients, orders, deliveriesForScan] = await Promise.all([
                 UserClientService.getClients('activo'),
                 OrderService.getOrders(),
-                DeliveryService.getIncidents({ resuelto: 'false' })
+                DeliveryService.getDeliveries({ page: 1, limit: 100 })
             ])
 
-            const incidentsSafe = incidents ?? []
+            const incidentsByDelivery = await Promise.all(
+                deliveriesForScan.map(async (delivery) => {
+                    const incidents = await DeliveryService.getIncidents({ deliveryId: delivery.id })
+                    return incidents ?? []
+                }),
+            )
+
+            const incidentsSafe = incidentsByDelivery.flat()
 
             // 3. Process KPIs
             const activeOrders = orders.filter(o =>
