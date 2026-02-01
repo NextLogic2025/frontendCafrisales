@@ -8,8 +8,8 @@ interface EquipoListProps {
   usuarios: Usuario[]
   isLoading: boolean
   onEdit: (usuario: Usuario) => void
-  onDeactivate: (usuario: Usuario) => void
-  onActivate: (usuario: Usuario) => void
+  onDeactivate: (usuario: Usuario) => Promise<void>
+  onActivate: (usuario: Usuario) => Promise<void>
 }
 
 export function EquipoList({ usuarios, isLoading, onEdit, onDeactivate, onActivate }: EquipoListProps) {
@@ -34,8 +34,8 @@ export function EquipoList({ usuarios, isLoading, onEdit, onDeactivate, onActiva
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
       {usuarios.map((usuario) => (
-        <UsuarioCard 
-          key={usuario.id} 
+        <UsuarioCard
+          key={usuario.id}
           usuario={usuario}
           onEdit={onEdit}
           onDeactivate={onDeactivate}

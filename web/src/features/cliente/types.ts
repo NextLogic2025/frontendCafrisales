@@ -115,7 +115,7 @@ export interface ItemPedido {
   cantidad_solicitada?: number | null
   motivo_ajuste?: string | null
   descuento_item_valor?: number
-  descuento_item_tipo?: 'porcentaje' | 'monto' | 'fijo'
+  descuento_item_tipo?: 'porcentaje' | 'monto' | 'fijo' | 'monto_fijo'
   origen_precio?: 'catalogo' | 'negociado'
 }
 
@@ -135,7 +135,7 @@ export interface Pedido {
   metodo_pago?: string
   // Global discount
   descuento_pedido_valor?: number
-  descuento_pedido_tipo?: 'porcentaje' | 'monto' | 'fijo'
+  descuento_pedido_tipo?: 'porcentaje' | 'monto' | 'fijo' | 'monto_fijo'
   validaciones?: ValidacionBodega[]
 }
 

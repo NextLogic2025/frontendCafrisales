@@ -15,7 +15,6 @@ import { getAllCampanias, type Campania, type ProductoPromocion, getProductosByC
 import { useProductoCrud } from '../../services/useProductoCrud' // New hook
 import { ProductosList } from './productos/ProductosList'
 import { ProductosForm } from './productos/ProductosForm'
-import { ProductosPromocionesView } from './productos/ProductosPromocionesView'
 import { ProductoDetailModal } from './productos/ProductoDetailModal'
 
 export function ProductosView() {
@@ -263,15 +262,6 @@ export function ProductosView() {
         />
       )}
 
-      {/* Vista de Promociones */}
-      {vistaActual === 'promociones' && (
-        <ProductosPromocionesView
-          campanias={campanias}
-          productosEnPromociones={productosEnPromociones}
-          products={products}
-          isLoading={isLoadingPromos || isLoading}
-        />
-      )}
 
       {/* Formulario Modal */}
       <ProductosForm

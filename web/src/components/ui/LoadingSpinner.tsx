@@ -3,13 +3,14 @@ import React from 'react'
 interface Props {
   size?: 'sm' | 'md'
   text?: string
+  className?: string
 }
 
-export function LoadingSpinner({ size = 'md', text }: Props) {
+export function LoadingSpinner({ size = 'md', text, className = '' }: Props) {
   const dimension = size === 'sm' ? 'h-4 w-4' : 'h-6 w-6'
 
   return (
-    <div className="flex items-center gap-2 text-gray-700">
+    <div className={`flex items-center gap-2 text-gray-700 ${className}`}>
       <svg
         className={`animate-spin ${dimension}`}
         xmlns="http://www.w3.org/2000/svg"

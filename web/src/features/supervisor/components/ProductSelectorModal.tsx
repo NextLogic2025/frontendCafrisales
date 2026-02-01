@@ -59,7 +59,7 @@ export function ProductSelectorModal({
     (p) =>
       !productosAsignadosArray.find((pa) => pa.producto_id === p.id) &&
       (p.nombre.toLowerCase().includes(searchProducto.toLowerCase()) ||
-        p.codigo_sku.toLowerCase().includes(searchProducto.toLowerCase()))
+        p.skus?.some(s => s.codigo_sku.toLowerCase().includes(searchProducto.toLowerCase())))
   )
 
   return (
@@ -91,7 +91,7 @@ export function ProductSelectorModal({
                   const promoProductoId = pp.producto_id || pp.producto?.id
                   const productoData = promoProductoId ? productos.find((p) => p.id === promoProductoId) : undefined
                   const nombreMostrar = productoData?.nombre || pp.producto?.nombre || promoProductoId || 'Producto'
-                  const skuMostrar = productoData?.codigo_sku || pp.producto?.codigo_sku
+                  const skuMostrar = productoData?.skus?.[0]?.codigo_sku || pp.producto?.codigo_sku
                   return (
                     <div
                       key={`${promoProductoId || 'sin-id'}-${idx}`}
@@ -146,7 +146,7 @@ export function ProductSelectorModal({
                     {productos.find((p) => p.id === selectedProductId)?.nombre}
                   </p>
                   <p className="text-xs text-gray-600">
-                    {productos.find((p) => p.id === selectedProductId)?.codigo_sku}
+                    {productos.find((p) => p.id === selectedProductId)?.skus?.[0]?.codigo_sku}
                   </p>
                 </div>
               </div>
@@ -170,7 +170,7 @@ export function ProductSelectorModal({
                         }`}
                     >
                       <p className="text-sm font-medium text-gray-900">{producto.nombre}</p>
-                      <p className="text-xs text-gray-600">{producto.codigo_sku}</p>
+                      <p className="text-xs text-gray-600">{producto.skus?.[0]?.codigo_sku}</p>
                     </button>
                   ))}
                   {productosDisponibles.length === 0 && (

@@ -35,6 +35,9 @@ type SignInApiResponse = {
     rol?: string
     expires_in?: number
     message?: string
+    // Alternate property names that might be used
+    accessToken?: string
+    user?: SignedInUser
 }
 
 type RefreshApiResponse = {

@@ -82,7 +82,7 @@ export function ClienteDetailModal({ isOpen, onClose, cliente }: ClienteDetailMo
   const zonaNombre = zona?.nombre ?? (cliente?.zona_comercial_id ? `Zona ${cliente.zona_comercial_id}` : null)
 
   const creditoDisponible = cliente?.tiene_credito && cliente.limite_credito
-    ? (parseFloat(cliente.limite_credito) - parseFloat(cliente.saldo_actual)).toFixed(2)
+    ? (parseFloat(cliente.limite_credito) - parseFloat(cliente.saldo_actual || '0')).toFixed(2)
     : '0.00'
 
   if (!GOOGLE_MAPS_API_KEY) {

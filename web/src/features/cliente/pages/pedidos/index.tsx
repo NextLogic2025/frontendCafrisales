@@ -6,7 +6,7 @@ import { SkeletonTable } from 'components/ui/LoadingSpinner'
 import { Alert } from 'components/ui/Alert'
 import { Pagination } from 'components/ui/Pagination'
 import { PageHero } from 'components/ui/PageHero'
-import { COLORES_MARCA } from '../../types'
+import { COLORES_MARCA, Pedido, ValidacionBodega } from '../../types'
 
 import { usePedidosPage } from './hooks/usePedidosPage'
 import { OrdersHeader } from './components/OrdersHeader'
@@ -14,7 +14,6 @@ import { OrdersTable } from './components/OrdersTable'
 import { OrderDetailsModal } from './components/OrderDetailsModal'
 import { CancelOrderModal } from './components/CancelOrderModal'
 import { respondToAdjustment } from '../../../vendedor/services/pedidosApi'
-import { Pedido } from '../../../types'
 
 export default function PaginaPedidos() {
 	const navigate = useNavigate()
@@ -60,7 +59,7 @@ export default function PaginaPedidos() {
 		}
 
 		// Find latest validation
-		const latestValidation = pedido.validaciones.sort((a, b) =>
+		const latestValidation = pedido.validaciones.sort((a: ValidacionBodega, b: ValidacionBodega) =>
 			new Date(b.creado_en).getTime() - new Date(a.creado_en).getTime()
 		)[0]
 

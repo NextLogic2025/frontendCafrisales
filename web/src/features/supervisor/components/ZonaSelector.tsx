@@ -1,12 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
 
-import { obtenerZonas } from '../services/zonasApi';
-
-export interface Zona {
-  id: string;
-  nombre: string;
-}
+import { obtenerZonas, ZonaComercial } from '../services/zonasApi';
 
 interface ZonaSelectorProps {
   value: string;
@@ -15,7 +10,7 @@ interface ZonaSelectorProps {
 }
 
 export const ZonaSelector: React.FC<ZonaSelectorProps> = ({ value, onChange, className }) => {
-  const [zonas, setZonas] = useState<Zona[]>([]);
+  const [zonas, setZonas] = useState<ZonaComercial[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

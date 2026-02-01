@@ -199,7 +199,7 @@ export function ValidationModal({ pedido, onClose, onSuccess }: ValidationModalP
                                 disabled={isSubmitting || !isFormValid}
                                 className="px-4 py-2 bg-brand-red text-white text-sm font-medium rounded-lg hover:bg-brand-red/90 transition-colors disabled:opacity-50 flex items-center gap-2"
                             >
-                                {isSubmitting && <LoadingSpinner className="w-4 h-4 text-white" />}
+                                {isSubmitting && <LoadingSpinner size="sm" className="text-white" />}
                                 Confirmar Validación
                             </button>
                         </div>

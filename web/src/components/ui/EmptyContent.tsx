@@ -18,7 +18,7 @@ export function EmptyContent({ icon, title, description, subtitle, action }: Emp
     <div className="py-12 text-center">
       {icon && (
         React.isValidElement(icon)
-          ? React.cloneElement(icon as React.ReactElement, { className: 'mb-4 inline-block h-12 w-12 text-gray-300' })
+          ? React.cloneElement(icon as React.ReactElement<{ className?: string }>, { className: 'mb-4 inline-block h-12 w-12 text-gray-300' })
           : React.createElement(icon as React.ComponentType<{ className?: string }>, { className: 'mb-4 inline-block h-12 w-12 text-gray-300' })
       )}
       <p className="text-lg text-gray-600">{title}</p>

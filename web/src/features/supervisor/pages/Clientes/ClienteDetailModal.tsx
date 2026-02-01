@@ -60,7 +60,7 @@ export function ClienteDetailModal({ isOpen, onClose, cliente, zonas, listasPrec
   const zonaNombre = cliente?.zona_comercial?.nombre || zona?.nombre
 
   const creditoDisponible = cliente?.tiene_credito && cliente.limite_credito
-    ? (parseFloat(cliente.limite_credito) - parseFloat(cliente.saldo_actual)).toFixed(2)
+    ? (parseFloat(cliente.limite_credito) - parseFloat(cliente.saldo_actual || '0')).toFixed(2)
     : '0.00'
 
   const zonasOptions = useMemo(() => zonas.map((z) => ({ id: z.id, nombre: z.nombre, poligono_geografico: (z as any).poligono_geografico })) as ZonaOption[], [zonas])
