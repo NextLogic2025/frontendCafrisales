@@ -55,7 +55,7 @@ export function useOrders(options: UseOrdersOptions = {}): UseOrdersReturn {
         try {
             await OrderService.cancelOrder(id)
             setOrders(prev => prev.map(order =>
-                order.id === id ? { ...order, estado_actual: 'ANULADO' } : order
+                order.id === id ? { ...order, estado_actual: 'cancelado', estado: 'cancelado' } : order
             ))
             return true
         } catch (err) {
@@ -68,7 +68,7 @@ export function useOrders(options: UseOrdersOptions = {}): UseOrdersReturn {
         try {
             await OrderService.changeOrderStatus(id, status)
             setOrders(prev => prev.map(order =>
-                order.id === id ? { ...order, estado_actual: status } : order
+                order.id === id ? { ...order, estado_actual: status, estado: status } : order
             ))
             return true
         } catch (err) {

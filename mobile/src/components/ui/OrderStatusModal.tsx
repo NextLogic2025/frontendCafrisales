@@ -23,6 +23,7 @@ export function OrderStatusModal({
 }: OrderStatusModalProps) {
     const [changing, setChanging] = useState(false)
     const [selectedStatus, setSelectedStatus] = useState<OrderStatus | null>(null)
+    const currentStatus = (order?.estado as OrderStatus) || order?.estado_actual || 'pendiente_validacion'
 
     const handleStatusChange = async (status: OrderStatus) => {
         setSelectedStatus(status)
@@ -37,45 +38,49 @@ export function OrderStatusModal({
 
     const getStatusIcon = (status: OrderStatus): keyof typeof Ionicons.glyphMap => {
         switch (status) {
-            case 'APROBADO':
+            case 'pendiente_validacion':
+                return 'time'
+            case 'validado':
                 return 'checkmark-circle'
-            case 'RECHAZADO':
+            case 'rechazado_cliente':
                 return 'close-circle'
-            case 'EN_PREPARACION':
-                return 'cube'
-            case 'PREPARADO':
-                return 'checkbox'
-            case 'FACTURADO':
-                return 'receipt'
-            case 'EN_RUTA':
-                return 'car'
-            case 'ENTREGADO':
+            case 'ajustado_bodega':
+                return 'alert-circle'
+            case 'aceptado_cliente':
                 return 'checkmark-done-circle'
-            case 'ANULADO':
+            case 'asignado_ruta':
+                return 'map'
+            case 'en_ruta':
+                return 'car'
+            case 'entregado':
+                return 'checkmark-done-circle'
+            case 'cancelado':
                 return 'ban'
             default:
                 return 'time'
         }
     }
 
-    const getStatusDescription = (status: OrderStatus): string => {
+    const getStatusDescription(status: OrderStatus): string => {
         switch (status) {
-            case 'APROBADO':
-                return 'Aprobar pedido. Se creará automáticamente una orden de picking para bodega'
-            case 'RECHAZADO':
-                return 'Rechazar pedido. No se creará picking'
-            case 'EN_PREPARACION':
-                return 'Marcar como en preparación'
-            case 'PREPARADO':
-                return 'Marcar como preparado'
-            case 'FACTURADO':
-                return 'Marcar como facturado'
-            case 'EN_RUTA':
-                return 'Marcar como en ruta'
-            case 'ENTREGADO':
-                return 'Marcar como entregado'
-            case 'ANULADO':
-                return 'Anular pedido'
+            case 'pendiente_validacion':
+                return 'Pedido pendiente de validacion por bodega'
+            case 'validado':
+                return 'Pedido validado por bodega'
+            case 'ajustado_bodega':
+                return 'Pedido ajustado por bodega, requiere respuesta del cliente'
+            case 'aceptado_cliente':
+                return 'Cliente acepto los ajustes de bodega'
+            case 'rechazado_cliente':
+                return 'Cliente rechazo los ajustes'
+            case 'asignado_ruta':
+                return 'Pedido asignado a un rutero logistico'
+            case 'en_ruta':
+                return 'Transportista en ruta'
+            case 'entregado':
+                return 'Pedido entregado'
+            case 'cancelado':
+                return 'Pedido cancelado'
             default:
                 return 'Cambiar a este estado'
         }
@@ -110,13 +115,13 @@ export function OrderStatusModal({
                                 <Text className="text-neutral-600 text-sm mb-1">Estado actual:</Text>
                                 <View
                                     className="self-start px-3 py-1.5 rounded-full"
-                                    style={{ backgroundColor: `${ORDER_STATUS_COLORS[order.estado_actual]}20` }}
+                                    style={{ backgroundColor: `${ORDER_STATUS_COLORS[currentStatus]}20` }}
                                 >
                                     <Text
                                         className="text-sm font-bold uppercase"
-                                        style={{ color: ORDER_STATUS_COLORS[order.estado_actual] }}
+                                        style={{ color: ORDER_STATUS_COLORS[currentStatus] }}
                                     >
-                                        {ORDER_STATUS_LABELS[order.estado_actual]}
+                                        {ORDER_STATUS_LABELS[currentStatus]}
                                     </Text>
                                 </View>
                             </View>
@@ -124,7 +129,7 @@ export function OrderStatusModal({
                             <Text className="text-neutral-900 font-bold mb-3">Selecciona nuevo estado:</Text>
 
                             {allowedStatuses.map((status) => {
-                                const isCurrentStatus = order.estado_actual === status
+                                const isCurrentStatus = currentStatus === status
                                 const isProcessingThis = (changing || isProcessing) && selectedStatus === status
                                 const allDisabled = changing || isProcessing
 

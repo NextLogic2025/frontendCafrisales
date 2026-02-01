@@ -61,18 +61,24 @@ export function ClientHomeScreen() {
 
     const getOrderStatusStyle = (estado: string) => {
         switch (estado) {
-            case 'PENDIENTE':
-                return { bg: '#FEF3C7', color: '#92400E', label: 'Pendiente' }
-            case 'EN_REVISION':
-                return { bg: '#DBEAFE', color: '#1D4ED8', label: 'En revision' }
-            case 'APROBADO':
-                return { bg: '#DCFCE7', color: '#166534', label: 'Aprobado' }
-            case 'RECHAZADO':
+            case 'pendiente_validacion':
+                return { bg: '#FEF3C7', color: '#92400E', label: 'Pendiente validacion' }
+            case 'validado':
+                return { bg: '#DCFCE7', color: '#166534', label: 'Validado' }
+            case 'ajustado_bodega':
+                return { bg: '#FFEDD5', color: '#9A3412', label: 'Ajustado bodega' }
+            case 'aceptado_cliente':
+                return { bg: '#DCFCE7', color: '#166534', label: 'Aceptado' }
+            case 'rechazado_cliente':
                 return { bg: '#FEE2E2', color: '#991B1B', label: 'Rechazado' }
-            case 'EN_PREPARACION':
-                return { bg: '#E0E7FF', color: '#4338CA', label: 'Preparando' }
-            case 'DESPACHADO':
-                return { bg: '#D1FAE5', color: '#047857', label: 'Despachado' }
+            case 'asignado_ruta':
+                return { bg: '#E0F2FE', color: '#0369A1', label: 'Asignado ruta' }
+            case 'en_ruta':
+                return { bg: '#DBEAFE', color: '#1D4ED8', label: 'En ruta' }
+            case 'entregado':
+                return { bg: '#DCFCE7', color: '#166534', label: 'Entregado' }
+            case 'cancelado':
+                return { bg: '#E5E7EB', color: '#4B5563', label: 'Cancelado' }
             default:
                 return { bg: '#E5E7EB', color: '#4B5563', label: estado }
         }
@@ -173,7 +179,7 @@ export function ClientHomeScreen() {
                         </View>
                     ) : (
                         recentOrders.map((order) => {
-                            const status = getOrderStatusStyle(order.estado || 'PENDIENTE')
+                            const status = getOrderStatusStyle(order.estado || 'pendiente_validacion')
                             return (
                                 <Pressable
                                     key={order.id}

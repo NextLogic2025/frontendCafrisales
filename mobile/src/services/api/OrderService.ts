@@ -3,6 +3,41 @@ import { ApiService } from './ApiService'
 import { createService } from './createService'
 import { logErrorForDebugging } from '../../utils/errorMessages'
 
+export type OrderStatus =
+  | 'pendiente_validacion'
+  | 'validado'
+  | 'ajustado_bodega'
+  | 'aceptado_cliente'
+  | 'rechazado_cliente'
+  | 'asignado_ruta'
+  | 'en_ruta'
+  | 'entregado'
+  | 'cancelado'
+
+export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
+  pendiente_validacion: 'Pendiente validacion',
+  validado: 'Validado',
+  ajustado_bodega: 'Ajustado por bodega',
+  aceptado_cliente: 'Aceptado por cliente',
+  rechazado_cliente: 'Rechazado por cliente',
+  asignado_ruta: 'Asignado a ruta',
+  en_ruta: 'En ruta',
+  entregado: 'Entregado',
+  cancelado: 'Cancelado',
+}
+
+export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
+  pendiente_validacion: '#F59E0B',
+  validado: '#10B981',
+  ajustado_bodega: '#F97316',
+  aceptado_cliente: '#22C55E',
+  rechazado_cliente: '#EF4444',
+  asignado_ruta: '#0EA5E9',
+  en_ruta: '#2563EB',
+  entregado: '#16A34A',
+  cancelado: '#9CA3AF',
+}
+
 export type OrderItemPayload = {
   sku_id: string
   cantidad: number
@@ -31,7 +66,7 @@ export type OrderResponse = {
   subtotal?: number
   impuesto?: number
   descuento_pedido_valor?: number
-  estado?: string
+  estado?: OrderStatus | string
   cliente_id?: string
   metodo_pago?: 'contado' | 'credito'
   origen?: string
@@ -41,6 +76,23 @@ export type OrderResponse = {
   creado_en?: string
   actualizado_en?: string
   fecha_entrega_sugerida?: string
+}
+
+export type Order = OrderResponse & {
+  estado_actual?: OrderStatus
+  created_at?: string
+  detalles?: Array<{ id?: string }>
+  codigo_visual?: string
+  cliente?: { nombre_comercial?: string; razon_social?: string }
+  total_final?: number
+}
+
+export type OrderFilters = {
+  estado?: OrderStatus | string
+  fecha_desde?: string
+  fecha_hasta?: string
+  page?: number
+  limit?: number
 }
 
 export type OrderItemDetail = {

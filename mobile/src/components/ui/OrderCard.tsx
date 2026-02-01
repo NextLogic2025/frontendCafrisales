@@ -2,7 +2,7 @@ import React from 'react'
 import { View, Text, Pressable, TouchableOpacity, ActivityIndicator } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { BRAND_COLORS } from '../../shared/types'
-import { Order, ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '../../services/api/OrderService'
+import { Order, ORDER_STATUS_COLORS, ORDER_STATUS_LABELS, OrderStatus } from '../../services/api/OrderService'
 
 export interface ActionButton {
     id: string
@@ -25,8 +25,9 @@ interface OrderCardProps {
 
 
 export function OrderCard({ order, onPress, onCancel, actionButtons, showClientInfo }: OrderCardProps) {
-    const statusColor = ORDER_STATUS_COLORS[order.estado_actual]
-    const statusLabel = ORDER_STATUS_LABELS[order.estado_actual]
+    const currentStatus = (order.estado as OrderStatus) || order.estado_actual || 'pendiente_validacion'
+    const statusColor = ORDER_STATUS_COLORS[currentStatus]
+    const statusLabel = ORDER_STATUS_LABELS[currentStatus]
 
     const dateFormatted = (() => {
         try {
@@ -117,7 +118,7 @@ export function OrderCard({ order, onPress, onCancel, actionButtons, showClientI
                         </View>
                     </View>
 
-                    {order.estado_actual === 'PENDIENTE' && onCancel && !visibleButtons.length && (
+                    {currentStatus === 'pendiente_validacion' && onCancel && !visibleButtons.length && (
                         <Pressable
                             onPress={(e) => {
                                 e.stopPropagation()
@@ -129,7 +130,7 @@ export function OrderCard({ order, onPress, onCancel, actionButtons, showClientI
                         </Pressable>
                     )}
 
-                    {!actionButtons && order.estado_actual !== 'PENDIENTE' && (
+                    {!actionButtons && currentStatus !== 'pendiente_validacion' && (
                         <View className="bg-neutral-50 p-2.5 rounded-full">
                             <Ionicons name="chevron-forward" size={22} color="#9CA3AF" />
                         </View>

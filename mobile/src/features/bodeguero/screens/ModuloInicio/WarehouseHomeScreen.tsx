@@ -38,7 +38,9 @@ export function WarehouseHomeScreen() {
       ])
 
       setPendingCount(pending.length)
-      setValidatedCount(orders.filter((o: OrderListItem) => o.estado === 'validado' || o.estado === 'APROBADO').length)
+      setValidatedCount(
+        orders.filter((o: OrderListItem) => o.estado === 'validado' || o.estado === 'aceptado_cliente').length,
+      )
     } catch {
       // Silently fail
     } finally {

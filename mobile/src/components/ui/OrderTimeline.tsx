@@ -20,29 +20,29 @@ interface TimelineStep {
 }
 
 const STATUS_FLOW: OrderStatus[] = [
-    'PENDIENTE',
-    'APROBADO',
-    'EN_PREPARACION',
-    'PREPARADO',
-    'FACTURADO',
-    'EN_RUTA',
-    'ENTREGADO'
+    'pendiente_validacion',
+    'validado',
+    'ajustado_bodega',
+    'aceptado_cliente',
+    'asignado_ruta',
+    'en_ruta',
+    'entregado'
 ]
 
 const STATUS_ICONS: Record<OrderStatus, keyof typeof Ionicons.glyphMap> = {
-    PENDIENTE: 'time-outline',
-    APROBADO: 'checkmark-circle-outline',
-    EN_PREPARACION: 'cube-outline',
-    PREPARADO: 'checkbox-outline',
-    FACTURADO: 'document-text-outline',
-    EN_RUTA: 'car-outline',
-    ENTREGADO: 'checkmark-done-circle-outline',
-    ANULADO: 'close-circle-outline',
-    RECHAZADO: 'close-circle-outline'
+    pendiente_validacion: 'time-outline',
+    validado: 'checkmark-circle-outline',
+    ajustado_bodega: 'alert-circle-outline',
+    aceptado_cliente: 'checkmark-done-circle-outline',
+    asignado_ruta: 'map-outline',
+    en_ruta: 'car-outline',
+    entregado: 'checkmark-done-circle-outline',
+    cancelado: 'close-circle-outline',
+    rechazado_cliente: 'close-circle-outline'
 }
 
 export function OrderTimeline({ currentStatus, createdAt, compact = false }: OrderTimelineProps) {
-    const isTerminalStatus = currentStatus === 'ANULADO' || currentStatus === 'RECHAZADO'
+    const isTerminalStatus = currentStatus === 'cancelado' || currentStatus === 'rechazado_cliente'
 
     const getStatusSteps = (): TimelineStep[] => {
         const currentIndex = STATUS_FLOW.indexOf(currentStatus)
