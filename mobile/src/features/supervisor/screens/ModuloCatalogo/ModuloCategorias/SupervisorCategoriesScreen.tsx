@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, Text, Pressable, TouchableOpacity, StyleSheet } from 'react-native'
+import { View, Text, Pressable, TouchableOpacity, StyleSheet, Switch } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { Header } from '../../../../../components/ui/Header'
@@ -20,6 +20,7 @@ export function SupervisorCategoriesScreen() {
   const [searchQuery, setSearchQuery] = React.useState('')
   const [filter, setFilter] = React.useState<CategoryFilterOption>('todas')
   const [loading, setLoading] = React.useState(false)
+  const [togglingId, setTogglingId] = React.useState<string | null>(null)
 
   const [feedbackVisible, setFeedbackVisible] = React.useState(false)
   const [feedbackConfig, setFeedbackConfig] = React.useState<{
@@ -84,6 +85,25 @@ export function SupervisorCategoriesScreen() {
       showGlobalToast('No se pudo eliminar la categoria.', 'error')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleToggleActive = async (category: CatalogCategory) => {
+    const nextValue = !category.activo
+    setTogglingId(category.id)
+    setCategories((prev) =>
+      prev.map((item) => (item.id === category.id ? { ...item, activo: nextValue } : item)),
+    )
+    try {
+      const updated = await CatalogCategoryService.updateCategory(category.id, { activo: nextValue })
+      if (!updated) throw new Error('UPDATE_ERROR')
+    } catch {
+      setCategories((prev) =>
+        prev.map((item) => (item.id === category.id ? { ...item, activo: category.activo } : item)),
+      )
+      showGlobalToast('No se pudo actualizar la categoria.', 'error')
+    } finally {
+      setTogglingId(null)
     }
   }
 
@@ -174,7 +194,16 @@ export function SupervisorCategoriesScreen() {
                     </Text>
                   ) : null}
                 </View>
-                <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+                <View style={styles.actions} onStartShouldSetResponder={() => true}>
+                  <Switch
+                    value={category.activo ?? true}
+                    onValueChange={() => handleToggleActive(category)}
+                    disabled={loading || togglingId === category.id}
+                    trackColor={{ false: '#E5E7EB', true: '#FECACA' }}
+                    thumbColor={category.activo ? BRAND_COLORS.red : '#9CA3AF'}
+                  />
+                  <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+                </View>
               </View>
             </Pressable>
           )}
@@ -221,6 +250,11 @@ const styles = StyleSheet.create({
   cardContent: {
     flex: 1,
     marginRight: 10,
+  },
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
   title: {
     fontSize: 16,

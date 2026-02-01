@@ -29,6 +29,7 @@ type DecodedToken = {
 type UserApiUser = {
     id?: string
     email?: string
+    nombre?: string
     rol?: string
     estado?: 'activo' | 'inactivo' | 'suspendido'
 }
@@ -69,9 +70,10 @@ const AUTH_REGISTER_URL = `${AUTH_API_URL}/register`
 
 const normalizeUser = (user: UserApiUser, profile?: UserApiProfile | null): UserProfile => {
     const fullName = [profile?.nombres, profile?.apellidos].filter(Boolean).join(' ').trim()
+    const preferredName = user?.nombre?.trim()
     return {
         id: user.id || '',
-        name: fullName || user.email || 'Sin nombre',
+        name: preferredName || fullName || user.email || 'Sin nombre',
         role: user.rol || 'Usuario',
         email: user.email || '',
         phone: profile?.telefono || '',
