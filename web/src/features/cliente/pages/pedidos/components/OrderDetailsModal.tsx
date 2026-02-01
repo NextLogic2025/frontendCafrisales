@@ -75,7 +75,6 @@ export function OrderDetailsModal({
             // We'll rely on global refresh or user action.
             window.dispatchEvent(new CustomEvent('pedidoCreado', { detail: { message: accion === 'acepta' ? 'Pedido confirmado' : 'Pedido rechazado' } }))
         } catch (e: any) {
-            console.error(e)
             alert(e.message || 'Error al responder')
         } finally {
             setResponding(false)

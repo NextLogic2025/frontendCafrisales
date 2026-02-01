@@ -58,7 +58,7 @@ export default function RuterosLogisticosPage() {
                         // Get full rutero details including paradas
                         const ruteroCompleto = await getRuteroLogistico(r.id)
                         if (!ruteroCompleto) throw new Error('Rutero not found')
-                        
+
                         const transportista = transportistasData.find((t) => t.id === ruteroCompleto.transportista_id)
                         const vehiculo = vehiculosData.find((v) => v.id === ruteroCompleto.vehiculo_id)
 
@@ -81,7 +81,7 @@ export default function RuterosLogisticosPage() {
                         }
                     } catch (error) {
                         // If individual rutero fetch fails, return basic data
-                        console.error(`Error loading details for rutero ${r.id}:`, error)
+                        // If individual rutero fetch fails, return basic data
                         const transportista = transportistasData.find((t) => t.id === r.transportista_id)
                         const vehiculo = vehiculosData.find((v) => v.id === r.vehiculo_id)
 
@@ -108,7 +108,6 @@ export default function RuterosLogisticosPage() {
 
             setRuteros(ruterosConDetalles)
         } catch (error) {
-            console.error('Error al cargar ruteros:', error)
             showToast('error', 'Error al cargar ruteros logísticos')
         } finally {
             setLoading(false)
@@ -166,7 +165,6 @@ export default function RuterosLogisticosPage() {
             }
             setShowDetalleModal(true)
         } catch (error) {
-            console.error('Error loading rutero details:', error)
             showToast('error', 'Error al cargar detalles del rutero')
             // Fallback to the current rutero data
             setRuteroDetalle(rutero)

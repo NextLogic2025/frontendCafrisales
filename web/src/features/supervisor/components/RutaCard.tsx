@@ -24,9 +24,10 @@ export function RutaCard({
     onStart,
     onComplete,
 }: RutaCardProps) {
-    const formatDate = (dateString?: string) => {
-        if (!dateString) return 'No definida'
-        return new Date(dateString).toLocaleDateString('es-ES', {
+    const formatDate = (dateString?: string, alternate?: string) => {
+        const date = dateString || alternate
+        if (!date) return 'No definida'
+        return new Date(date).toLocaleDateString('es-ES', {
             day: '2-digit',
             month: 'short',
             year: 'numeric',
@@ -79,13 +80,11 @@ export function RutaCard({
                 </div>
 
                 {/* Fecha */}
-                {ruta.fecha_programada && (
-                    <div className="flex items-center gap-2 text-sm text-neutral-600">
-                        <Calendar className="h-4 w-4 text-neutral-400" />
-                        <span className="font-medium">Programada:</span>
-                        <span>{formatDate(ruta.fecha_programada)}</span>
-                    </div>
-                )}
+                <div className="flex items-center gap-2 text-sm text-neutral-600">
+                    <Calendar className="h-4 w-4 text-neutral-400" />
+                    <span className="font-medium">Programada:</span>
+                    <span>{formatDate(ruta.fecha_programada, ruta.fecha_rutero)}</span>
+                </div>
 
                 {/* Fecha creación */}
                 <div className="flex items-center gap-2 text-sm text-neutral-600">

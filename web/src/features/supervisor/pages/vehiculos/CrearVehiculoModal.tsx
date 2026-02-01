@@ -50,7 +50,6 @@ export function CrearVehiculoModal({ isOpen, onClose, onSuccess }: CrearVehiculo
                 onSuccess()
             }, 800)
         } catch (err: any) {
-            console.error(err)
             setMessage({ type: 'error', message: err.message || 'Error al crear vehículo' })
         } finally {
             setSubmitting(false)

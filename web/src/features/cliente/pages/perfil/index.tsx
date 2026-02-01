@@ -20,14 +20,6 @@ export default function PerfilCliente() {
     handleSaveUser, handleSaveClient, formatGps
   } = usePerfilPage()
 
-  console.log('PerfilCliente: State:', {
-    activeStep,
-    role,
-    hasProfile: !!profile,
-    hasClient: !!client,
-    loading,
-    clientLoading
-  })
 
   if (loading && !profile) return <LoadingSpinner text="Cargando perfil..." />
 
@@ -47,7 +39,6 @@ export default function PerfilCliente() {
         active={activeStep}
         onSelect={(i) => {
           if (i === 1 && role.toUpperCase() !== 'CLIENTE') {
-            console.warn('PerfilCliente: Attempted to access Client tab without proper role')
             return
           }
           setActiveStep(i)

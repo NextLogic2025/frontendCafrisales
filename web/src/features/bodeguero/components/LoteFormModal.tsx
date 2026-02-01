@@ -47,7 +47,6 @@ export function LoteFormModal({ open, onClose, onSubmit, initialData, loading }:
             const data = await getAllProducts()
             setProductos(data)
         } catch (err) {
-            console.error("Error loading products", err)
         }
     }
 

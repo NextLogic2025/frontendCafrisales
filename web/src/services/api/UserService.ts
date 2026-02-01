@@ -14,6 +14,7 @@ export interface UserProfile {
     codigoEmpleado?: string
     numeroLicencia?: string
     licenciaVenceEn?: string
+    createdAt?: string
 }
 
 type DecodedToken = {
@@ -27,6 +28,10 @@ type UserApiUser = {
     email?: string
     rol?: string
     estado?: 'activo' | 'inactivo' | 'suspendido'
+    perfil?: UserApiProfile
+    nombres?: string
+    apellidos?: string
+    nombre?: string
 }
 
 type UserApiProfile = {
@@ -40,16 +45,22 @@ const USERS_BASE_URL = env.api.usuarios
 const USERS_API_URL = USERS_BASE_URL.endsWith('/api') ? USERS_BASE_URL : `${USERS_BASE_URL}/api`
 
 const normalizeUser = (user: UserApiUser, profile?: UserApiProfile | null): UserProfile => {
-    const fullName = [profile?.nombres, profile?.apellidos].filter(Boolean).join(' ').trim()
+    // Try to get names from profile (from /me) or explicitly from user (from /users/:id)
+    const nombres = user.nombre || profile?.nombres || user.perfil?.nombres || user.nombres || ''
+    const apellidos = user.nombre ? '' : (profile?.apellidos || user.perfil?.apellidos || user.apellidos || '')
+
+    const fullName = nombres === user.nombre ? nombres : [nombres, apellidos].filter(Boolean).join(' ').trim()
+
     return {
         id: user.id || '',
         name: fullName || user.email || 'Sin nombre',
         role: user.rol || 'Usuario',
         email: user.email || '',
-        phone: profile?.telefono || '',
-        photoUrl: profile?.url_avatar,
+        phone: profile?.telefono || user.perfil?.telefono || '',
+        photoUrl: profile?.url_avatar || user.perfil?.url_avatar,
         active: user.estado ? user.estado === 'activo' : true,
-        lastLogin: undefined
+        lastLogin: undefined,
+        createdAt: (user as any).creado_en || (user as any).createdAt
     }
 }
 
@@ -90,35 +101,31 @@ export const UserService = {
             const userId = decoded.sub || decoded.userId
             if (!userId) return null
 
-            const user = await apiRequest<UserApiUser>(`${USERS_API_URL}/usuarios/${userId}`)
-            let profile: UserApiProfile | null = null
-            try {
-                profile = await apiRequest<UserApiProfile>(`${USERS_API_URL}/usuarios/me/perfil`)
-            } catch (error) {
-                console.error('UserService.getProfile.profile error', error)
-            }
+            const user = await apiRequest<UserApiUser>(`${USERS_API_URL}/v1/users/${userId}`)
+            // Profile is already included in user object from backend
+            const profile = user.perfil || null
 
             return normalizeUser(user, profile)
         } catch (error) {
-            console.error('UserService.getProfile error', error)
             return null
         }
     },
 
-    async updateProfile(_userId: string, data: { nombre: string; telefono: string }): Promise<boolean> {
+    async updateProfile(userId: string, data: { nombre: string; telefono: string }): Promise<boolean> {
         try {
             const nameParts = splitName(data.nombre)
-            await apiRequest(`${USERS_API_URL}/usuarios/me/perfil`, {
-                method: 'PUT',
+            await apiRequest(`${USERS_API_URL}/v1/users/${userId}`, {
+                method: 'PATCH',
                 body: JSON.stringify({
-                    nombres: nameParts.nombres,
-                    apellidos: nameParts.apellidos,
-                    telefono: data.telefono || null
+                    perfil: {
+                        nombres: nameParts.nombres,
+                        apellidos: nameParts.apellidos,
+                        telefono: data.telefono || null
+                    }
                 })
             })
             return true
         } catch (error) {
-            console.error('UserService.updateProfile error', error)
             return false
         }
     },

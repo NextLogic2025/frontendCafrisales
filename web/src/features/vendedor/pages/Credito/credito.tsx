@@ -67,8 +67,6 @@ export default function VendedorCredito() {
                 const data = await getCreditDetail(id)
                 setSelectedDetail(data)
             }
-        } catch (error) {
-            console.error('Error fetching credit detail:', error)
         } finally {
             setLoadingDetail(false)
         }
@@ -120,7 +118,6 @@ export default function VendedorCredito() {
                 setCredits(data)
             }
         } catch (error) {
-            console.error('Error fetching credits:', error)
             setCredits([])
         } finally {
             setLoading(false)
@@ -154,7 +151,6 @@ export default function VendedorCredito() {
             setPendingCredit(null)
             fetchCredits()
         } catch (error) {
-            console.error(error)
             alert('Error al aprobar el crédito')
         }
     }
@@ -173,7 +169,6 @@ export default function VendedorCredito() {
             setIsDetailOpen(false)
             fetchCredits()
         } catch (error) {
-            console.error(error)
             alert('Error al rechazar el crédito')
         }
     }

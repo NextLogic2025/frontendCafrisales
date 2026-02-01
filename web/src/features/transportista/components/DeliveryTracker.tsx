@@ -61,7 +61,6 @@ export function DeliveryTracker({ pedidoId, ruteroId, onDeliveryMarked }: Delive
             setIsOpen(false)
             onDeliveryMarked()
         } catch (error) {
-            console.error('Error marking delivery:', error)
         } finally {
             setLoading(false)
         }
@@ -94,8 +93,8 @@ export function DeliveryTracker({ pedidoId, ruteroId, onDeliveryMarked }: Delive
                             <button
                                 onClick={() => setEstadoEntrega('entregado')}
                                 className={`flex-1 px-4 py-2 rounded-lg border-2 font-medium transition-all duration-150 ${estadoEntrega === 'entregado'
-                                        ? 'border-green-600 bg-green-50 text-green-700'
-                                        : 'border-neutral-300 text-neutral-700 hover:border-green-600'
+                                    ? 'border-green-600 bg-green-50 text-green-700'
+                                    : 'border-neutral-300 text-neutral-700 hover:border-green-600'
                                     }`}
                             >
                                 Entregado
@@ -103,8 +102,8 @@ export function DeliveryTracker({ pedidoId, ruteroId, onDeliveryMarked }: Delive
                             <button
                                 onClick={() => setEstadoEntrega('problema')}
                                 className={`flex-1 px-4 py-2 rounded-lg border-2 font-medium transition-all duration-150 ${estadoEntrega === 'problema'
-                                        ? 'border-red-600 bg-red-50 text-red-700'
-                                        : 'border-neutral-300 text-neutral-700 hover:border-red-600'
+                                    ? 'border-red-600 bg-red-50 text-red-700'
+                                    : 'border-neutral-300 text-neutral-700 hover:border-red-600'
                                     }`}
                             >
                                 Problema

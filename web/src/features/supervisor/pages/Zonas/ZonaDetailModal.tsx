@@ -116,7 +116,6 @@ function parseGeoPolygon(value: unknown): google.maps.LatLngLiteral[] {
       const parsed = JSON.parse(value)
       return parseGeoPolygon(parsed)
     } catch (e) {
-      console.warn('No se pudo parsear polígono desde string', e)
       return []
     }
   }

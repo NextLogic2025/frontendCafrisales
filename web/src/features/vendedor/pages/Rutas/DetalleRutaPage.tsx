@@ -7,6 +7,7 @@ import { ZonaMapaGoogle } from '../../../supervisor/components/ZonaMapaGoogle'
 import { HistorialModal } from '../../../supervisor/components/HistorialModal'
 import { getRutaVendedorById, iniciarRuta, completarRuta } from '../../../supervisor/services/rutasVendedorApi'
 import { obtenerClientePorId, obtenerZonas } from '../../../supervisor/services/clientesApi'
+import { getCreditsByCustomer } from '../../services/creditosApi'
 import { ESTADO_RUTA_COLORS, ESTADO_RUTA_LABELS, type RutaVendedor, type ParadaRuta } from '../../../supervisor/services/rutasVendedorTypes'
 
 export default function DetalleRutaPage() {
@@ -33,7 +34,6 @@ export default function DetalleRutaPage() {
                 await hydrateRuta(data)
             }
         } catch (error) {
-            console.error('Error al cargar ruta:', error)
             showToast('error', 'No se pudo cargar el detalle de la ruta')
         } finally {
             setLoading(false)
@@ -52,7 +52,13 @@ export default function DetalleRutaPage() {
             const hydratedParadas = await Promise.all(
                 (rutaData.paradas || []).map(async (p: ParadaRuta) => {
                     try {
-                        const clienteFull = await obtenerClientePorId(p.cliente_id)
+                        const [clienteFull, clientCredits] = await Promise.all([
+                            obtenerClientePorId(p.cliente_id),
+                            getCreditsByCustomer(p.cliente_id).catch(() => [])
+                        ])
+
+                        const totalBalance = clientCredits.reduce((acc, c) => acc + Number(c.saldo || 0), 0)
+
                         return {
                             ...p,
                             cliente: clienteFull ? {
@@ -61,7 +67,8 @@ export default function DetalleRutaPage() {
                                 direccion: clienteFull.direccion_texto || clienteFull.identificacion || 'Dirección no disponible',
                                 latitud: clienteFull.latitud || undefined,
                                 longitud: clienteFull.longitud || undefined,
-                                ubicacion_gps: clienteFull.ubicacion_gps || undefined
+                                ubicacion_gps: clienteFull.ubicacion_gps || undefined,
+                                saldo_actual: totalBalance.toString()
                             } : p.cliente
                         }
                     } catch (e) {
@@ -76,7 +83,6 @@ export default function DetalleRutaPage() {
                 paradas: hydratedParadas
             })
         } catch (error) {
-            console.error('Error hydrating route:', error)
             setRuta(rutaData)
         } finally {
             setHydrating(false)
@@ -102,9 +108,10 @@ export default function DetalleRutaPage() {
         setTimeout(() => setToast(null), 3000)
     }
 
-    const formatDate = (dateString?: string | null) => {
-        if (!dateString) return 'No definida'
-        return new Date(dateString).toLocaleDateString('es-ES', {
+    const formatDate = (dateString?: string | null, alternate?: string | null) => {
+        const date = dateString || alternate
+        if (!date) return 'No definida'
+        return new Date(date).toLocaleDateString('es-ES', {
             day: '2-digit',
             month: 'short',
             year: 'numeric'
@@ -114,7 +121,7 @@ export default function DetalleRutaPage() {
     const paradasParaList = ruta?.paradas?.map(p => ({
         id: p.id,
         pedido_id: p.cliente_id,
-        orden_visita: p.orden_visita,
+        orden_entrega: p.orden_visita,
         completada: p.visitado,
         pedido: {
             id: p.cliente_id,
@@ -122,7 +129,7 @@ export default function DetalleRutaPage() {
             cliente_nombre: p.cliente?.razon_social || 'Cliente',
             direccion_entrega: p.cliente?.direccion || 'Dirección no disponible',
             ubicacion_gps: (p.cliente as any)?.ubicacion_gps,
-            total: 0
+            total: Number((p.cliente as any)?.saldo_actual || 0)
         }
     })) || []
 
@@ -208,7 +215,7 @@ export default function DetalleRutaPage() {
                                 <Calendar className="h-5 w-5 text-neutral-400" />
                                 <div>
                                     <p className="text-xs text-neutral-500 uppercase font-semibold">Fecha Programada</p>
-                                    <p className="font-medium text-neutral-800">{formatDate(ruta.fecha_programada)}</p>
+                                    <p className="font-medium text-neutral-800">{formatDate(ruta.fecha_programada, ruta.fecha_rutero)}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3 p-3 bg-neutral-50 rounded-lg">
@@ -294,6 +301,7 @@ export default function DetalleRutaPage() {
                 isOpen={showHistorial}
                 onClose={() => setShowHistorial(false)}
                 ruteroId={ruta.id}
+                tipo="comercial"
             />
 
             {toast && (

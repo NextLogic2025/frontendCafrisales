@@ -8,7 +8,6 @@ export function useBodega() {
   const handleError = useCallback((err: any) => {
     const message = err?.message || 'Error en la operación'
     setError(message)
-    console.error(err)
   }, [])
 
   const clearError = useCallback(() => {

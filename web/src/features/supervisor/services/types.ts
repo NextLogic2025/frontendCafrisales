@@ -78,6 +78,11 @@ export interface ParadaRutero {
   estado_entrega?: 'pendiente' | 'entregado' | 'problema'
   creado_en?: string
   actualizado_en?: string
+  // Preparation tracking
+  preparado_en?: string | null
+  preparado_por?: string | null
+  // Delivery tracking
+  entrega_id?: string
   // Información del pedido (populated)
   pedido?: {
     id: string

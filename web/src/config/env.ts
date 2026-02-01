@@ -14,10 +14,11 @@ export const env = {
     orders: normalizeBaseUrl(readEnv('VITE_ORDERS_BASE_URL')),
     creditos: normalizeBaseUrl(readEnv('VITE_CREDIT_BASE_URL')),
     warehouse: normalizeBaseUrl(readEnv('VITE_WAREHOUSE_BASE_URL')),
+    delivery: normalizeBaseUrl(readEnv('VITE_DELIVERY_BASE_URL')),
     transportista: normalizeBaseUrl(readEnv('VITE_TRANSPORTISTA_BASE_URL')),
     routes: normalizeBaseUrl(readEnv('VITE_ROUTES_BASE_URL')),
     zonas: normalizeBaseUrl(readEnv('VITE_ZONAS_BASE_URL')),
-        notifications: normalizeBaseUrl(readEnv('VITE_NOTIFICATIONS_BASE_URL')),
+    notifications: normalizeBaseUrl(readEnv('VITE_NOTIFICATIONS_BASE_URL')),
 
   },
   googleMaps: {

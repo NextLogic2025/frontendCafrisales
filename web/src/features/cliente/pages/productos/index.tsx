@@ -91,7 +91,6 @@ export default function PaginaProductos() {
                 setProductos(mapProductToFrontend(prods))
                 setCategories(cats.map(c => ({ id: Number(c.id), nombre: c.nombre })))
             } catch (err) {
-                console.error("Error cargando productos", err)
                 setError("No se pudieron cargar los productos. Por favor intente más tarde.")
             } finally {
                 setCargando(false)
@@ -165,7 +164,6 @@ export default function PaginaProductos() {
             })
             setProductForSkuSelection(null)
         } catch (error) {
-            console.error('Error adding to cart:', error)
         }
     }
 

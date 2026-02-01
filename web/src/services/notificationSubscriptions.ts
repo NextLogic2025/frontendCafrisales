@@ -22,7 +22,7 @@ export async function getNotificationTypes(token?: string) {
     try {
       const res = await fetch(p, { headers: { Authorization: getToken(token) } })
       if (res.ok) return res.json()
-      lastErr = `HTTP ${res.status} ${await res.text().catch(()=>'')}`
+      lastErr = `HTTP ${res.status} ${await res.text().catch(() => '')}`
     } catch (err) {
       lastErr = err
     }
@@ -44,7 +44,7 @@ export async function getSubscriptions(token?: string) {
     try {
       const res = await fetch(p, { headers: { Authorization: getToken(token) } })
       if (res.ok) return res.json()
-      lastErr = `HTTP ${res.status} ${await res.text().catch(()=>'')}`
+      lastErr = `HTTP ${res.status} ${await res.text().catch(() => '')}`
     } catch (err) {
       lastErr = err
     }
@@ -71,7 +71,6 @@ export async function upsertSubscription(tipoId: string, opts: { websocketEnable
       emailEnabled: body.emailEnabled,
       smsEnabled: body.smsEnabled,
     }
-    console.debug('upsertSubscription: sending tipoCodigo instead of tipoId', tipoId)
   }
   // Try the canonical endpoint first, but fall back to common alternatives
   const tokenHeader = { 'Content-Type': 'application/json', Authorization: getToken(token) }
@@ -89,14 +88,12 @@ export async function upsertSubscription(tipoId: string, opts: { websocketEnable
 
   // The backend exposes PUT /api/notifications/subscriptions for upsert (see controller).
   // Try PUT first, then fall back to POST for compatibility with older variants.
-  console.debug('upsertSubscription: URL', `${base}/api/notifications/subscriptions`, 'payload', payload)
   let res = await tryFetch(`${base}/api/notifications/subscriptions`, {
     method: 'PUT', headers: tokenHeader, body: JSON.stringify(payload)
   })
 
   if (res.status === 404) {
     // fallback: POST /api/notifications/subscriptions
-    console.debug('upsertSubscription: fallback POST URL', `${base}/api/notifications/subscriptions`, 'payload', payload)
     res = await tryFetch(`${base}/api/notifications/subscriptions`, {
       method: 'POST', headers: tokenHeader, body: JSON.stringify(payload)
     })
@@ -105,7 +102,6 @@ export async function upsertSubscription(tipoId: string, opts: { websocketEnable
   if (!res.ok) {
     let text = ''
     try { text = await res.text() } catch (e) { /* ignore */ }
-    console.error('upsertSubscription: non-ok response', res.status, text)
     throw new Error(`Failed to upsert subscription: ${res.status} ${text}`)
   }
   return res.json()

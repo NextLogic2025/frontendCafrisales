@@ -13,15 +13,14 @@ export function NotificationStack({ notifications, onRemove }: NotificationStack
       {notifications.map((notification) => (
         <div
           key={notification.id}
-          className={`pointer-events-auto rounded-lg shadow-lg p-4 flex items-start gap-3 animate-in slide-in-from-right-5 fade-in-80 ${
-            notification.type === 'success'
+          className={`pointer-events-auto rounded-lg shadow-lg p-4 flex items-start gap-3 animate-in slide-in-from-right-5 fade-in-80 ${notification.type === 'success'
               ? 'bg-emerald-50 border border-emerald-200 text-emerald-900'
               : notification.type === 'error'
                 ? 'bg-red-50 border border-red-200 text-red-900'
                 : notification.type === 'warning'
                   ? 'bg-amber-50 border border-amber-200 text-amber-900'
                   : 'bg-blue-50 border border-blue-200 text-blue-900'
-          }`}
+            }`}
         >
           <div className="flex-shrink-0">
             {notification.type === 'success' && (

@@ -41,7 +41,7 @@ export async function approveCredit(payload: ApproveCreditPayload): Promise<Cred
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const res = await fetch(`${CREDIT_API_URL}/creditos/aprobar`, {
+    const res = await fetch(`${CREDIT_API_URL}/v1/credits/approve`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -79,19 +79,39 @@ export async function getCredits(estados?: string[]): Promise<CreditListItem[]> 
     const vendedorId = decoded.userId || decoded.sub
 
     const params = new URLSearchParams()
-    params.append('vendedor_id', vendedorId)
+    params.append('sellerId', vendedorId)
     if (estados && estados.length > 0) {
-        params.append('estado', estados.join(','))
+        params.append('status', estados.join(','))
     }
 
-    const res = await fetch(`${CREDIT_API_URL}/creditos?${params.toString()}`, {
+    const res = await fetch(`${CREDIT_API_URL}/v1/credits?${params.toString()}`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },
     })
 
     if (!res.ok) return []
-    return await res.json()
+    const response = await res.json()
+    return response.data || response
+}
+
+export async function getCreditsByCustomer(customerId: string): Promise<CreditListItem[]> {
+    const token = await getValidToken()
+    if (!token) throw new Error('No hay sesión activa')
+
+    const params = new URLSearchParams()
+    params.append('customerId', customerId)
+    params.append('status', 'activo,vencido')
+
+    const res = await fetch(`${CREDIT_API_URL}/v1/credits?${params.toString()}`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    })
+
+    if (!res.ok) return []
+    const response = await res.json()
+    return response.data || response
 }
 
 export type CreditDetail = {
@@ -114,7 +134,7 @@ export async function getCreditDetail(id: string): Promise<CreditDetail> {
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const res = await fetch(`${CREDIT_API_URL}/creditos/${id}`, {
+    const res = await fetch(`${CREDIT_API_URL}/v1/credits/${id}`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },
@@ -130,7 +150,7 @@ export async function rejectCredit(id: string, motivo?: string): Promise<boolean
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const res = await fetch(`${CREDIT_API_URL}/creditos/${id}/rechazar`, {
+    const res = await fetch(`${CREDIT_API_URL}/v1/credits/${id}/reject`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',

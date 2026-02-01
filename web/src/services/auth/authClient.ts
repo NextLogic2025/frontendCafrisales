@@ -17,9 +17,6 @@ export const ERROR_MESSAGES = {
     PASSWORD_RESET_ERROR: 'No se pudo procesar la solicitud de recuperación.',
 }
 
-function logErrorForDebugging(error: unknown, context: string, meta?: Record<string, unknown>) {
-    console.error(`[AuthError] ${context}:`, error, meta)
-}
 
 type SignedInUser = {
     id?: string
@@ -55,7 +52,7 @@ type DecodedToken = {
 }
 
 export async function signIn(email: string, password: string) {
-    const url = `${env.api.auth}/api/auth/login`
+    const url = `${env.api.auth}/api/v1/auth/login`
 
     let res: Response
     try {
@@ -65,7 +62,6 @@ export async function signIn(email: string, password: string) {
             body: JSON.stringify({ email, password }),
         })
     } catch (networkError) {
-        logErrorForDebugging(networkError, 'signIn', { email })
         throw new Error(ERROR_MESSAGES.NETWORK_ERROR)
     }
 
@@ -89,11 +85,10 @@ export async function signIn(email: string, password: string) {
         throw new Error(ERROR_MESSAGES.INVALID_CREDENTIALS)
     }
 
-    const accessToken = data?.access_token || data?.token
+    const accessToken = data?.access_token || data?.token || data?.accessToken
     const refreshToken = data?.refresh_token
 
     if (!accessToken) {
-        logErrorForDebugging(new Error('Missing token in response'), 'signIn', { data })
         throw new Error(ERROR_MESSAGES.SERVER_UNAVAILABLE)
     }
 
@@ -102,27 +97,29 @@ export async function signIn(email: string, password: string) {
         setRefreshToken(refreshToken)
     }
 
-    if (data?.usuario?.nombre) {
-        setUserName(data.usuario.nombre)
-    } else if (data?.usuario?.email) {
-        setUserName(data.usuario.email)
+    // Backend returns user data in different structure
+    const userData = data?.user || data?.usuario
+    if (userData?.nombre) {
+        setUserName(userData.nombre)
+    } else if (userData?.email) {
+        setUserName(userData.email)
     }
 
     const role =
         typeof data?.rol === 'string'
             ? data.rol
-            : typeof data?.usuario?.role === 'string'
-                ? data.usuario.role
-                : typeof data?.usuario?.rol === 'string'
-                    ? data.usuario.rol
+            : typeof userData?.role === 'string'
+                ? userData.role
+                : typeof userData?.rol === 'string'
+                    ? userData.rol
                     : undefined
 
     const user =
-        data?.usuario || data?.usuario_id || role
+        userData || data?.usuario_id || role
             ? {
-                id: data?.usuario?.id || data?.usuario_id,
-                email: data?.usuario?.email || email,
-                nombre: data?.usuario?.nombre,
+                id: userData?.id || data?.usuario_id,
+                email: userData?.email || email,
+                nombre: userData?.nombre,
                 role,
             }
             : undefined
@@ -149,8 +146,8 @@ export async function getValidToken(): Promise<string | null> {
 }
 
 const AUTH_PATHS = {
-    refresh: '/api/auth/refresh',
-    logout: '/api/auth/logout',
+    refresh: '/api/v1/auth/refresh',
+    logout: '/api/v1/auth/logout',
 } as const
 
 function normalizeTokenString(token: string) {
@@ -193,7 +190,6 @@ export async function refreshAccessToken(): Promise<string | null> {
                 return newAccessToken
             }
         } catch (error) {
-            logErrorForDebugging(error, 'refreshAccessToken')
             clearToken()
         }
         return null
@@ -220,10 +216,9 @@ export async function signOut() {
                     Authorization: `Bearer ${accessToken}`,
                 },
                 body: JSON.stringify({ refresh_token: cleanToken }),
-            }).catch((err) => logErrorForDebugging(err, 'signOut.backendLogout'))
+            }).catch(() => { });
         }
     } catch (error) {
-        logErrorForDebugging(error, 'signOut')
     } finally {
         clearToken()
     }

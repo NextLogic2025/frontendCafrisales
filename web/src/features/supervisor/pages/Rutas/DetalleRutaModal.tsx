@@ -15,9 +15,10 @@ interface DetalleRutaModalProps {
 export function DetalleRutaModal({ isOpen, onClose, ruta }: DetalleRutaModalProps) {
     if (!ruta) return null
 
-    const formatDate = (dateString?: string) => {
-        if (!dateString) return 'No definida'
-        return new Date(dateString).toLocaleString('es-ES', {
+    const formatDate = (dateString?: string, alternate?: string) => {
+        const date = dateString || alternate
+        if (!date) return 'No definida'
+        return new Date(date).toLocaleString('es-ES', {
             day: '2-digit',
             month: 'short',
             year: 'numeric',
@@ -61,7 +62,7 @@ export function DetalleRutaModal({ isOpen, onClose, ruta }: DetalleRutaModalProp
                     <div>
                         <p className="text-sm text-neutral-600">Fecha Programada</p>
                         <p className="font-semibold text-neutral-900">
-                            {formatDate(ruta.fecha_programada)}
+                            {formatDate(ruta.fecha_programada, ruta.fecha_rutero)}
                         </p>
                     </div>
                     <div>

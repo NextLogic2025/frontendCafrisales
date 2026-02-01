@@ -59,24 +59,19 @@ export async function obtenerPedidos(options: { skipClients?: boolean } = {}): P
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const requests: Promise<any>[] = [
-        fetch(`${ORDERS_API_URL}/pedidos`, {
-            headers: { Authorization: `Bearer ${token}` }
-        })
-    ]
+    const resPedidos = await fetch(`${ORDERS_API_URL}/v1/orders`, {
+        headers: { Authorization: `Bearer ${token}` }
+    })
 
-    if (!options.skipClients) {
-        requests.push(obtenerClientes('todos').catch(() => []))
-    }
-
-    const [resPedidos, resClientes] = await Promise.all(requests)
+    const clientesList = options.skipClients ? [] : await (obtenerClientes('todos').catch(() => []))
 
     if (!resPedidos.ok) {
         throw new Error('Error al obtener pedidos')
     }
 
-    const dataPedidos = await resPedidos.json()
-    const clientesList = options.skipClients ? [] : (resClientes || [])
+    const responseData = await resPedidos.json()
+    // Backend returns paginated response { data, meta }
+    const dataPedidos = responseData.data || responseData
     const clientesMap = new Map<string, any>(clientesList.map((c: any) => [String(c.id), c]))
 
     return Array.isArray(dataPedidos) ? dataPedidos.map((p: any) => {
@@ -98,7 +93,7 @@ export async function obtenerPedidoPorId(id: string): Promise<Pedido | null> {
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const res = await fetch(`${ORDERS_API_URL}/pedidos/${id}`, {
+    const res = await fetch(`${ORDERS_API_URL}/v1/orders/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
     })
 
@@ -119,7 +114,6 @@ export async function obtenerPedidoPorId(id: string): Promise<Pedido | null> {
                 }
             }
         } catch (e) {
-            console.warn('Could not hydrate client for order detail', e)
         }
     }
 
@@ -175,18 +169,21 @@ export async function cambiarEstadoPedido(id: string, nuevoEstado: string): Prom
 
     let url = ''
     let body = {}
+    let method = ''
 
     if (nuevoEstado === 'ANULADO') {
-        url = `${ORDERS_API_URL}/pedidos/${id}/cancel`
+        url = `${ORDERS_API_URL}/v1/orders/${id}/cancel`
         body = { motivo: 'Anulado desde Web Supervisor' }
+        method = 'PUT'
     } else {
         // Fallback for approval if supported
-        url = `${ORDERS_API_URL}/pedidos/${id}/estado`
+        url = `${ORDERS_API_URL}/v1/orders/${id}/status`
         body = { estado: nuevoEstado }
+        method = 'POST'
     }
 
     const res = await fetch(url, {
-        method: 'PATCH',
+        method,
         headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`

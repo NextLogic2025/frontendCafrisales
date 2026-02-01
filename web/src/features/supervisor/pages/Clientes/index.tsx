@@ -44,7 +44,6 @@ export default function ClientesPage() {
       setZonas(zonasData as any)
       setCanales(canalesData)
     } catch (error) {
-      console.error('Error al cargar catálogos:', error)
     }
   }
 
@@ -53,8 +52,6 @@ export default function ClientesPage() {
       setIsLoading(true)
       const data = await obtenerClientes('todos')
       setClientes(data)
-    } catch (error) {
-      console.error('Error al cargar clientes:', error)
     } finally {
       setIsLoading(false)
     }

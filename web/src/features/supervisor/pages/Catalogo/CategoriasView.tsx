@@ -57,7 +57,7 @@ export function CategoriasView() {
     }
   }
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string | number) => {
     if (!confirm('¿Estás seguro de eliminar esta categoría?')) return
     try {
       await deleteItem(id.toString())
@@ -67,7 +67,7 @@ export function CategoriasView() {
     }
   }
 
-  const handleRestore = async (id: number) => {
+  const handleRestore = async (id: string | number) => {
     try {
       await restore(id)
       success('Categoría restaurada exitosamente')

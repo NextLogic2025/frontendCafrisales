@@ -38,10 +38,9 @@ export function ClienteDetailModal({ isOpen, onClose, cliente }: ClienteDetailMo
     const fetchZone = async () => {
       if (cliente.zona_comercial_id) {
         try {
-          const z = await obtenerZonaPorId(cliente.zona_comercial_id)
+          const z = await obtenerZonaPorId(String(cliente.zona_comercial_id))
           setFullZona(z)
         } catch (e) {
-          console.error("Failed to fetch zone details", e)
         }
       } else {
         setFullZona(null)
@@ -62,7 +61,6 @@ export function ClienteDetailModal({ isOpen, onClose, cliente }: ClienteDetailMo
     try {
       return parseGeoPolygon(zona.poligono_geografico)
     } catch (e) {
-      console.error("Error parsing polygon", e)
       return []
     }
   }, [zona])
@@ -201,14 +199,12 @@ export function ClienteDetailModal({ isOpen, onClose, cliente }: ClienteDetailMo
 }
 
 function parseGeoPolygon(value: unknown): google.maps.LatLngLiteral[] {
-  console.log('Parsing GeoPolygon Input:', value)
   if (!value) return []
 
   if (typeof value === 'string') {
     try {
       return parseGeoPolygon(JSON.parse(value))
     } catch (error) {
-      console.log('Error parsing string JSON')
       return []
     }
   }
@@ -247,24 +243,20 @@ function parseGeoPolygon(value: unknown): google.maps.LatLngLiteral[] {
   }
 
   if (!coordinates) {
-    console.log('No coordinates found')
     return []
   }
 
   const ring = findRing(coordinates)
 
   if (ring) {
-    console.log('Found Ring:', ring)
     const path = ring.map((pair: any) => {
       if (!Array.isArray(pair) || pair.length < 2) return null
       return { lat: pair[1], lng: pair[0] } // GeoJSON [lng, lat]
     }).filter(Boolean) as google.maps.LatLngLiteral[]
 
-    console.log('Converted Path:', path)
     return dedupeClosingPoint(path)
   }
 
-  console.log('No valid ring found in coordinates')
   return []
 }
 

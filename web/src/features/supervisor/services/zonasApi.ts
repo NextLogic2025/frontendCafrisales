@@ -26,24 +26,30 @@ export interface CreateZonaDto {
   poligono_geografico?: unknown
 }
 
-// Mobile endpoints use /api/zonas
+// Backend uses versioned endpoints: /api/v1/zones
 // Port 3004 verified from docker-compose.yml for zone-service
-const ZONES_BASE_URL = 'http://localhost:3004/api'
+const ZONES_BASE_URL = 'http://localhost:3004'
 
 export async function obtenerZonas(estado: 'activo' | 'inactivo' | 'todos' = 'activo'): Promise<ZonaComercial[]> {
   const token = await getValidToken()
   if (!token) throw new Error('No hay sesión activa')
 
-  const query = estado ? `?estado=${encodeURIComponent(estado)}` : ''
-  // Switch to Spanish endpoint to match mobile logic if that's what user requested
-  // Mobile: `${ZONES_BASE_URL}/zonas${query}`
-  const res = await fetch(`${ZONES_BASE_URL}/zonas${query}`, {
+  // Backend expects 'status' param, and 'todos' means no param at all
+  let query = ''
+  if (estado !== 'todos') {
+    query = `?status=${encodeURIComponent(estado)}`
+  }
+
+  const res = await fetch(`${ZONES_BASE_URL}/api/v1/zones${query}`, {
     headers: { Authorization: `Bearer ${token}` }
   })
 
   if (!res.ok) return []
-  const data = await res.json()
-  return data.map((z: any) => {
+  const response = await res.json()
+  // Backend returns { data, meta } for paginated responses
+  const zones = response.data || response
+  if (!Array.isArray(zones)) return []
+  return zones.map((z: any) => {
     const geom = z.zonaGeom ?? z.zona_geom ?? z.poligono_geografico ?? null
     return {
       ...z,
@@ -57,7 +63,7 @@ export async function obtenerZonaPorId(id: string | number): Promise<ZonaComerci
   const token = await getValidToken()
   if (!token) throw new Error('No hay sesión activa')
 
-  const res = await fetch(`${ZONES_BASE_URL}/zonas/${id}`, {
+  const res = await fetch(`${ZONES_BASE_URL}/api/v1/zones/${id}`, {
     headers: { Authorization: `Bearer ${token}` }
   })
 
@@ -69,6 +75,37 @@ export async function obtenerZonaPorId(id: string | number): Promise<ZonaComerci
     poligono_geografico: geom,
     zonaGeom: geom
   }
+}
+
+/**
+ * Get zones with geometry for map display
+ * Uses /api/v1/zones/map endpoint which returns zona_geom in GeoJSON format
+ */
+export async function obtenerZonasParaMapa(estado?: 'activo' | 'inactivo'): Promise<ZonaComercial[]> {
+  const token = await getValidToken()
+  if (!token) throw new Error('No hay sesión activa')
+
+  let query = ''
+  if (estado) {
+    query = `?status=${encodeURIComponent(estado)}`
+  }
+
+  const res = await fetch(`${ZONES_BASE_URL}/api/v1/zones/map${query}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  })
+
+  if (!res.ok) return []
+  const response = await res.json()
+  // /map endpoint returns array directly (not paginated)
+  const zones = Array.isArray(response) ? response : (response.data || [])
+  return zones.map((z: any) => {
+    const geom = z.zonaGeom ?? z.zona_geom ?? z.poligono_geografico ?? null
+    return {
+      ...z,
+      poligono_geografico: geom,
+      zonaGeom: geom
+    }
+  })
 }
 
 export async function crearZona(data: CreateZonaDto): Promise<ZonaComercial> {
@@ -84,7 +121,7 @@ export async function crearZona(data: CreateZonaDto): Promise<ZonaComercial> {
     zonaGeom: data.poligono_geografico,
   }
 
-  const res = await fetch(`${ZONES_BASE_URL}/zonas`, {
+  const res = await fetch(`${ZONES_BASE_URL}/api/v1/zones`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -112,7 +149,7 @@ export async function getZoneSchedules(zoneId: string | number): Promise<ZoneSch
   const token = await getValidToken()
   if (!token) throw new Error('No hay sesión activa')
 
-  const res = await fetch(`${ZONES_BASE_URL}/zonas/${zoneId}/horarios`, {
+  const res = await fetch(`${ZONES_BASE_URL}/api/v1/zones/${zoneId}/horarios`, {
     headers: { Authorization: `Bearer ${token}` }
   })
 
@@ -124,7 +161,7 @@ export async function updateZoneSchedules(zoneId: string | number, schedules: Zo
   const token = await getValidToken()
   if (!token) throw new Error('No hay sesión activa')
 
-  const res = await fetch(`${ZONES_BASE_URL}/zonas/${zoneId}/horarios`, {
+  const res = await fetch(`${ZONES_BASE_URL}/api/v1/zones/${zoneId}/horarios`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -148,7 +185,7 @@ export async function actualizarZona(id: string | number, data: Partial<CreateZo
     delete payload.poligono_geografico
   }
 
-  const res = await fetch(`${ZONES_BASE_URL}/zonas/${id}`, {
+  const res = await fetch(`${ZONES_BASE_URL}/api/v1/zones/${id}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
@@ -169,7 +206,7 @@ export async function eliminarZona(id: string | number): Promise<void> {
   const token = await getValidToken()
   if (!token) throw new Error('No hay sesión activa')
 
-  const res = await fetch(`${ZONES_BASE_URL}/zonas/${id}`, {
+  const res = await fetch(`${ZONES_BASE_URL}/api/v1/zones/${id}`, {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${token}` }
   })

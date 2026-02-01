@@ -38,7 +38,6 @@ export function useCliente() {
       setPedidosPaginaActual(pagina)
       setPedidosTotalPaginas(1) // Backend returns array, not paginated object, so specific paging not available yet
     } catch (e) {
-      console.error('Error fetching orders:', e)
       setError('Error al cargar pedidos')
     } finally {
       setCargando(false)
@@ -51,7 +50,6 @@ export function useCliente() {
       const data = await getOrderById(id)
       return data as any as Pedido
     } catch (e) {
-      console.error('Error fetching order by id:', e)
       throw e
     } finally {
       setCargando(false)
@@ -95,13 +93,11 @@ export function useCliente() {
 
   const cancelarPedido = useCallback(async (id: string) => {
     try {
-      console.log(`Canceling order ${id}...`)
       await cancelOrder(id, 'Cancelado por el cliente')
       setPedidos(prev => prev.map(p => (p.id === id ? { ...p, status: EstadoPedido.CANCELLED, estado: 'cancelado' } : p)))
       // Success handled by UI refresh
       await fetchPedidos(pedidosPaginaActual) // Check updated data from server
     } catch (error: any) {
-      console.error('Error canceling order:', error)
       alert(`Error al cancelar: ${error.message || error}`)
       setError('No se pudo cancelar el pedido')
     }

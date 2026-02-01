@@ -187,7 +187,6 @@ export function CrearUsuarioModal({ isOpen, onClose, onSuccess, initialData, mod
         licenseExpiry,
       })
     } catch (error) {
-      console.error('Error loading user data:', error)
       setServerError('Error al cargar datos del usuario')
     } finally {
       setIsLoadingData(false)

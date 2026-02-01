@@ -49,8 +49,6 @@ export const useCrearPedido = () => {
             setIsLoadingClientes(true)
             const items = await obtenerMisClientes()
             setClientes(items)
-        } catch (err) {
-            console.error('Error loading clientes:', err)
         } finally {
             setIsLoadingClientes(false)
         }
@@ -66,7 +64,6 @@ export const useCrearPedido = () => {
                 } as any)
             }
         } catch (err) {
-            console.error('Error loading cliente detalle:', err)
         }
     }
 
@@ -80,7 +77,6 @@ export const useCrearPedido = () => {
             try {
                 setCart(JSON.parse(savedCart))
             } catch (e) {
-                console.error('Error parsing cart from localStorage:', e)
             }
         }
 
@@ -227,16 +223,13 @@ export const useCrearPedido = () => {
                         notas: notasCredito
                     }
                     // Log payload for debugging network issues
-                    console.log('Aprobación de crédito - payload:', creditPayload)
                     await approveCredit(creditPayload)
                 } catch (creditErr) {
-                    console.error('Error al registrar aprobación de crédito:', creditErr)
                     // REQUISITO: Si falla la aprobación de crédito, NO debe crearse el pedido.
                     // Intentamos cancelar el pedido creado
                     try {
                         await cancelOrder(pedido.id, 'Fallo registro automático de aprobación de crédito')
                     } catch (cancelErr) {
-                        console.error('Error al intentar revertir pedido:', cancelErr)
                     }
                     throw new Error('Hubo un error al registrar los términos del crédito. El pedido fue cancelado automáticamente.')
                 }
@@ -254,7 +247,6 @@ export const useCrearPedido = () => {
             // Redirigir a la lista de pedidos o dashboard
             navigate('/vendedor/pedidos')
         } catch (err) {
-            console.error('Error creating order:', err)
             setError(err instanceof Error ? err.message : 'Error al crear el pedido')
         } finally {
             setIsSubmitting(false)

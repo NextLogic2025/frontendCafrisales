@@ -25,7 +25,6 @@ export default function EquipoPage() {
       const data = await getUsers()
       setUsuarios(data)
     } catch (error) {
-      console.error('Error al cargar equipo:', error)
       setGlobalMessage({ type: 'error', message: 'Error al cargar el equipo' })
     } finally {
       setIsLoading(false)

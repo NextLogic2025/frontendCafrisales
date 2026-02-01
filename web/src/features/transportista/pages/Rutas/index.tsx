@@ -56,7 +56,6 @@ export default function RutasPage() {
               }
             }
           } catch (e) {
-            console.error('Error fetching vehicle', e)
           }
         }
 
@@ -73,7 +72,6 @@ export default function RutasPage() {
               }
             }
           } catch (e) {
-            console.error('Error fetching transportista', e)
           }
         }
 
@@ -82,7 +80,6 @@ export default function RutasPage() {
 
       setRuteros(enrichedData)
     } catch (error) {
-      console.error('Error al cargar ruteros:', error)
       showToast('error', 'Error al cargar ruteros asignados')
     } finally {
       setLoading(false)

@@ -44,7 +44,6 @@ export function ValidationModal({ pedido, onClose, onSuccess }: ValidationModalP
             const data = await getAllSkus()
             setSkus(data.filter(s => s.activo))
         } catch (e) {
-            console.error('Error loading SKUs', e)
             setError('Error al cargar catálogo de SKUs')
         } finally {
             setIsLoadingSkus(false)
@@ -102,12 +101,10 @@ export function ValidationModal({ pedido, onClose, onSuccess }: ValidationModalP
             }
 
             // Log items to help debug validations (temporal)
-            console.log('Validación: items a enviar', items)
             await validarPedido(pedido.id, items, observaciones)
             onSuccess()
             onClose()
         } catch (err: any) {
-            console.error(err)
             setError(err.message || 'Error al guardar la validación')
         } finally {
             setIsSubmitting(false)
@@ -120,7 +117,7 @@ export function ValidationModal({ pedido, onClose, onSuccess }: ValidationModalP
             title={`Validar Pedido #${pedido?.codigo_visual || ''}`}
             onClose={onClose}
             headerGradient="red"
-                maxWidth="2xl"
+            maxWidth="2xl"
         >
             <div className="space-y-6">
                 {error && <Alert type="error" message={error} />}
@@ -158,22 +155,22 @@ export function ValidationModal({ pedido, onClose, onSuccess }: ValidationModalP
                         <div className="border border-gray-200 rounded-lg overflow-hidden">
                             <div className="w-full max-h-[48vh] overflow-auto">
                                 <table className="w-full">
-                                <thead className="bg-gray-50 border-b border-gray-200">
-                                    <tr>
-                                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700 w-1/3">Producto Solicitado</th>
-                                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700 w-2/3">Validación Bodega</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-200 bg-white">
-                                    {pedido?.detalles?.map(item => (
-                                        <ValidationItemRow
-                                            key={item.id}
-                                            item={item}
-                                            skus={skus}
-                                            onChange={handleRowChange}
-                                        />
-                                    ))}
-                                </tbody>
+                                    <thead className="bg-gray-50 border-b border-gray-200">
+                                        <tr>
+                                            <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700 w-1/3">Producto Solicitado</th>
+                                            <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700 w-2/3">Validación Bodega</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-200 bg-white">
+                                        {pedido?.detalles?.map(item => (
+                                            <ValidationItemRow
+                                                key={item.id}
+                                                item={item}
+                                                skus={skus}
+                                                onChange={handleRowChange}
+                                            />
+                                        ))}
+                                    </tbody>
                                 </table>
                             </div>
                         </div>

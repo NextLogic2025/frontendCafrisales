@@ -46,7 +46,6 @@ export default function PaginaPedidos() {
 			try {
 				await cancelarPedido(pedidoACancelar.id)
 			} catch (err) {
-				console.error('Error en handleConfirmCancel:', err)
 			}
 			setPedidoACancelar(null)
 		}
@@ -76,7 +75,6 @@ export default function PaginaPedidos() {
 			// Refresh list
 			window.dispatchEvent(new CustomEvent('pedidoCreado', { detail: { message: action === 'acepta' ? 'Pedido confirmado' : 'Pedido rechazado' } }))
 		} catch (error: any) {
-			console.error(error)
 			// If error, maybe open modal to show details? or alert
 			alert(error.message || 'Error al procesar la respuesta')
 		}

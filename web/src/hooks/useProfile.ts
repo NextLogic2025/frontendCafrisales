@@ -37,7 +37,6 @@ export function useProfile() {
     setError(null)
     try {
       const data = await UserService.getProfile()
-      console.log('useProfile: Raw UserService.getProfile result:', data)
       if (data) {
         const mapped = {
           id: data.id,
@@ -47,16 +46,14 @@ export function useProfile() {
           avatarUrl: data.photoUrl,
           rol: { id: 0, nombre: data.role },
           activo: data.active,
-          emailVerificado: false,
-          createdAt: undefined
+          emailVerificado: (data as any).emailVerificado ?? false,
+          createdAt: data.createdAt
         }
-        console.log('useProfile: Mapped user profile:', mapped)
         setProfile(mapped)
       } else {
         setProfile(null)
       }
     } catch (e) {
-      console.error('useProfile: Profile load error:', e)
       const message = e instanceof Error ? e.message : 'No se pudo obtener el perfil'
       setError(message)
     } finally {
@@ -65,27 +62,21 @@ export function useProfile() {
   }, [])
 
   const loadClient = React.useCallback(async (id: string) => {
-    console.log('useProfile: Attempting to load client for ID:', id)
     setClientLoading(true)
     setClientError(null)
     try {
       let data = await obtenerClientePorId(id)
-      console.log('useProfile: obtenerClientePorId result:', data)
 
       // Fallback: Si no lo encuentra por ID, intentar listar (para el rol cliente esto debería devolver solo su registro)
       if (!data) {
-        console.log('useProfile: ID lookup failed, trying fallback (obtenerClientes)...')
         const all = await obtenerClientes()
-        console.log('useProfile: obtenerClientes result length:', all.length)
         if (all.length > 0) {
           data = all[0]
-          console.log('useProfile: Fallback client selected:', data)
         }
       }
 
       setClient(data)
     } catch (e) {
-      console.error('useProfile: Client load error:', e)
       setClientError(e instanceof Error ? e.message : 'Error al cargar datos del cliente')
     } finally {
       setClientLoading(false)
@@ -101,7 +92,6 @@ export function useProfile() {
       })
       setVendedorMap(map)
     } catch (e) {
-      console.error('Error loading vendors map:', e)
     }
   }, [])
 
@@ -136,10 +126,9 @@ export function useProfile() {
   React.useEffect(() => {
     if (profile?.rol?.nombre) {
       const roleName = profile.rol.nombre.trim().toUpperCase()
-      console.log('useProfile: Checking role for data load. Role:', roleName)
       if (roleName === 'CLIENTE') {
         loadClient(profile.id)
-        loadVendedores()
+        // loadVendedores() // Forbidden for clients
       }
     }
   }, [profile, loadClient, loadVendedores])

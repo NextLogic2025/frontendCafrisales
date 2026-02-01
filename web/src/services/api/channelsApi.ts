@@ -26,12 +26,11 @@ export const channelsApi = {
             const headers: HeadersInit = {}
             if (token) headers.Authorization = `Bearer ${token}`
 
-            const res = await fetch(`${USERS_API_URL}/canales`, { headers })
+            const res = await fetch(`${USERS_API_URL}/v1/canales`, { headers })
             if (!res.ok) return []
             const data = await res.json().catch(() => [])
             return Array.isArray(data) ? data : []
         } catch (error) {
-            console.error('Error fetching channels:', error)
             return []
         }
     },
@@ -41,7 +40,7 @@ export const channelsApi = {
             const token = await getValidToken()
             if (!token) throw new Error('No hay sesión activa')
 
-            const res = await fetch(`${USERS_API_URL}/canales`, {
+            const res = await fetch(`${USERS_API_URL}/v1/canales`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -57,7 +56,6 @@ export const channelsApi = {
 
             return await res.json()
         } catch (error) {
-            console.error('Error creating channel:', error)
             throw error
         }
     },

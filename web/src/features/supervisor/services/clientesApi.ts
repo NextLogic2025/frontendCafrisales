@@ -158,20 +158,18 @@ export async function obtenerClientes(estado: 'activo' | 'inactivo' | 'todos' = 
   try {
     const token = await getValidToken()
     const query = estado !== 'todos' ? `?estado=${estado}` : ''
-    const url = `${USERS_API_URL}/clientes${query}`
+    const url = `${USERS_API_URL}/v1/clientes${query}`
     const headers: any = {}
     if (token) headers.Authorization = `Bearer ${token}`
 
     const res = await fetch(url, { headers })
     if (!res.ok) {
-      console.error('obtenerClientes error:', res.status, res.statusText)
       return []
     }
     const data = await res.json().catch(() => [])
     const list = Array.isArray(data) ? data : []
     return list.map(mapCliente)
   } catch (error) {
-    console.error('Error fetching clientes:', error)
     return []
   }
 }
@@ -192,20 +190,18 @@ export async function obtenerClientesPorVendedor(vendedorId: string): Promise<Cl
   try {
     const token = await getValidToken()
     // Matches mobile: `${USERS_API_URL}/vendedores/${vendedorId}/clientes`
-    const url = `${USERS_API_URL}/vendedores/${vendedorId}/clientes`
+    const url = `${USERS_API_URL}/v1/vendedores/${vendedorId}/clientes`
     const headers: any = {}
     if (token) headers.Authorization = `Bearer ${token}`
 
     const res = await fetch(url, { headers })
     if (!res.ok) {
-      console.error('obtenerClientesPorVendedor error:', res.status, res.statusText)
       return []
     }
     const data = await res.json().catch(() => [])
     const list = Array.isArray(data) ? data : []
     return list.map(mapCliente)
   } catch (error) {
-    console.error('Error fetching clientes by vendedor:', error)
     return []
   }
 }
@@ -213,7 +209,7 @@ export async function obtenerClientesPorVendedor(vendedorId: string): Promise<Cl
 export async function obtenerClientePorId(id: string): Promise<Cliente | null> {
   try {
     const token = await getValidToken()
-    const url = `${USERS_API_URL}/clientes/${id}`
+    const url = `${USERS_API_URL}/v1/clientes/${id}`
     const headers: any = {}
     if (token) headers.Authorization = `Bearer ${token}`
 
@@ -222,7 +218,6 @@ export async function obtenerClientePorId(id: string): Promise<Cliente | null> {
     const data = await res.json().catch(() => null)
     return data ? mapCliente(data as BackendCliente) : null
   } catch (error) {
-    console.error('Error fetching cliente by id:', error)
     return null
   }
 }
@@ -232,7 +227,7 @@ export async function crearCliente(data: CreateClienteDto): Promise<Cliente> {
   const token = await getValidToken()
   if (!token) throw new Error('No hay sesión activa')
 
-  const url = `${USERS_API_URL}/clientes`
+  const url = `${USERS_API_URL}/v1/clientes`
 
   const payload: any = {
     usuario_id: data.usuario_principal_id ?? null,
@@ -282,7 +277,7 @@ export async function crearCliente(data: CreateClienteDto): Promise<Cliente> {
 export async function actualizarCliente(id: string, data: Partial<CreateClienteDto>): Promise<Cliente> {
   const token = await getValidToken()
   if (!token) throw new Error('No hay sesión activa')
-  const url = `${USERS_API_URL}/clientes/${id}`
+  const url = `${USERS_API_URL}/v1/clientes/${id}`
 
   const payload: any = {}
   if (data.nombre_comercial !== undefined) payload.nombre_comercial = data.nombre_comercial
@@ -315,7 +310,7 @@ export async function actualizarCliente(id: string, data: Partial<CreateClienteD
 export async function eliminarCliente(id: string): Promise<void> {
   const token = await getValidToken()
   if (!token) throw new Error('No hay sesión activa')
-  const url = `${USERS_API_URL}/clientes/${id}`
+  const url = `${USERS_API_URL}/v1/clientes/${id}`
 
   await fetch(url, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }).catch(() => null)
 }
@@ -326,17 +321,16 @@ export async function obtenerZonas(): Promise<ZonaComercial[]> {
     const token = await getValidToken()
     const ZONAS_BASE_URL = env.api.zonas
     const ZONAS_API_URL = ZONAS_BASE_URL.endsWith('/api') ? ZONAS_BASE_URL : `${ZONAS_BASE_URL}/api`
-    const url = `${ZONAS_API_URL}/zonas?estado=activo`
+    const url = `${ZONAS_API_URL}/v1/zones?status=activo`
     const headers: any = {}
     if (token) headers.Authorization = `Bearer ${token}`
 
     const res = await fetch(url, { headers })
     if (!res.ok) return []
-    const data = await res.json().catch(() => [])
-    return Array.isArray(data) ? data : []
+    const response = await res.json().catch(() => ({ data: [] }))
+    const results = response.data || response
+    return Array.isArray(results) ? results : []
   } catch (error) {
-    console.error('Error fetching zonas:', error)
     return []
   }
 }
-

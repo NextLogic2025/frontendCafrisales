@@ -11,6 +11,7 @@ export interface RutaVendedor {
         email: string
     }
     fecha_programada?: string
+    fecha_rutero?: string
     estado: EstadoRuta
     paradas: ParadaRuta[]
     historial?: HistorialEstadoRuta[]

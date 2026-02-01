@@ -5,6 +5,7 @@ import { type CreateZonaDto, type ZoneSchedule, type ZonaComercial } from '../..
 import { ZonaMapSelector } from './ZonaMapSelector'
 
 import { ZoneScheduleConfig } from './ZoneScheduleConfig'
+import { findOverlappingZones } from '../../utils/polygonUtils'
 
 type LatLngLiteral = google.maps.LatLngLiteral
 
@@ -39,6 +40,7 @@ export function CrearZonaForm({
   const [polygonPath, setPolygonPath] = useState<LatLngLiteral[]>([])
   const [mapCenter, setMapCenter] = useState<LatLngLiteral | undefined>(undefined)
   const [selectedProvincia, setSelectedProvincia] = useState<string>('')
+  const [overlapWarning, setOverlapWarning] = useState<string | null>(null)
 
   const mapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined
 
@@ -49,7 +51,6 @@ export function CrearZonaForm({
   }, [parsedInitialPolygon])
 
 
-
   // Reset step when modal opens/closes (detected by formData changes mostly, or mount)
   useEffect(() => {
     setStep(1)
@@ -58,10 +59,31 @@ export function CrearZonaForm({
 
   const handlePolygonChange = (path: LatLngLiteral[]) => {
     setPolygonPath(path)
+    const geoJson = path.length >= 3 ? toGeoJsonPolygon(path) : null
     setFormData((prev) => ({
       ...prev,
-      poligono_geografico: path.length >= 3 ? toGeoJsonPolygon(path) : null,
+      poligono_geografico: geoJson,
     }))
+
+    // Check for overlaps in real-time
+    if (geoJson && path.length >= 3) {
+      const overlapping = findOverlappingZones(
+        geoJson,
+        zonas,
+        isEditing ? (formData as any).id : undefined
+      )
+
+      if (overlapping.length > 0) {
+        const zoneNames = overlapping.map(z => z.nombre).join(', ')
+        setOverlapWarning(
+          `⚠️ El polígono se superpone con ${overlapping.length === 1 ? 'la zona' : 'las zonas'}: ${zoneNames}`
+        )
+      } else {
+        setOverlapWarning(null)
+      }
+    } else {
+      setOverlapWarning(null)
+    }
   }
 
 
@@ -146,8 +168,18 @@ export function CrearZonaForm({
               center={mapCenter}
               zonas={zonas}
             />
+            {overlapWarning && (
+              <div className="rounded-lg border-2 border-red-500 bg-red-50 px-4 py-3 text-sm text-red-800">
+                <div className="flex items-start gap-2">
+                  <svg className="h-5 w-5 flex-shrink-0 text-red-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <span className="font-medium">{overlapWarning}</span>
+                </div>
+              </div>
+            )}
             {polygonPath.length > 0 ? (
-              <p className="text-[11px] text-neutral-600">Vertices: {polygonPath.length} | Se guardará como polígono GeoJSON.</p>
+              <p className="text-[11px] text-neutral-600">Vértices: {polygonPath.length} | Se guardará como polígono GeoJSON.</p>
             ) : (
               <p className="text-[11px] text-neutral-500">Dibuja en el mapa para delimitar la zona.</p>
             )}

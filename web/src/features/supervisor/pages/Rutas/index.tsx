@@ -51,8 +51,6 @@ export default function RutasPage() {
 
             await loadRutas(vendedoresData, zonasData) // Pass data to loadRutas
         } catch (error) {
-            console.error('Error loading data:', error)
-            showToast('error', 'Error al cargar datos')
         } finally { // Added finally block
             setIsLoading(false)
         }
@@ -72,10 +70,10 @@ export default function RutasPage() {
                     try {
                         // Get full route details including paradas
                         const rutaCompleta = await getRutaVendedorById(r.id)
-                        
+
                         const vendedor = vendedoresList.find(v => v.id === rutaCompleta.vendedor_id)
                         const zona = zonasList.find(z => String(z.id) === String(rutaCompleta.zona_id))
-                        
+
                         return {
                             ...rutaCompleta,
                             paradas: rutaCompleta.paradas || [],
@@ -91,10 +89,10 @@ export default function RutasPage() {
                         }
                     } catch (error) {
                         // If individual route fetch fails, return basic data
-                        console.error(`Error loading details for route ${r.id}:`, error)
+                        // If individual route fetch fails, return basic data
                         const vendedor = vendedoresList.find(v => v.id === r.vendedor_id)
                         const zona = zonasList.find(z => String(z.id) === String(r.zona_id))
-                        
+
                         return {
                             ...r,
                             paradas: r.paradas || [],
@@ -114,7 +112,6 @@ export default function RutasPage() {
 
             setRutas(rutasConDetalles)
         } catch (error) {
-            console.error('Error loading rutas:', error)
             showToast('error', 'Error al cargar rutas')
         }
     }
@@ -166,7 +163,6 @@ export default function RutasPage() {
             const rutaCompleta = await getRutaVendedorById(ruta.id)
             setDetalleRuta(rutaCompleta)
         } catch (error) {
-            console.error('Error loading route details:', error)
             showToast('error', 'Error al cargar detalles de la ruta')
             // Fallback to the current ruta data
             setDetalleRuta(ruta)

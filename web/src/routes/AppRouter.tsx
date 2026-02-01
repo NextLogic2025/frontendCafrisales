@@ -9,6 +9,7 @@ import {
   DashboardPage,
   PedidosPage,
   PerfilPage,
+  PreparacionPage,
 } from '../features/bodeguero/pages'
 
 const NotificacionesBodegaPage = React.lazy(() => import('../features/bodeguero/pages/Notificaciones'))
@@ -96,6 +97,7 @@ export default function AppRouter() {
         >
           <Route index element={<DashboardPage />} />
           <Route path="pedidos" element={<PedidosPage />} />
+          <Route path="preparacion" element={<PreparacionPage />} />
 
 
           <Route path="notificaciones" element={<NotificacionesBodegaPage />} />

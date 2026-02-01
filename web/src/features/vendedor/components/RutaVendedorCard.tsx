@@ -20,9 +20,10 @@ export function RutaVendedorCard({
     const estadoColor = ESTADO_RUTA_COLORS[ruta.estado]
     const estadoLabel = ESTADO_RUTA_LABELS[ruta.estado]
 
-    const formatDate = (dateString?: string | null) => {
-        if (!dateString) return 'No definida'
-        return new Date(dateString).toLocaleDateString('es-ES', {
+    const formatDate = (dateString?: string | null, alternate?: string | null) => {
+        const date = dateString || alternate
+        if (!date) return 'No definida'
+        return new Date(date).toLocaleDateString('es-ES', {
             day: '2-digit',
             month: 'short',
             year: 'numeric'
@@ -81,7 +82,7 @@ export function RutaVendedorCard({
                     <Calendar className="h-4 w-4 text-neutral-400" />
                     <div>
                         <p className="text-[10px] text-neutral-500 uppercase font-black leading-none mb-1">Programado</p>
-                        <p className="font-semibold text-neutral-800">{formatDate(ruta.fecha_programada)}</p>
+                        <p className="font-semibold text-neutral-800">{formatDate(ruta.fecha_programada, ruta.fecha_rutero)}</p>
                     </div>
                 </div>
             </div>

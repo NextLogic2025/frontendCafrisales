@@ -61,7 +61,6 @@ export function usePerfilPage() {
     const email = profile?.email || 'Sin correo'
     const phone = profile?.telefono || 'Sin teléfono'
     const normalizedRole = (profile?.rol?.nombre || '').trim().toUpperCase()
-    console.log('usePerfilPage: Normalized role for UI:', normalizedRole)
     const role = normalizedRole || 'Sin rol'
     const created = (profile?.createdAt || client?.created_at) ? new Date(profile?.createdAt || client?.created_at).toLocaleDateString('es-PE') : '---'
 

@@ -63,7 +63,6 @@ export function useBodegueroPedidos() {
             const sorted = data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
             setPedidos(sorted)
         } catch (err: any) {
-            console.error(err)
             setError(err?.message || 'Error al cargar los pedidos')
         } finally {
             setIsLoading(false)

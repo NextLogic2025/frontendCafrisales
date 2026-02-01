@@ -76,7 +76,6 @@ export function PreciosView() {
       const history = await getPriceHistory(item.id)
       setPriceHistory(history)
     } catch (err) {
-      console.error('Error al cargar historial:', err)
     } finally {
       setIsLoadingHistory(false)
     }

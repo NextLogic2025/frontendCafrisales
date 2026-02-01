@@ -1,5 +1,5 @@
 
-import { useMemo } from 'react'
+import { useMemo, useRef, useEffect } from 'react'
 import { GoogleMap, Polygon, useJsApiLoader } from '@react-google-maps/api'
 import { Alert } from 'components/ui/Alert'
 import { Modal } from 'components/ui/Modal'
@@ -22,6 +22,8 @@ export function MapaGeneralModal({ isOpen, onClose, zonas }: MapaGeneralModalPro
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
     libraries: GOOGLE_MAP_LIBRARIES,
   })
+
+  const mapRef = useRef<google.maps.Map | null>(null)
 
   const zonasConPoligono = useMemo(() => {
     return zonas
@@ -49,6 +51,13 @@ export function MapaGeneralModal({ isOpen, onClose, zonas }: MapaGeneralModalPro
     }
   }, [zonasConPoligono])
 
+  // Fit bounds when zones change and map is loaded
+  useEffect(() => {
+    if (mapRef.current && bounds && zonasConPoligono.length > 0) {
+      mapRef.current.fitBounds(bounds, 50)
+    }
+  }, [bounds, zonasConPoligono])
+
   const colors = [
     '#f0412d',
     '#3b82f6',
@@ -75,9 +84,10 @@ export function MapaGeneralModal({ isOpen, onClose, zonas }: MapaGeneralModalPro
               <GoogleMap
                 mapContainerStyle={mapStyle}
                 center={defaultCenter}
-                zoom={7}
+                zoom={bounds ? undefined : 7}
                 onLoad={(map) => {
-                  if (bounds) {
+                  mapRef.current = map
+                  if (bounds && zonasConPoligono.length > 0) {
                     map.fitBounds(bounds, 50)
                   }
                 }}

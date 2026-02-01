@@ -10,7 +10,7 @@ import type {
     HistorialEstadoRuta,
 } from './rutasVendedorTypes'
 
-const BASE_URL = `${env.api.transportista}/api/ruteros-comerciales`
+const BASE_URL = `${env.api.transportista}/api/v1/ruteros-comerciales`
 
 // ========================================
 // SUPERVISOR FUNCTIONS
@@ -44,7 +44,9 @@ export async function getRutasVendedor(filtros?: {
         throw new Error(errorData?.message || 'Error al obtener rutas de vendedor')
     }
 
-    return await res.json()
+    const response = await res.json()
+    // Backend returns paginated response { data, meta }
+    return response.data || response
 }
 
 /**
@@ -282,7 +284,9 @@ export async function getMisRutas(filtros?: {
         throw new Error(errorData?.message || 'Error al obtener mis rutas')
     }
 
-    return await res.json()
+    const response = await res.json()
+    // Backend returns paginated response { data, meta }
+    return response.data || response
 }
 
 /**

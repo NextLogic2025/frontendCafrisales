@@ -25,7 +25,6 @@ export default function PromocionesSupervisor() {
             const data = await getPendingPromotions()
             setPedidos(data)
         } catch (err: any) {
-            console.error(err)
             setError(err?.message || 'Error al cargar promociones pendientes')
         } finally {
             setIsLoading(false)

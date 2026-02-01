@@ -73,7 +73,6 @@ export const useProductos = () => {
                 setProductos(mapProductToFrontend(productsData))
                 setCategories(categoriesData as any[])
             } catch (err) {
-                console.error('Error cargando catálogo:', err)
             } finally {
                 setLoading(false)
             }
@@ -159,7 +158,6 @@ export const useProductos = () => {
 
             // navigate('/vendedor/crear-pedido') 
         } catch (error) {
-            console.error('Error adding to cart:', error)
             alert('Error al agregar producto al carrito')
         }
     }

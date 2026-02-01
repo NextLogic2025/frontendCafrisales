@@ -5,7 +5,7 @@ import { SectionHeader } from 'components/ui/SectionHeader'
 import { Alert } from 'components/ui/Alert'
 import { Modal } from 'components/ui/Modal'
 import { LoadingSpinner } from 'components/ui/LoadingSpinner'
-import { type ZonaComercial, type CreateZonaDto, type ZoneSchedule, getZoneSchedules, updateZoneSchedules } from '../../services/zonasApi'
+import { type ZonaComercial, type CreateZonaDto, type ZoneSchedule, getZoneSchedules, updateZoneSchedules, obtenerZonasParaMapa } from '../../services/zonasApi'
 import { useZonas } from '../../services/useZonas'
 import { ZonasTable } from './ZonasTable'
 import { CrearZonaForm } from './CrearZonaForm'
@@ -32,6 +32,8 @@ export default function ZonasPage() {
   const [zonaEditando, setZonaEditando] = useState<ZonaComercial | null>(null)
   const [zonaDetalle, setZonaDetalle] = useState<ZonaComercial | null>(null)
   const [isMapaGeneralOpen, setIsMapaGeneralOpen] = useState(false)
+  const [zonasParaMapa, setZonasParaMapa] = useState<ZonaComercial[]>([])
+  const [isLoadingMapa, setIsLoadingMapa] = useState(false)
 
   // Schedules state
   const [schedules, setSchedules] = useState<ZoneSchedule[]>(DEFAULT_SCHEDULES)
@@ -53,7 +55,7 @@ export default function ZonasPage() {
 
   const [formData, setFormData] = useState<CreateZonaDto>(emptyForm)
 
-  const handleOpenModalCrear = () => {
+  const handleOpenModalCrear = async () => {
     setModalMode('crear')
     setZonaEditando(null)
     setIsModalOpen(true)
@@ -61,6 +63,13 @@ export default function ZonasPage() {
     setSubmitMessage(null)
     setFormData(emptyForm)
     setSchedules(DEFAULT_SCHEDULES) // Reset schedules
+    // Load zones with geometry for map overlay
+    try {
+      const zonasConGeometria = await obtenerZonasParaMapa()
+      setZonasParaMapa(zonasConGeometria)
+    } catch (error) {
+      setZonasParaMapa([])
+    }
   }
 
   const handleOpenModalEditar = async (zona: ZonaComercial) => {
@@ -76,6 +85,14 @@ export default function ZonasPage() {
       poligono_geografico: zona.poligono_geografico ?? null,
     })
 
+    // Load zones with geometry for map overlay
+    try {
+      const zonasConGeometria = await obtenerZonasParaMapa()
+      setZonasParaMapa(zonasConGeometria)
+    } catch (error) {
+      setZonasParaMapa([])
+    }
+
     // Fetch schedules for this zone
     try {
       const fetchedSchedules = await getZoneSchedules(zona.id)
@@ -85,7 +102,6 @@ export default function ZonasPage() {
         setSchedules(DEFAULT_SCHEDULES)
       }
     } catch (e) {
-      console.error("Error loading schedules", e)
       setSchedules(DEFAULT_SCHEDULES)
     }
   }
@@ -96,6 +112,19 @@ export default function ZonasPage() {
     setFormErrors({})
     setSubmitMessage(null)
     setFormData(emptyForm)
+  }
+
+  const handleOpenMapaGeneral = async () => {
+    setIsMapaGeneralOpen(true)
+    setIsLoadingMapa(true)
+    try {
+      const zonasConGeometria = await obtenerZonasParaMapa()
+      setZonasParaMapa(zonasConGeometria)
+    } catch (error) {
+      setZonasParaMapa([])
+    } finally {
+      setIsLoadingMapa(false)
+    }
   }
 
   const handleToggleEstado = async (zona: ZonaComercial) => {
@@ -128,7 +157,7 @@ export default function ZonasPage() {
     if (formData.poligono_geografico) {
       const overlapping = findOverlappingZones(
         formData.poligono_geografico,
-        zonas,
+        zonasParaMapa,
         modalMode === 'editar' ? zonaEditando?.id : undefined
       )
 
@@ -207,7 +236,7 @@ export default function ZonasPage() {
         <div className="flex gap-2">
           <button
             type="button"
-            onClick={() => setIsMapaGeneralOpen(true)}
+            onClick={handleOpenMapaGeneral}
             className="inline-flex items-center justify-center rounded-xl px-4 py-3 font-extrabold transition bg-indigo-600 text-white hover:bg-indigo-700"
           >
             <Map className="mr-2 h-4 w-4" />
@@ -270,12 +299,16 @@ export default function ZonasPage() {
           onSubmit={handleSubmit}
           onCancel={handleCloseModal}
           isEditing={modalMode === 'editar'}
-          zonas={zonas}
+          zonas={zonasParaMapa}
         />
       </Modal>
 
       <ZonaDetailModal zona={zonaDetalle} isOpen={!!zonaDetalle} onClose={handleCloseDetalle} />
-      <MapaGeneralModal zonas={zonas} isOpen={isMapaGeneralOpen} onClose={() => setIsMapaGeneralOpen(false)} />
+      <MapaGeneralModal
+        zonas={isLoadingMapa ? [] : zonasParaMapa}
+        isOpen={isMapaGeneralOpen}
+        onClose={() => setIsMapaGeneralOpen(false)}
+      />
 
       {/* Toast Notification */}
       {toast && (

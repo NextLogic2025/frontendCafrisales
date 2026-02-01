@@ -125,7 +125,6 @@ export function PickingProcessing({ pickingId, onBack, onComplete }: Props) {
                 loteConfirmado: overrideLot ? String(overrideLot.id) : undefined,
                 ubicacion_confirmada: overrideLot ? String(overrideLot.ubicacionId) : undefined
             };
-            console.log('FRONTEND PickingProcessing - confirmPick Payload:', payload);
 
             await pickingApi.pickItem(picking.id, pickModal.item.id, payload)
             setPickModal({ open: false, item: null })

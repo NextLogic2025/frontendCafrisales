@@ -47,7 +47,6 @@ export default function VendedorClientes() {
           setZonas(dataZonas)
         }
       } catch (err: any) {
-        console.error('Error cargando clientes:', err)
         if (isMounted) setError(err?.message || 'Error al cargar clientes')
       } finally {
         if (isMounted) setIsLoading(false)

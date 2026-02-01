@@ -46,7 +46,7 @@ export async function createOrder(payload: CreateOrderPayload): Promise<OrderRes
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const res = await fetch(`${ORDERS_API_URL}/pedidos`, {
+    const res = await fetch(`${ORDERS_API_URL}/v1/orders`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -67,30 +67,32 @@ export async function getOrders(): Promise<OrderResponse[]> {
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const res = await fetch(`${ORDERS_API_URL}/pedidos`, {
+    const res = await fetch(`${ORDERS_API_URL}/v1/orders`, {
         headers: { Authorization: `Bearer ${token}` },
     })
     if (!res.ok) return []
-    return await res.json()
+    const response = await res.json()
+    return response.data || response
 }
 
 export async function getMyOrders(): Promise<OrderResponse[]> {
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const res = await fetch(`${ORDERS_API_URL}/pedidos/my-orders`, {
+    const res = await fetch(`${ORDERS_API_URL}/v1/orders/my-orders`, {
         headers: { Authorization: `Bearer ${token}` },
     })
     if (!res.ok) return []
-    return await res.json()
+    const response = await res.json()
+    return response.data || response
 }
 
 export async function cancelOrder(orderId: string, motivo: string): Promise<void> {
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const res = await fetch(`${ORDERS_API_URL}/pedidos/${orderId}/cancel`, {
-        method: 'PATCH',
+    const res = await fetch(`${ORDERS_API_URL}/v1/orders/${orderId}/cancel`, {
+        method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
@@ -107,7 +109,7 @@ export async function getOrderById(id: string): Promise<OrderResponse> {
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const res = await fetch(`${ORDERS_API_URL}/pedidos/${id}`, {
+    const res = await fetch(`${ORDERS_API_URL}/v1/orders/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
     })
 
@@ -127,7 +129,7 @@ export async function getPendingPromotions(): Promise<OrderResponse[]> {
     if (!token) throw new Error('No hay sesión activa')
 
     const [resPromos, resClientes] = await Promise.all([
-        fetch(`${ORDERS_API_URL}/pedidos/promociones-pendientes`, {
+        fetch(`${ORDERS_API_URL}/v1/orders/promociones-pendientes`, {
             headers: { Authorization: `Bearer ${token}` }
         }),
         obtenerClientes('todos').catch(() => [])
@@ -155,8 +157,8 @@ export async function approvePromotions(
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const res = await fetch(`${ORDERS_API_URL}/pedidos/${orderId}/aprobar-promociones`, {
-        method: 'PATCH',
+    const res = await fetch(`${ORDERS_API_URL}/v1/orders/${orderId}/aprobar-promociones`, {
+        method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
@@ -179,7 +181,7 @@ export async function respondToAdjustment(
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const res = await fetch(`${ORDERS_API_URL}/pedidos/${orderId}/responder-ajuste`, {
+    const res = await fetch(`${ORDERS_API_URL}/v1/orders/${orderId}/responder-ajuste`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

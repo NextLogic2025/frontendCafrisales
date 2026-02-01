@@ -4,15 +4,18 @@ import { Clock, User, FileText } from 'lucide-react'
 import type { HistorialEstadoRutero } from '../services/types'
 import { ESTADO_RUTERO_LABELS } from '../services/types'
 import { getHistorialRutero } from '../services/logisticsApi'
+import { getHistorialRuta as getHistorialRutaComercial } from '../services/rutasVendedorApi'
+import { ESTADO_RUTA_LABELS } from '../services/rutasVendedorTypes'
 
 interface HistorialModalProps {
     isOpen: boolean
     onClose: () => void
     ruteroId: string
+    tipo?: 'comercial' | 'logistico'
 }
 
-export function HistorialModal({ isOpen, onClose, ruteroId }: HistorialModalProps) {
-    const [historial, setHistorial] = useState<HistorialEstadoRutero[]>([])
+export function HistorialModal({ isOpen, onClose, ruteroId, tipo = 'logistico' }: HistorialModalProps) {
+    const [historial, setHistorial] = useState<any[]>([])
     const [loading, setLoading] = useState(false)
 
     useEffect(() => {
@@ -24,10 +27,11 @@ export function HistorialModal({ isOpen, onClose, ruteroId }: HistorialModalProp
     const loadHistorial = async () => {
         setLoading(true)
         try {
-            const data = await getHistorialRutero(ruteroId)
+            const data = tipo === 'comercial'
+                ? await getHistorialRutaComercial(ruteroId)
+                : await getHistorialRutero(ruteroId)
             setHistorial(data)
         } catch (error) {
-            console.error('Error al cargar historial:', error)
         } finally {
             setLoading(false)
         }
@@ -77,8 +81,8 @@ export function HistorialModal({ isOpen, onClose, ruteroId }: HistorialModalProp
                                 <div className="relative z-10 flex-shrink-0">
                                     <div
                                         className={`w-12 h-12 rounded-full flex items-center justify-center ${index === 0
-                                                ? 'bg-brand-red text-white'
-                                                : 'bg-neutral-100 text-neutral-600'
+                                            ? 'bg-brand-red text-white'
+                                            : 'bg-neutral-100 text-neutral-600'
                                             }`}
                                     >
                                         <Clock className="h-5 w-5" />
@@ -91,12 +95,14 @@ export function HistorialModal({ isOpen, onClose, ruteroId }: HistorialModalProp
                                         {/* Estado */}
                                         <div className="flex items-center justify-between mb-2">
                                             <h4 className="font-semibold text-lg text-neutral-800">
-                                                {ESTADO_RUTERO_LABELS[item.estado]}
+                                                {tipo === 'comercial'
+                                                    ? ESTADO_RUTA_LABELS[item.estado as keyof typeof ESTADO_RUTA_LABELS]
+                                                    : ESTADO_RUTERO_LABELS[item.estado as keyof typeof ESTADO_RUTERO_LABELS]}
                                             </h4>
                                             <span
                                                 className={`text-xs font-medium px-2 py-1 rounded ${index === 0
-                                                        ? 'bg-brand-red text-white'
-                                                        : 'bg-neutral-100 text-neutral-600'
+                                                    ? 'bg-brand-red text-white'
+                                                    : 'bg-neutral-100 text-neutral-600'
                                                     }`}
                                             >
                                                 {index === 0 ? 'Actual' : 'Anterior'}
@@ -108,7 +114,7 @@ export function HistorialModal({ isOpen, onClose, ruteroId }: HistorialModalProp
                                             <div className="flex items-center gap-2 text-sm text-neutral-600 mb-2">
                                                 <User className="h-4 w-4 text-neutral-400" />
                                                 <span>
-                                                    {item.usuario.nombre} {item.usuario.apellido}
+                                                    {item.usuario.nombre} {item.usuario.apellido || ''}
                                                 </span>
                                             </div>
                                         )}
@@ -116,7 +122,7 @@ export function HistorialModal({ isOpen, onClose, ruteroId }: HistorialModalProp
                                         {/* Fecha */}
                                         <div className="flex items-center gap-2 text-sm text-neutral-600 mb-2">
                                             <Clock className="h-4 w-4 text-neutral-400" />
-                                            <span>{formatDate(item.cambiado_en)}</span>
+                                            <span>{formatDate(item.cambiado_en || item.creado_en)}</span>
                                         </div>
 
                                         {/* Observaciones */}

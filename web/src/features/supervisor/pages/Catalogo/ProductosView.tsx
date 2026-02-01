@@ -39,7 +39,7 @@ export function ProductosView() {
   const { notifications, success, error: notifyError, remove: removeNotification } = useNotification()
 
   useEffect(() => {
-    getAllCategories().then(setCategories).catch((err) => console.error('Error al cargar categorías:', err))
+    getAllCategories().then(setCategories).catch(() => { })
   }, [])
 
   useEffect(() => {
@@ -113,13 +113,11 @@ export function ProductosView() {
               productosMap.set(String(campania.id), normalizados)
             }
           } catch (err) {
-            console.error(`Error al cargar productos de campaña ${campania.id}:`, err)
           }
         })
       )
       setProductosEnPromociones(productosMap)
     } catch (err) {
-      console.error('Error al cargar promociones:', err)
     } finally {
       setIsLoadingPromos(false)
     }

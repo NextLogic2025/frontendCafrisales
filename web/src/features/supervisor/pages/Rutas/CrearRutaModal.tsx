@@ -64,7 +64,6 @@ export function CrearRutaModal({ isOpen, onClose, onSubmit }: CrearRutaModalProp
             setTodosClientes(clientesData)
             setClientesDisponibles(clientesData)
         } catch (error) {
-            console.error('Error loading data:', error)
         } finally {
             setLoadingData(false)
         }

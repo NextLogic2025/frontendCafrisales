@@ -16,8 +16,6 @@ export interface ValidacionItemResult {
     item_pedido_id: string
     estado_resultado: EstadoItemResultado
     sku_aprobado_id?: string
-    sku_aprobado_nombre_snapshot?: string
-    sku_aprobado_codigo_snapshot?: string
     cantidad_aprobada?: number
     motivo: string
 }
@@ -56,7 +54,7 @@ export async function validarPedido(id: string, items: ValidacionItemResult[], o
         items_resultados: items
     }
 
-    const res = await fetch(`${ORDERS_API_URL}/pedidos/${id}/validar`, {
+    const res = await fetch(`${ORDERS_API_URL}/v1/orders/${id}/validar`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

@@ -30,7 +30,6 @@ export function useSocket() {
         try {
             localStorage.setItem(NOTIFICATIONS_STORAGE_KEY, JSON.stringify(notifications))
         } catch (err) {
-            console.error('Failed to save notifications to localStorage', err)
         }
     }
 
@@ -50,7 +49,6 @@ export function useSocket() {
     useEffect(() => {
         if (!token) {
             if (lastTokenRef.current) {
-                console.log('useSocket: user logged out, clearing notifications')
                 setNotifications([])
                 clearNotifications()
             }
@@ -58,7 +56,6 @@ export function useSocket() {
             return
         }
         if (lastTokenRef.current && lastTokenRef.current !== token) {
-            console.log('useSocket: token changed, different user logged in, clearing old notifications')
             setNotifications([])
             clearNotifications()
         }
@@ -73,7 +70,7 @@ export function useSocket() {
         if (!sentToken) return
         try {
             const base = env.api.notifications || env.api.catalogo
-            const apiUrl = `${base.replace(/\/$/, '')}/api/notifications`
+            const apiUrl = `${base.replace(/\/$/, '')}/api/v1/notifications`
             const res = await fetch(apiUrl, {
                 headers: {
                     'Accept': 'application/json',
@@ -82,7 +79,6 @@ export function useSocket() {
             })
             if (!res.ok) {
                 if (res.status === 401 && typeof auth?.refresh === 'function') {
-                    console.log('useSocket: 401 fetching notifications, refreshing...')
                     auth.refresh()
                 }
                 return
@@ -114,7 +110,6 @@ export function useSocket() {
                 return [...newNotifications, ...prev]
             })
         } catch (err) {
-            console.error('useSocket: exception while fetching initial notifications', err)
         }
     }, [])
 
@@ -124,21 +119,16 @@ export function useSocket() {
         const base = (env.api.notifications || env.api.catalogo).replace(/\/$/, '')
         const sentToken = token?.startsWith('Bearer ') ? token.replace(/^Bearer\s+/i, '') : token
         const masked = sentToken ? `${sentToken.substring(0, 6)}...${sentToken.slice(-6)}` : 'null'
-        console.log('useSocket: connecting with token (masked):', masked)
 
         try {
             const parts = (sentToken || '').split('.')
             if (parts.length === 3) {
                 const header = JSON.parse(atob(parts[0].replace(/-/g, '+').replace(/_/g, '/')))
                 const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')))
-                console.log('useSocket: jwt header', { alg: header.alg, typ: header.typ })
-                console.log('useSocket: jwt payload (exp, iat, sub):', { exp: payload.exp, iat: payload.iat, sub: payload.sub })
                 if (payload.exp && typeof payload.exp === 'number') {
                     const expiresAt = new Date(payload.exp * 1000)
-                    console.log('useSocket: jwt expires at', expiresAt.toISOString())
 
                     if (expiresAt.getTime() < Date.now()) {
-                        console.log('useSocket: token expired, refreshing before connect...')
                         if (typeof auth?.refresh === 'function') {
                             auth.refresh()
                         }
@@ -147,7 +137,6 @@ export function useSocket() {
                 }
             }
         } catch (err) {
-            console.warn('useSocket: failed to decode jwt for debug', err)
         }
 
         // IMPORTANT: use namespace URL and set auth.token; force websocket transport
@@ -161,20 +150,17 @@ export function useSocket() {
         socketRef.current = socket
 
         socket.on('connect', () => {
-            console.log('Socket connected:', socket.id)
             setIsConnected(true)
             refresh(sentToken)
         })
 
         socket.on('disconnect', (reason) => {
-            console.log('Socket disconnected:', reason)
             setIsConnected(false)
         })
 
         socket.on('connect_error', async (err: any) => {
             const msg = err?.message ?? err
             const extra = (err as any)?.data ?? null
-            console.error('Socket connect_error:', msg, extra)
             setIsConnected(false)
 
             const text = String(msg || '').toLowerCase()
@@ -182,13 +168,10 @@ export function useSocket() {
             if ((text.includes('jwt') || text.includes('token') || text.includes('expired'))) {
                 try {
                     if (typeof auth?.refreshToken === 'function') {
-                        console.log('useSocket: attempting token refresh via auth.refreshToken()')
                         await auth.refreshToken()
                     } else if (typeof auth?.refresh === 'function') {
-                        console.log('useSocket: attempting token refresh via auth.refresh()')
                         await auth.refresh()
                     } else {
-                        console.warn('useSocket: no refresh function available on auth; please re-login')
                         return
                     }
                     // Use new token and reconnect
@@ -198,7 +181,6 @@ export function useSocket() {
                         socket.connect()
                     }
                 } catch (refreshErr) {
-                    console.error('useSocket: token refresh failed', refreshErr)
                 }
             }
         })
@@ -206,22 +188,17 @@ export function useSocket() {
         socket.on('error', (err) => {
             try {
                 const errMsg = typeof err === 'object' ? JSON.stringify(err) : String(err)
-                console.error('Socket error event:', errMsg)
                 if ((errMsg.includes('Token inválido') || errMsg.includes('expired') || errMsg.includes('jwt')) && typeof auth?.refresh === 'function') {
-                    console.log('useSocket: socket error triggers refresh...')
                     auth.refresh()
                 }
             } catch (e) {
-                console.error('Socket error event (stringify failed):', err)
             }
         })
 
         socket.on('reconnect_failed', () => {
-            console.warn('Socket reconnection failed')
         })
 
         socket.on('notification', (payload: any) => {
-            console.log('Notification received (raw):', payload)
             const title = payload.title ?? payload.titulo ?? payload.payload?.title ?? payload.payload?.titulo ?? ''
             const message = payload.message ?? payload.mensaje ?? payload.payload?.message ?? payload.payload?.mensaje ?? ''
             const type = payload.type ?? payload.tipo ?? 'info'
@@ -235,7 +212,6 @@ export function useSocket() {
                 read: payload.leida === true || Boolean(payload.leidaEn),
                 readAt: payload.leidaEn ? new Date(payload.leidaEn).getTime() : null,
             }
-            console.log('Notification normalized:', normalized)
             setNotifications((prev: AppNotification[]) => {
                 const exists = normalized.id && prev.some(n => n.id === normalized.id)
                 if (exists) {
@@ -247,7 +223,6 @@ export function useSocket() {
 
         // Order event handlers
         const handleOrderEvent = (payload: any) => {
-            console.log('Order event received (raw):', payload)
             const orderId = payload.id ?? payload.orderId ?? payload.payload?.id ?? null
             const title = payload.title ?? payload.titulo ?? `Nuevo pedido ${orderId ?? ''}`
             const message = payload.message ?? payload.mensaje ?? payload.payload?.message ?? `Pedido ${orderId ?? ''} creado`
@@ -284,7 +259,7 @@ export function useSocket() {
 
         if (!s || !s.connected) {
             try {
-                const res = await fetch(`${base.replace(/\/$/, '')}/api/notifications/${notificationId}/mark-read`, {
+                const res = await fetch(`${base.replace(/\/$/, '')}/api/v1/notifications/${notificationId}/mark-read`, {
                     method: 'PATCH', headers: { 'Authorization': sentToken ? `Bearer ${sentToken}` : '' }
                 })
                 return { success: res.ok, error: res.ok ? undefined : `HTTP ${res.status}` }
@@ -299,7 +274,7 @@ export function useSocket() {
                 if (settled) return
                 settled = true
                 try {
-                    const res = await fetch(`${base.replace(/\/$/, '')}/api/notifications/${notificationId}/mark-read`, {
+                    const res = await fetch(`${base.replace(/\/$/, '')}/api/v1/notifications/${notificationId}/mark-read`, {
                         method: 'PATCH', headers: { 'Authorization': sentToken ? `Bearer ${sentToken}` : '' }
                     })
                     resolve({ success: res.ok, error: res.ok ? undefined : `HTTP ${res.status}` })
@@ -338,7 +313,7 @@ export function useSocket() {
 
         if (!s || !s.connected) {
             try {
-                const res = await fetch(`${base.replace(/\/$/, '')}/api/notifications/mark-all-read`, { method: 'PATCH', headers: { 'Authorization': sentToken ? `Bearer ${sentToken}` : '' } })
+                const res = await fetch(`${base.replace(/\/$/, '')}/api/v1/notifications/mark-all-read`, { method: 'PATCH', headers: { 'Authorization': sentToken ? `Bearer ${sentToken}` : '' } })
                 return { success: res.ok, error: res.ok ? undefined : `HTTP ${res.status}` }
             } catch (err: any) {
                 return { success: false, error: String(err) }
@@ -351,7 +326,7 @@ export function useSocket() {
                 if (settled) return
                 settled = true
                 try {
-                    const res = await fetch(`${base.replace(/\/$/, '')}/api/notifications/mark-all-read`, { method: 'PATCH', headers: { 'Authorization': sentToken ? `Bearer ${sentToken}` : '' } })
+                    const res = await fetch(`${base.replace(/\/$/, '')}/api/v1/notifications/mark-all-read`, { method: 'PATCH', headers: { 'Authorization': sentToken ? `Bearer ${sentToken}` : '' } })
                     resolve({ success: res.ok, error: res.ok ? undefined : `HTTP ${res.status}` })
                 } catch (err: any) {
                     resolve({ success: false, error: String(err) })
@@ -387,22 +362,20 @@ export function useSocket() {
         try {
             await subscriptionsService.upsertSubscription(tipoId, { websocketEnabled: opts?.websocketEnabled ?? true, emailEnabled: opts?.emailEnabled ?? false, smsEnabled: opts?.smsEnabled ?? false })
         } catch (err) {
-            console.error('subscribeToNotificationType: REST upsert failed', err)
             throw err
         }
         try {
             socketRef.current?.emit('subscribeNotification', { tipoId })
-        } catch (err) { console.warn('subscribeToNotificationType: socket emit failed', err) }
+        } catch (err) { }
     }
 
     const unsubscribeFromNotificationType = async (tipoId: string) => {
         try {
             await subscriptionsService.deleteSubscription(tipoId)
         } catch (err) {
-            console.error('unsubscribeFromNotificationType: REST delete failed', err)
             throw err
         }
-        try { socketRef.current?.emit('unsubscribeNotification', { tipoId }) } catch (err) { console.warn('unsubscribeFromNotificationType: socket emit failed', err) }
+        try { socketRef.current?.emit('unsubscribeNotification', { tipoId }) } catch (err) { }
     }
 
     const pushNotification = (payload: any) => {

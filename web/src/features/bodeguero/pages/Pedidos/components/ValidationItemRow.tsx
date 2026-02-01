@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Check, AlertTriangle, XCircle, RefreshCw, Search } from 'lucide-react'
 import { EstadoItemResultado } from '../../../services/validationsApi'
 import type { DetallePedido } from '../../../../supervisor/services/pedidosApi'
-import type { CatalogSku } from '../../../supervisor/services/skusApi'
+import type { CatalogSku } from '../../../../supervisor/services/skusApi'
 
 interface ValidationItemRowProps {
     item: DetallePedido
@@ -12,8 +12,6 @@ interface ValidationItemRowProps {
         estado_resultado: EstadoItemResultado
         cantidad_aprobada?: number
         sku_aprobado_id?: string
-        sku_aprobado_nombre_snapshot?: string
-        sku_aprobado_codigo_snapshot?: string
         motivo: string
     }) => void
 }
@@ -27,29 +25,25 @@ export function ValidationItemRow({ item, skus, onChange }: ValidationItemRowPro
 
     // Init default state
     useEffect(() => {
-        reportChange(estado, cantidad, selectedSku?.id, motivo, selectedSku ? { nombre: selectedSku.nombre, codigo: selectedSku.codigo_sku } : undefined)
+        reportChange(estado, cantidad, selectedSku?.id, motivo)
     }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
     const reportChange = (
         newEstado: EstadoItemResultado,
         newCantidad: number,
         newSkuId: string | undefined,
-        newMotivo: string,
-        newSkuSnapshot?: { nombre: string; codigo: string }
+        newMotivo: string
     ) => {
         // Logic to clear/set defaults based on state
         let finalCantidad = newCantidad
         let finalSkuId = newSkuId
-        let finalSkuSnapshot = newSkuSnapshot
 
         if (newEstado === EstadoItemResultado.APROBADO) {
             finalCantidad = Number(item.cantidad)
             finalSkuId = undefined
-            finalSkuSnapshot = undefined
         } else if (newEstado === EstadoItemResultado.RECHAZADO) {
             finalCantidad = 0
             finalSkuId = undefined
-            finalSkuSnapshot = undefined
         }
 
         onChange({
@@ -57,8 +51,6 @@ export function ValidationItemRow({ item, skus, onChange }: ValidationItemRowPro
             estado_resultado: newEstado,
             cantidad_aprobada: newEstado === EstadoItemResultado.APROBADO ? undefined : finalCantidad,
             sku_aprobado_id: finalSkuId,
-            sku_aprobado_nombre_snapshot: finalSkuSnapshot?.nombre,
-            sku_aprobado_codigo_snapshot: finalSkuSnapshot?.codigo,
             motivo: newMotivo
         })
     }
@@ -68,24 +60,29 @@ export function ValidationItemRow({ item, skus, onChange }: ValidationItemRowPro
         setEstado(newEstado)
 
         // Default quantity adjustments
+        let nextCantidad = cantidad
         if (newEstado === EstadoItemResultado.APROBADO) {
-            setCantidad(Number(item.cantidad))
+            nextCantidad = Number(item.cantidad)
         } else if (newEstado === EstadoItemResultado.RECHAZADO) {
-            setCantidad(0)
+            nextCantidad = 0
+        } else if (cantidad === 0) {
+            // Restore original quantity if it was zeroed out by a previous "Rejected" choice
+            nextCantidad = Number(item.cantidad)
         }
 
-        reportChange(newEstado, cantidad, selectedSku?.id, motivo, selectedSku ? { nombre: selectedSku.nombre, codigo: selectedSku.codigo_sku } : undefined)
+        setCantidad(nextCantidad)
+        reportChange(newEstado, nextCantidad, selectedSku?.id, motivo)
     }
 
     const handleCantidadChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = Number(e.target.value)
         setCantidad(val)
-        reportChange(estado, val, selectedSku?.id, motivo, selectedSku ? { nombre: selectedSku.nombre, codigo: selectedSku.codigo_sku } : undefined)
+        reportChange(estado, val, selectedSku?.id, motivo)
     }
 
     const handleMotivoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setMotivo(e.target.value)
-        reportChange(estado, cantidad, selectedSku?.id, e.target.value, selectedSku ? { nombre: selectedSku.nombre, codigo: selectedSku.codigo_sku } : undefined)
+        reportChange(estado, cantidad, selectedSku?.id, e.target.value)
     }
 
     // Filter SKUs for autocomplete
@@ -131,6 +128,7 @@ export function ValidationItemRow({ item, skus, onChange }: ValidationItemRowPro
                             <input
                                 type="number"
                                 min="0"
+                                step="any"
                                 max={item.cantidad}
                                 value={cantidad}
                                 onChange={handleCantidadChange}
@@ -160,7 +158,7 @@ export function ValidationItemRow({ item, skus, onChange }: ValidationItemRowPro
                                             onClick={() => {
                                                 setSelectedSku(s)
                                                 setSkuSearch(s.nombre)
-                                                reportChange(estado, cantidad, s.id, motivo, { nombre: s.nombre, codigo: s.codigo_sku })
+                                                reportChange(estado, cantidad, s.id, motivo)
                                             }}
                                             className="w-full text-left px-2 py-1 hover:bg-gray-100 text-xs truncate"
                                         >
@@ -175,7 +173,7 @@ export function ValidationItemRow({ item, skus, onChange }: ValidationItemRowPro
                                     <button onClick={() => {
                                         setSelectedSku(null)
                                         setSkuSearch('')
-                                        reportChange(estado, cantidad, undefined, motivo, undefined)
+                                        reportChange(estado, cantidad, undefined, motivo)
                                     }}>
                                         <XCircle className="w-3 h-3" />
                                     </button>
@@ -186,6 +184,7 @@ export function ValidationItemRow({ item, skus, onChange }: ValidationItemRowPro
                                 <input
                                     type="number"
                                     min="0"
+                                    step="any"
                                     value={cantidad}
                                     onChange={handleCantidadChange}
                                     className="w-20 text-sm border rounded p-1"

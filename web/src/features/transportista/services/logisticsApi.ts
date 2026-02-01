@@ -21,22 +21,25 @@ export async function getRuterosAsignados(params?: {
     const queryParams = new URLSearchParams()
     if (params?.estado) {
         const estados = Array.isArray(params.estado) ? params.estado : [params.estado]
-        queryParams.append('estado', estados.join(','))
+        queryParams.append('status', estados.join(','))
     }
 
     const query = queryParams.toString()
-    const url = `${BASE_URL}/api/ruteros-logisticos${query ? `?${query}` : ''}`
+    const url = `${BASE_URL}/api/v1/routes${query ? `?${query}` : ''}`
 
     const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
     })
 
     if (!res.ok) {
-        console.error('Error al obtener ruteros asignados')
-        return []
+        if (!res.ok) {
+            return []
+        }
     }
 
-    return await res.json()
+    const response = await res.json()
+    // Backend returns paginated response { data, meta }
+    return response.data || response
 }
 
 /**
@@ -46,12 +49,11 @@ export async function getRuteroLogistico(id: string): Promise<RuteroLogistico | 
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const res = await fetch(`${BASE_URL}/api/ruteros-logisticos/${id}`, {
+    const res = await fetch(`${BASE_URL}/api/v1/routes/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
     })
 
     if (!res.ok) {
-        console.error('Error al obtener rutero logístico')
         return null
     }
 
@@ -65,13 +67,14 @@ export async function getHistorialRutero(id: string): Promise<HistorialEstadoRut
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const res = await fetch(`${BASE_URL}/api/ruteros-logisticos/${id}/historial`, {
+    const res = await fetch(`${BASE_URL}/api/v1/routes/${id}/history`, {
         headers: { Authorization: `Bearer ${token}` },
     })
 
     if (!res.ok) {
-        console.error('Error al obtener historial del rutero')
-        return []
+        if (!res.ok) {
+            return []
+        }
     }
 
     return await res.json()
@@ -84,7 +87,7 @@ export async function iniciarRutero(id: string): Promise<RuteroLogistico> {
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const res = await fetch(`${BASE_URL}/api/ruteros-logisticos/${id}/iniciar`, {
+    const res = await fetch(`${BASE_URL}/api/v1/routes/${id}/iniciar`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -107,7 +110,7 @@ export async function completarRutero(id: string): Promise<RuteroLogistico> {
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const res = await fetch(`${BASE_URL}/api/ruteros-logisticos/${id}/completar`, {
+    const res = await fetch(`${BASE_URL}/api/v1/routes/${id}/completar`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',

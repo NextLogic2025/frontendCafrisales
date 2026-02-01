@@ -6,8 +6,8 @@ import type { Category } from '../../../services/catalogApi'
 interface CategoriaListProps {
   categories: Category[]
   onEdit?: (cat: Category) => void
-  onDelete?: (id: number) => void
-  onRestore?: (id: number) => void
+  onDelete?: (id: string | number) => void
+  onRestore?: (id: string | number) => void
   onView?: (cat: Category) => void
   isDeletedView?: boolean
 }
@@ -43,7 +43,7 @@ export function CategoriaList({ categories, onEdit, onDelete, onRestore, onView,
           <div className="flex w-full gap-2 mt-2">
             {isDeletedView ? (
               <button
-                onClick={() => onRestore?.(Number(category.id))}
+                onClick={() => onRestore?.(category.id)}
                 className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-emerald-600 bg-white px-3 py-2 text-sm font-semibold text-emerald-600 shadow-sm transition hover:bg-emerald-600 hover:text-white hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-400"
                 title="Restaurar categoría"
               >
@@ -61,7 +61,7 @@ export function CategoriaList({ categories, onEdit, onDelete, onRestore, onView,
                   <span>Detalles</span>
                 </button>
                 <button
-                  onClick={() => onDelete?.(Number(category.id))}
+                  onClick={() => onDelete?.(category.id)}
                   className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-red-600 bg-white px-3 py-2 text-sm font-semibold text-red-600 shadow-sm transition hover:bg-red-600 hover:text-white hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400"
                   title="Eliminar categoría"
                 >

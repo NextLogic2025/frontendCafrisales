@@ -24,7 +24,7 @@ export async function createVehicle(payload: CreateVehiclePayload): Promise<Vehi
   if (!token) throw new Error('No hay sesión activa')
 
   const base = env.api.transportista || ''
-  const res = await fetch(`${base}/api/vehiculos`, {
+  const res = await fetch(`${base}/api/v1/vehiculos`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -47,7 +47,7 @@ export async function getVehicles(estado?: string): Promise<Vehicle[]> {
 
   const query = estado ? `?estado=${encodeURIComponent(estado)}` : ''
   const base = env.api.transportista || ''
-  const res = await fetch(`${base}/api/vehiculos${query}`, {
+  const res = await fetch(`${base}/api/v1/vehiculos${query}`, {
     headers: { Authorization: `Bearer ${token}` }
   })
 

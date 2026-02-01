@@ -39,8 +39,6 @@ export default function ClienteSelectorModal({
       const data = await obtenerClientes()
       setClientes(data)
     } catch (error) {
-      console.error('Error al cargar clientes:', error)
-    } finally {
       setLoading(false)
     }
   }
@@ -55,7 +53,6 @@ export default function ClienteSelectorModal({
       setSuccessMessage(`✓ ${selectedCliente.razon_social} agregado correctamente`)
       setTimeout(() => setSuccessMessage(null), 3000)
     } catch (error) {
-      console.error('Error al agregar cliente:', error)
     }
   }
 
@@ -73,7 +70,6 @@ export default function ClienteSelectorModal({
       setSuccessMessage('✓ Cliente eliminado de la campaña')
       setTimeout(() => setSuccessMessage(null), 3000)
     } catch (error) {
-      console.error('Error al eliminar cliente:', error)
     }
   }
 

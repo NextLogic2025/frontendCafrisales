@@ -303,8 +303,7 @@ export function useCartOptional() {
   const ctx = React.useContext(CartContext)
   if (!ctx) {
     if (import.meta.env?.DEV) {
-      // eslint-disable-next-line no-console
-      console.warn('[CartContext] useCartOptional se llamó sin <CartProvider />, utilizando fallback sin estado')
+      // Intentional empty block for dev warning if needed, or just remove
     }
     return fallbackCartValue
   }

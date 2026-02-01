@@ -21,7 +21,7 @@ export async function createRuteroLogistico(
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const res = await fetch(`${BASE_URL}/api/ruteros-logisticos`, {
+    const res = await fetch(`${BASE_URL}/api/v1/routes`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -50,26 +50,27 @@ export async function getRuterosLogisticos(params?: {
 
     const queryParams = new URLSearchParams()
     if (params?.transportista_id) {
-        queryParams.append('transportista_id', params.transportista_id)
+        queryParams.append('driverId', params.transportista_id)
     }
     if (params?.estado) {
         const estados = Array.isArray(params.estado) ? params.estado : [params.estado]
-        queryParams.append('estado', estados.join(','))
+        queryParams.append('status', estados.join(','))
     }
 
     const query = queryParams.toString()
-    const url = `${BASE_URL}/api/ruteros-logisticos${query ? `?${query}` : ''}`
+    const url = `${BASE_URL}/api/v1/routes${query ? `?${query}` : ''}`
 
     const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
     })
 
     if (!res.ok) {
-        console.error('Error al obtener ruteros logísticos')
         return []
     }
 
-    return await res.json()
+    const response = await res.json()
+    // Backend returns paginated response { data, meta }
+    return response.data || response
 }
 
 /**
@@ -79,12 +80,11 @@ export async function getRuteroLogistico(id: string): Promise<RuteroLogistico | 
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const res = await fetch(`${BASE_URL}/api/ruteros-logisticos/${id}`, {
+    const res = await fetch(`${BASE_URL}/api/v1/routes/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
     })
 
     if (!res.ok) {
-        console.error('Error al obtener rutero logístico')
         return null
     }
 
@@ -98,12 +98,11 @@ export async function getHistorialRutero(id: string): Promise<HistorialEstadoRut
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const res = await fetch(`${BASE_URL}/api/ruteros-logisticos/${id}/historial`, {
+    const res = await fetch(`${BASE_URL}/api/v1/routes/${id}/history`, {
         headers: { Authorization: `Bearer ${token}` },
     })
 
     if (!res.ok) {
-        console.error('Error al obtener historial del rutero')
         return []
     }
 
@@ -117,7 +116,7 @@ export async function publicarRutero(id: string): Promise<RuteroLogistico> {
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const res = await fetch(`${BASE_URL}/api/ruteros-logisticos/${id}/publicar`, {
+    const res = await fetch(`${BASE_URL}/api/v1/routes/${id}/publicar`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -143,7 +142,7 @@ export async function cancelarRutero(
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const res = await fetch(`${BASE_URL}/api/ruteros-logisticos/${id}/cancelar`, {
+    const res = await fetch(`${BASE_URL}/api/v1/routes/${id}/cancelar`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -170,7 +169,7 @@ export async function addOrderToRutero(
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const res = await fetch(`${BASE_URL}/api/ruteros-logisticos/${id}/orders`, {
+    const res = await fetch(`${BASE_URL}/api/v1/routes/${id}/orders`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -192,7 +191,7 @@ export async function removeOrderFromRutero(id: string, pedidoId: string): Promi
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const res = await fetch(`${BASE_URL}/api/ruteros-logisticos/${id}/orders/${pedidoId}`, {
+    const res = await fetch(`${BASE_URL}/api/v1/routes/${id}/orders/${pedidoId}`, {
         method: 'DELETE',
         headers: {
             Authorization: `Bearer ${token}`,
@@ -215,7 +214,7 @@ export async function updateVehicleRutero(
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const res = await fetch(`${BASE_URL}/api/ruteros-logisticos/${id}/vehiculo`, {
+    const res = await fetch(`${BASE_URL}/api/v1/routes/${id}/vehiculo`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',

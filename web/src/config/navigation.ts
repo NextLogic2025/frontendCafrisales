@@ -24,6 +24,7 @@ export const CLIENTE_NAV_ITEMS: SidebarItem[] = [
 export const BODEGUERO_NAV_ITEMS: SidebarItem[] = [
   { id: 'dashboard', label: 'Inicio', to: '/bodeguero', icon: Home, end: true },
   { id: 'pedidos', label: 'Pedidos', to: '/bodeguero/pedidos', icon: ClipboardList },
+  { id: 'preparacion', label: 'Preparación', to: '/bodeguero/preparacion', icon: Package },
   { id: 'notificaciones', label: 'Notificaciones', to: '/bodeguero/notificaciones', icon: Bell },
   { id: 'perfil', label: 'Mi Perfil', to: '/bodeguero/perfil', icon: User },
 ]

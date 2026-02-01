@@ -22,7 +22,6 @@ export const usePedidos = () => {
                     const decoded: any = jwtDecode(token)
                     setCurrentUserId(decoded.sub || decoded.userId || decoded.id)
                 } catch (e) {
-                    console.error("Error decoding token", e)
                 }
             }
         }
@@ -71,8 +70,6 @@ export const usePedidos = () => {
             }))
 
             setPedidos(mappedOrders)
-        } catch (error) {
-            console.error('Error fetching pedidos:', error)
         } finally {
             setIsLoading(false)
         }

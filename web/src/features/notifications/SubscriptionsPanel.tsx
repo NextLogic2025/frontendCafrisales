@@ -21,35 +21,34 @@ export function SubscriptionsPanel() {
   useEffect(() => {
     let mounted = true
     setLoading(true)
-    ;(async () => {
-      try {
-        const [allTypes, subs] = await Promise.all([
-          subscriptionsService.getNotificationTypes(),
-          subscriptionsService.getSubscriptions(),
-        ])
+      ; (async () => {
+        try {
+          const [allTypes, subs] = await Promise.all([
+            subscriptionsService.getNotificationTypes(),
+            subscriptionsService.getSubscriptions(),
+          ])
 
-        if (!mounted) return
-        setTypes(allTypes)
+          if (!mounted) return
+          setTypes(allTypes)
 
-        // build map of tipoId -> enabled (websocket_enabled)
-        const map: Record<string, boolean> = {}
-        if (Array.isArray(subs)) {
-          subs.forEach((s: any) => { map[String(s.tipo_id ?? s.tipoId ?? s.tipo)] = !!s.websocket_enabled })
+          // build map of tipoId -> enabled (websocket_enabled)
+          const map: Record<string, boolean> = {}
+          if (Array.isArray(subs)) {
+            subs.forEach((s: any) => { map[String(s.tipo_id ?? s.tipoId ?? s.tipo)] = !!s.websocket_enabled })
+          }
+
+          // default false for missing
+          allTypes.forEach((t: any) => {
+            if (map[t.id] === undefined) map[t.id] = false
+          })
+
+          setEnabled(map)
+        } catch (err: any) {
+          error('No se pudieron cargar las preferencias de notificación')
+        } finally {
+          setLoading(false)
         }
-
-        // default false for missing
-        allTypes.forEach((t: any) => {
-          if (map[t.id] === undefined) map[t.id] = false
-        })
-
-        setEnabled(map)
-      } catch (err: any) {
-        console.error('SubscriptionsPanel: failed to load types/subscriptions', err)
-        error('No se pudieron cargar las preferencias de notificación')
-      } finally {
-        setLoading(false)
-      }
-    })()
+      })()
 
     return () => { mounted = false }
   }, [error])
@@ -80,14 +79,13 @@ export function SubscriptionsPanel() {
     } catch (err: any) {
       // rollback
       setEnabled(s => ({ ...s, [tipoId]: prev }))
-      console.error('SubscriptionsPanel: toggle failed', err)
       error('No se pudo actualizar la suscripción')
     }
   }
 
   if (loading) return <div className="p-4">Cargando preferencias...</div>
 
-  
+
 }
 
 export default SubscriptionsPanel

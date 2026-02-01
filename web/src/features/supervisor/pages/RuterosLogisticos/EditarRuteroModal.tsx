@@ -53,7 +53,6 @@ export function EditarRuteroModal({ isOpen, onClose, rutero, onSuccess }: Editar
             )
             setPedidosPendientes(pedidosPreparados)
         } catch (error) {
-            console.error('Error loading data:', error)
         } finally {
             setLoadingData(false)
         }
@@ -254,8 +253,8 @@ export function EditarRuteroModal({ isOpen, onClose, rutero, onSuccess }: Editar
                                                     onClick={() => handleAgregarPedido(pedido)}
                                                     disabled={yaEnRutero || loading}
                                                     className={`w-full text-left p-3 rounded-lg border transition-all duration-150 ${yaEnRutero
-                                                            ? 'bg-neutral-100 border-neutral-300 opacity-50 cursor-not-allowed'
-                                                            : 'bg-white border-neutral-200 hover:border-brand-red hover:bg-red-50'
+                                                        ? 'bg-neutral-100 border-neutral-300 opacity-50 cursor-not-allowed'
+                                                        : 'bg-white border-neutral-200 hover:border-brand-red hover:bg-red-50'
                                                         }`}
                                                 >
                                                     <p className="font-medium text-neutral-800">

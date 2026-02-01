@@ -40,7 +40,6 @@ export default function PedidosPage() {
       const sorted = data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       setPedidos(sorted)
     } catch (err: any) {
-      console.error(err)
       setError(err?.message || 'Error al cargar los pedidos')
     } finally {
       setIsLoading(false)
@@ -57,7 +56,6 @@ export default function PedidosPage() {
       cargarPedidos() // Refresh list
       setTimeout(() => setToast(null), 3000)
     } catch (err: any) {
-      console.error(err)
       setToast({
         type: 'error',
         message: err?.message || 'Error al cambiar el estado del pedido'

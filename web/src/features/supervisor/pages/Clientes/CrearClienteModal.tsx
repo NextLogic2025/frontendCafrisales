@@ -14,7 +14,7 @@ import {
   type ZonaOption,
   type CanalOption,
 } from 'components/ui/ClienteForm'
-import { obtenerZonas } from '../../services/zonasApi'
+import { obtenerZonasParaMapa } from '../../services/zonasApi'
 import { obtenerCanales } from '../../services/catalogApi'
 import { obtenerVendedores, type Vendedor } from '../../services/usuariosApi'
 import { actualizarCliente, obtenerClientePorId } from '../../services/clientesApi'
@@ -84,7 +84,7 @@ export function CrearClienteModal({ isOpen, onClose, onSuccess, initialData, mod
       try {
         setIsCatalogLoading(true)
         const [zonasData, canalesData, vendedoresData] = await Promise.all([
-          obtenerZonas(),
+          obtenerZonasParaMapa(),
           obtenerCanales(),
           obtenerVendedores()
         ])
@@ -100,7 +100,6 @@ export function CrearClienteModal({ isOpen, onClose, onSuccess, initialData, mod
         setCanales(canalesData as any)
         setVendedores(vendedoresData)
       } catch (e) {
-        console.error("Error loading catalog", e)
       } finally {
         setIsCatalogLoading(false)
       }
@@ -241,7 +240,6 @@ export function CrearClienteModal({ isOpen, onClose, onSuccess, initialData, mod
           ubicacion_gps: formData.ubicacion_gps ?? undefined
         }
 
-        console.log('actualizarCliente payload', payload)
         await actualizarCliente(initialData.id as string, payload)
         await updateUsuario(initialData.id as string, {
           nombres: formData.nombres || undefined,
@@ -257,7 +255,6 @@ export function CrearClienteModal({ isOpen, onClose, onSuccess, initialData, mod
         onSuccess()
       }, 800)
     } catch (error: any) {
-      console.error('Error creating/updating client', error)
       setSubmitMessage({ type: 'error', message: error?.message || 'Error al guardar el cliente' })
     } finally {
       setIsSubmitting(false)

@@ -33,7 +33,7 @@ export async function getAllSkus(): Promise<CatalogSku[]> {
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const res = await fetch(`${CATALOG_API_URL}/skus`, {
+    const res = await fetch(`${CATALOG_API_URL}/v1/skus`, {
         headers: { Authorization: `Bearer ${token}` },
     })
     if (!res.ok) return []
@@ -44,7 +44,7 @@ export async function createSku(data: CreateSkuDto): Promise<CatalogSku> {
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const res = await fetch(`${CATALOG_API_URL}/skus`, {
+    const res = await fetch(`${CATALOG_API_URL}/v1/skus`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -65,7 +65,7 @@ export async function updateSku(id: string | number, data: Partial<CreateSkuDto>
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const res = await fetch(`${CATALOG_API_URL}/skus/${id}`, {
+    const res = await fetch(`${CATALOG_API_URL}/v1/skus/${id}`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
@@ -86,7 +86,7 @@ export async function deleteSku(id: string | number): Promise<void> {
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
-    const res = await fetch(`${CATALOG_API_URL}/skus/${id}`, {
+    const res = await fetch(`${CATALOG_API_URL}/v1/skus/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
     })

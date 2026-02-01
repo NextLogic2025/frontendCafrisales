@@ -26,7 +26,6 @@ export default function VehiculosPage() {
             const items = await getVehicles()
             setVehiculos(items || [])
         } catch (error) {
-            console.error('Error al cargar vehículos:', error)
             setVehiculos([])
         } finally {
             setIsLoading(false)

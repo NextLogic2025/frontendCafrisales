@@ -43,7 +43,6 @@ export const useCarritoPage = () => {
             try { window.dispatchEvent(new CustomEvent('pedidoCreado', { detail: { message: 'Pedido creado exitosamente' } })) } catch { }
             navigate('/cliente/pedidos', { replace: true })
         } catch (e) {
-            console.error(e)
             alert('No se pudo crear el pedido: ' + (e instanceof Error ? e.message : 'error'))
         }
     }

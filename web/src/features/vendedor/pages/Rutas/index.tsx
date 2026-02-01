@@ -43,7 +43,6 @@ export default function RutasPage() {
             }
           } catch (error) {
             // If individual route fetch fails, return basic data
-            console.error(`Error loading details for route ${r.id}:`, error)
             return {
               ...r,
               paradas: r.paradas || [],
@@ -54,7 +53,6 @@ export default function RutasPage() {
 
       setRutas(rutasConDetalles)
     } catch (error) {
-      console.error('Error al cargar rutas:', error)
       showToast('error', 'No se pudieron cargar tus rutas')
     } finally {
       setLoading(false)

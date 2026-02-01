@@ -71,7 +71,6 @@ export function CrearRuteroModal({ isOpen, onClose, onSubmit }: CrearRuteroModal
             setTodosPedidos(pedidosValidados)
             setPedidosPendientes(pedidosValidados)
         } catch (error) {
-            console.error('Error loading data:', error)
         } finally {
             setLoadingData(false)
         }
@@ -98,7 +97,6 @@ export function CrearRuteroModal({ isOpen, onClose, onSubmit }: CrearRuteroModal
         const filtered = todosPedidos.filter(p => String(p.zona_id) === String(zonaId))
         setPedidosPendientes(filtered)
 
-        console.log(`Zone ${zonaId} selected. Showing ${filtered.length} matching orders out of ${todosPedidos.length} validated orders.`)
     }, [zonaId, todosPedidos])
 
     // Clear selected orders if zone changes to avoid cross-zone routes
@@ -106,7 +104,6 @@ export function CrearRuteroModal({ isOpen, onClose, onSubmit }: CrearRuteroModal
         if (pedidosSeleccionados.length > 0) {
             const hasCrossZone = pedidosSeleccionados.some(ps => ps.pedido && String(ps.pedido.zona_id) !== String(zonaId))
             if (hasCrossZone) {
-                console.log('Zone changed. Clearing order selections because they don\'t match the new zone.')
                 setPedidosSeleccionados([])
             }
         }

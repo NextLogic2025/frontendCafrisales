@@ -18,7 +18,7 @@ export function SkusView() {
     const { notifications, success, error: notifyError, remove: removeNotification } = useNotification()
 
     useEffect(() => {
-        getAllProducts().then(setProducts).catch((err) => console.error('Error al cargar productos:', err))
+        getAllProducts().then(setProducts).catch(() => { })
     }, [])
 
     const handleSubmit = async (data: CreateSkuDto) => {

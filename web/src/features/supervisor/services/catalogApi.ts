@@ -26,7 +26,7 @@ export async function getAllCategories(): Promise<Category[]> {
   const token = await getValidToken()
   if (!token) throw new Error('No hay sesión activa')
 
-  const res = await fetch(`${CATALOG_API_URL}/categorias`, {
+  const res = await fetch(`${CATALOG_API_URL}/v1/categorias`, {
     headers: { Authorization: `Bearer ${token}` },
   })
   if (!res.ok) return []
@@ -37,7 +37,7 @@ export async function getCategoryById(id: string): Promise<Category | null> {
   const token = await getValidToken()
   if (!token) throw new Error('No hay sesión activa')
 
-  const res = await fetch(`${CATALOG_API_URL}/categorias/${id}`, {
+  const res = await fetch(`${CATALOG_API_URL}/v1/categorias/${id}`, {
     headers: { Authorization: `Bearer ${token}` },
   })
   if (!res.ok) return null
@@ -48,7 +48,7 @@ export async function createCategory(data: CreateCategoryDto): Promise<Category>
   const token = await getValidToken()
   if (!token) throw new Error('No hay sesión activa')
 
-  const res = await fetch(`${CATALOG_API_URL}/categorias`, {
+  const res = await fetch(`${CATALOG_API_URL}/v1/categorias`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -69,7 +69,7 @@ export async function updateCategory(id: string, data: Partial<CreateCategoryDto
   const token = await getValidToken()
   if (!token) throw new Error('No hay sesión activa')
 
-  const res = await fetch(`${CATALOG_API_URL}/categorias/${id}`, {
+  const res = await fetch(`${CATALOG_API_URL}/v1/categorias/${id}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
@@ -90,7 +90,7 @@ export async function deleteCategory(id: string): Promise<void> {
   const token = await getValidToken()
   if (!token) throw new Error('No hay sesión activa')
 
-  const res = await fetch(`${CATALOG_API_URL}/categorias/${id}`, {
+  const res = await fetch(`${CATALOG_API_URL}/v1/categorias/${id}`, {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${token}` },
   })
@@ -104,7 +104,7 @@ export async function getDeletedCategories(): Promise<Category[]> {
   const token = await getValidToken()
   if (!token) throw new Error('No hay sesión activa')
 
-  const res = await fetch(`${CATALOG_API_URL}/categorias/eliminadas`, {
+  const res = await fetch(`${CATALOG_API_URL}/v1/categorias/eliminadas`, {
     headers: { Authorization: `Bearer ${token}` },
   })
   if (!res.ok) return []
@@ -115,7 +115,7 @@ export async function restoreCategory(id: string | number): Promise<void> {
   const token = await getValidToken()
   if (!token) throw new Error('No hay sesión activa')
 
-  const res = await fetch(`${CATALOG_API_URL}/categorias/${id}/restaurar`, {
+  const res = await fetch(`${CATALOG_API_URL}/v1/categorias/${id}/restaurar`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
   })
@@ -137,7 +137,7 @@ export async function obtenerCanales(): Promise<Canal[]> {
     if (!token) throw new Error('No hay sesión activa')
 
     const base = env.api.usuarios
-    const url = `${base}/api/canales`
+    const url = `${base}/api/v1/canales`
     const res = await fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -145,7 +145,6 @@ export async function obtenerCanales(): Promise<Canal[]> {
     const data = await res.json().catch(() => [])
     return Array.isArray(data) ? data : []
   } catch (error) {
-    console.error('Error fetching canales:', error)
     return []
   }
 }

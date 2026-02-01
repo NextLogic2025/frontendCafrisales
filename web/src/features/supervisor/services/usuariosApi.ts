@@ -59,8 +59,8 @@ export async function createUsuario(data: CreateUserPayload) {
   const token = await getValidToken()
   if (!token) throw new Error('No hay sesión activa')
 
-  // Use Auth Service Register endpoint (matching mobile app logic)
-  const url = `${env.api.auth}/api/auth/register`
+  // Use Auth Service Register endpoint with versioned route
+  const url = `${env.api.auth}/api/v1/auth/register`
 
   // Construct payload with nested structure (matching CreateUserDto / Mobile App)
   const payload: any = {
@@ -120,7 +120,7 @@ export async function updateUsuario(
   const token = await getValidToken()
   if (!token) throw new Error('No hay sesión activa')
 
-  const url = `${env.api.usuarios}/api/usuarios/${userId}`
+  const url = `${env.api.usuarios}/api/v1/users/${userId}`
   const payload: any = {}
   if (data.nombres || data.apellidos || data.telefono) {
     payload.perfil = {
@@ -153,7 +153,7 @@ export async function updateEstadoUsuario(userId: string, estado: 'activo' | 'in
   const token = await getValidToken()
   if (!token) throw new Error('No hay sesión activa')
 
-  const url = `${env.api.usuarios}/api/usuarios/${userId}`
+  const url = `${env.api.usuarios}/api/v1/users/${userId}`
   const body = { estado }
 
   const res = await fetch(url, {
@@ -243,11 +243,11 @@ export async function getUsers(): Promise<Usuario[]> {
   const createUrl = (path: string) => `${env.api.usuarios}/api${path}`
 
   try {
-    // 1. Fetch staff lists
+    // 1. Fetch staff lists (backend uses default version '1' for all controllers)
     const [vendedores, bodegueros, transportistas] = await Promise.all([
-      fetch(createUrl('/staff/vendedores'), { headers }).then(r => r.ok ? r.json() : [] as StaffEntry[]),
-      fetch(createUrl('/staff/bodegueros'), { headers }).then(r => r.ok ? r.json() : [] as StaffEntry[]),
-      fetch(createUrl('/staff/transportistas'), { headers }).then(r => r.ok ? r.json() : [] as StaffEntry[]),
+      fetch(createUrl('/v1/staff/vendedores'), { headers }).then(r => r.ok ? r.json() : [] as StaffEntry[]),
+      fetch(createUrl('/v1/staff/bodegueros'), { headers }).then(r => r.ok ? r.json() : [] as StaffEntry[]),
+      fetch(createUrl('/v1/staff/transportistas'), { headers }).then(r => r.ok ? r.json() : [] as StaffEntry[]),
     ])
 
     const staff: StaffEntry[] = [
@@ -261,13 +261,12 @@ export async function getUsers(): Promise<Usuario[]> {
     const userFetches = await Promise.all(
       staff.map(async (member) => {
         try {
-          const res = await fetch(createUrl(`/usuarios/${member.usuario_id}`), { headers })
+          const res = await fetch(createUrl(`/v1/users/${member.usuario_id}`), { headers })
           // We expect the user object directly or maybe inside a data wrapper?
           // Looking at getUserById line 407, it returns res.json().
           const user = res.ok ? await res.json() : null
           return { id: member.usuario_id, user }
         } catch (error) {
-          console.error(`Error fetching user ${member.usuario_id}`, error)
           return { id: member.usuario_id, user: null }
         }
       })
@@ -318,7 +317,6 @@ export async function getUsers(): Promise<Usuario[]> {
       }
     })
   } catch (error) {
-    console.error('Error fetching users:', error)
     return []
   }
 }
@@ -367,7 +365,7 @@ export async function getUserProfile(userId: string): Promise<UserProfile> {
   const token = await getValidToken()
   if (!token) throw new Error('No hay sesión activa')
 
-  const url = `${env.api.usuarios}/api/usuarios/${userId}/perfil`
+  const url = `${env.api.usuarios}/api/v1/users/${userId}`
   const res = await fetch(url, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -379,7 +377,8 @@ export async function getUserProfile(userId: string): Promise<UserProfile> {
     throw new Error(errorData?.message || 'Error al obtener perfil del usuario')
   }
 
-  return await res.json()
+  const user = await res.json()
+  return user.perfil || { nombres: '', apellidos: '' }
 }
 
 /**
@@ -389,7 +388,7 @@ export async function getUserById(userId: string): Promise<any> {
   const token = await getValidToken()
   if (!token) throw new Error('No hay sesión activa')
 
-  const url = `${env.api.usuarios}/api/usuarios/${userId}`
+  const url = `${env.api.usuarios}/api/v1/users/${userId}`
   const res = await fetch(url, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -414,7 +413,7 @@ export async function updateUsuarioCompleto(
   const token = await getValidToken()
   if (!token) throw new Error('No hay sesión activa')
 
-  const url = `${env.api.usuarios}/api/usuarios/${userId}`
+  const url = `${env.api.usuarios}/api/v1/users/${userId}`
 
   const res = await fetch(url, {
     method: 'PATCH',
@@ -443,7 +442,7 @@ export async function updateUsuarioPassword(
   const token = await getValidToken()
   if (!token) throw new Error('No hay sesión activa')
 
-  const url = `${env.api.auth}/api/auth/usuarios/${userId}/password`
+  const url = `${env.api.auth}/api/v1/auth/usuarios/${userId}/password`
 
   const res = await fetch(url, {
     method: 'PUT',
@@ -470,7 +469,7 @@ export async function updateUsuarioEmail(
   const token = await getValidToken()
   if (!token) throw new Error('No hay sesión activa')
 
-  const url = `${env.api.auth}/api/auth/usuarios/${userId}/email`
+  const url = `${env.api.auth}/api/v1/auth/usuarios/${userId}/email`
 
   const res = await fetch(url, {
     method: 'PUT',
