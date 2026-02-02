@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { env } from '../../../../config/env'
-import { Mail, Phone, MapPin, User, Clock } from 'lucide-react'
+import { Mail, Phone, MapPin, User, Clock } from 'components/ui/Icons'
 
 import { PageHero } from '../../../../components/ui/PageHero'
 import { InfoCard } from '../../../../components/ui/InfoCard'

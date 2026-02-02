@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ClipboardList, Search, Check, X, RefreshCcw, Eye } from 'lucide-react'
+import { ClipboardList, Search, Check, X, RefreshCcw, Eye } from 'components/ui/Icons'
 import { SectionHeader } from 'components/ui/SectionHeader'
 import { PageHero } from 'components/ui/PageHero'
 import { LoadingSpinner } from 'components/ui/LoadingSpinner'

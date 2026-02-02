@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Plus, Filter } from 'lucide-react'
+import { Plus, Filter } from 'components/ui/Icons'
 import { SectionHeader } from 'components/ui/SectionHeader'
 import { PageHero } from 'components/ui/PageHero'
 import { Button } from 'components/ui/Button'

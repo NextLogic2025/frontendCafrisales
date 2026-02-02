@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus } from 'lucide-react'
+import { Plus } from 'components/ui/Icons'
 
 import { SkeletonTable } from 'components/ui/LoadingSpinner'
 import { Alert } from 'components/ui/Alert'

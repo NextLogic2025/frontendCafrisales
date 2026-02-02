@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 
 export interface CrudResult<T> {
   data: T[]
@@ -74,12 +74,11 @@ export function useEntityCrud<T extends { id: string | number }, CreateDto, Upda
     [operations, load]
   )
 
-  // Cargar datos al montar
-  const [initialized, setInitialized] = useState(false)
-  if (!initialized) {
+  // Cargar datos al montar usando useEffect en lugar de render condicional
+  useEffect(() => {
     load()
-    setInitialized(true)
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Solo al montar
 
   return {
     data,
@@ -92,3 +91,4 @@ export function useEntityCrud<T extends { id: string | number }, CreateDto, Upda
     delete: deleteItem,
   }
 }
+

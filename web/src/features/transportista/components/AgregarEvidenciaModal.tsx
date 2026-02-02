@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Modal } from 'components/ui/Modal'
-import { Image, FileText } from 'lucide-react'
+import { Image, FileText } from 'components/ui/Icons'
 import { agregarEvidencia } from 'features/shared/services/deliveryApi'
 import type { TipoEvidencia } from 'features/shared/types/deliveryTypes'
 

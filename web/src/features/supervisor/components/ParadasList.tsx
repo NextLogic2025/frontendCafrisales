@@ -1,5 +1,5 @@
 import React from 'react'
-import { MapPin, Package, CheckCircle, AlertCircle, Clock } from 'lucide-react'
+import { MapPin, Package, CheckCircle, AlertCircle, Clock } from 'components/ui/Icons'
 import type { ParadaRutero } from '../services/types'
 
 interface ParadasListProps {

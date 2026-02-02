@@ -1,5 +1,5 @@
 import React from 'react'
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle } from 'components/ui/Icons'
 
 interface Props {
   type?: 'info' | 'error' | 'success'

@@ -1,4 +1,4 @@
-import { BarChart3, Activity } from 'lucide-react'
+import { BarChart3, Activity } from 'components/ui/Icons'
 import { SectionHeader } from 'components/ui/SectionHeader'
 import { MetricCard, SectionCard } from 'components/ui/Cards'
 import { PageHero } from 'components/ui/PageHero'

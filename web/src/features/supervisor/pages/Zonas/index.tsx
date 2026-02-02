@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { PlusCircle, MapPin, RefreshCcw, Map } from 'lucide-react'
+import { PlusCircle, MapPin, RefreshCcw, Map } from 'components/ui/Icons'
 import { PageHero } from 'components/ui/PageHero'
 import { SectionHeader } from 'components/ui/SectionHeader'
 import { Alert } from 'components/ui/Alert'

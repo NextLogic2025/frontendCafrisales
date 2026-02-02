@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Mail, Shield, CheckCircle, XCircle, Edit2, UserX, UserCheck } from 'lucide-react'
+import { Mail, Shield, CheckCircle, XCircle, Edit2, UserX, UserCheck } from 'components/ui/Icons'
 import { Button } from 'components/ui/Button'
 import { type Usuario } from '../../services/usuariosApi'
 

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Truck } from 'lucide-react'
+import { Truck } from 'components/ui/Icons'
 import { Outlet, useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../../hooks/useAuth'

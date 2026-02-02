@@ -2,7 +2,7 @@
 import { PageHero } from '../../../../components/ui/PageHero'
 import { EmptyContent } from '../../../../components/ui/EmptyContent'
 import { ProductCard } from '../../../../components/ui/ProductCard'
-import { Package } from 'lucide-react'
+import { Package } from 'components/ui/Icons'
 import ProductDetailModal from '../../../cliente/components/ProductDetailModal'
 
 import { useProductos } from './hooks/useProductos'

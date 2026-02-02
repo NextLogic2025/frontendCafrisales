@@ -1,5 +1,5 @@
 import React from 'react'
-import { Truck, MapPin, User, Calendar, Package } from 'lucide-react'
+import { Truck, MapPin, User, Calendar, Package } from 'components/ui/Icons'
 import type { RuteroLogistico } from '../services/types'
 import { ESTADO_RUTERO_COLORS, ESTADO_RUTERO_LABELS } from '../services/types'
 

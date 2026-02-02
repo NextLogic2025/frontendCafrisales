@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { MapPin, Phone, Clock, AlertCircle, Eye, Truck } from 'lucide-react'
+import { MapPin, Phone, Clock, AlertCircle, Eye, Truck } from 'components/ui/Icons'
 import { useCliente } from '../../hooks/useCliente'
 import { LoadingSpinner, SkeletonTable } from 'components/ui/LoadingSpinner'
 import { Alert } from 'components/ui/Alert'

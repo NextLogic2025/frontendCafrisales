@@ -1,7 +1,7 @@
 import { Modal } from 'components/ui/Modal'
 import { Vehicle } from '../../services/vehiclesApi'
 import { StatusBadge } from 'components/ui/StatusBadge'
-import { Truck, Calendar } from 'lucide-react'
+import { Truck, Calendar } from 'components/ui/Icons'
 
 interface VehiculoDetailModalProps {
     isOpen: boolean

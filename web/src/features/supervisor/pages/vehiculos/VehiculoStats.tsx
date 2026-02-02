@@ -1,4 +1,4 @@
-import { Truck } from 'lucide-react'
+import { Truck } from 'components/ui/Icons'
 import { MetricCard } from 'components/ui/Cards'
 import { Vehicle } from '../../services/vehiclesApi'
 

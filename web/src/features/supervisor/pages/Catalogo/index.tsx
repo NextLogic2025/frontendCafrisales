@@ -6,7 +6,7 @@ import {
   LayoutGrid,
   ArrowLeft,
   Tag
-} from 'lucide-react'
+} from 'components/ui/Icons'
 import { PageHero } from 'components/ui/PageHero'
 import { SectionHeader } from 'components/ui/SectionHeader'
 import { Button } from 'components/ui/Button'

@@ -1,5 +1,5 @@
 
-import { Eye, X } from 'lucide-react'
+import { Eye, X } from 'components/ui/Icons'
 import { EstadoPedido, Pedido } from '../../../types'
 import { formatEstadoPedido, getEstadoPedidoColor } from 'utils/statusHelpers'
 

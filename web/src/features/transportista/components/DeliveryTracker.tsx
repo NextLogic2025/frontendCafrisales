@@ -23,7 +23,7 @@
 
 import React, { useState } from 'react'
 import { Modal } from 'components/ui/Modal'
-import { Camera, FileText, CheckCircle } from 'lucide-react'
+import { Camera, FileText, CheckCircle } from 'components/ui/Icons'
 
 interface DeliveryTrackerProps {
     pedidoId: string

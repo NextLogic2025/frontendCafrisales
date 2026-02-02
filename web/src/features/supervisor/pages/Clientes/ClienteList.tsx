@@ -1,4 +1,4 @@
-import { Building2 } from 'lucide-react'
+import { Building2 } from 'components/ui/Icons'
 import { EmptyContent } from 'components/ui/EmptyContent'
 import { LoadingSpinner } from 'components/ui/LoadingSpinner'
 import { type Cliente, type ZonaComercial } from '../../services/clientesApi'

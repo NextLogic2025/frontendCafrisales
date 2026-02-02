@@ -1,4 +1,4 @@
-import { AlertTriangle, X } from 'lucide-react'
+import { AlertTriangle, X } from 'components/ui/Icons'
 import { COLORES_MARCA } from '../../../types'
 
 interface CancelOrderModalProps {

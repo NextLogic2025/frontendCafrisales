@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Modal } from 'components/ui/Modal'
 import { Alert } from 'components/ui/Alert'
 import { Button } from 'components/ui/Button'
-import { Check } from 'lucide-react'
+import { Check } from 'components/ui/Icons'
 import {
   type ZonaComercial,
 } from '../../services/clientesApi'

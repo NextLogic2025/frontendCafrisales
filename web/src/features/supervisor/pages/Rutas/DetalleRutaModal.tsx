@@ -1,6 +1,6 @@
 import React from 'react'
 import { Modal } from 'components/ui/Modal'
-import { X } from 'lucide-react'
+import { X } from 'components/ui/Icons'
 import type { RutaVendedor } from '../../services/rutasVendedorTypes'
 import { ClientesList } from '../../components/ClientesList'
 import { ZonaMapaGoogle } from '../../components/ZonaMapaGoogle'

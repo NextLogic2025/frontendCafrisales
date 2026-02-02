@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { LucideIcon, Loader2 } from 'lucide-react'
+import { LucideIcon, Loader2 } from 'components/ui/Icons'
 import { cn } from '../../utils/cn'
 
 interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {

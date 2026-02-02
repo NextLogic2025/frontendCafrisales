@@ -1,5 +1,5 @@
 import React from 'react'
-import { X, ShoppingCart, Info } from 'lucide-react'
+import { X, ShoppingCart, Info } from 'components/ui/Icons'
 import type { Producto } from '../types'
 
 interface SkuSelectionModalProps {

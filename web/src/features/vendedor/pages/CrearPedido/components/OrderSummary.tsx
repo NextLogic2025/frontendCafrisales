@@ -1,5 +1,5 @@
 
-import { CheckCircle2, Tag } from 'lucide-react'
+import { CheckCircle2, Tag } from 'components/ui/Icons'
 import { PaymentConditionSelector } from './PaymentConditionSelector'
 import type { ClienteDetalle } from '../types'
 

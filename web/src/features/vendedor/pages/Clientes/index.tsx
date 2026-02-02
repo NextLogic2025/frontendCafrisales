@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { KeyboardEvent, MouseEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Users, Plus, Search, UserPlus, Building2, DollarSign, CheckCircle, XCircle, ShoppingCart, Navigation } from 'lucide-react'
+import { Users, Plus, Search, UserPlus, Building2, DollarSign, CheckCircle, XCircle, ShoppingCart, Navigation } from 'components/ui/Icons'
 
 import { PageHero } from '../../../../components/ui/PageHero'
 import { ActionButton } from '../../../../components/ui/ActionButton'

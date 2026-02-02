@@ -1,4 +1,4 @@
-import { Package, RefreshCw } from 'lucide-react'
+import { Package, RefreshCw } from 'components/ui/Icons'
 import { PageHero } from '../../../../components/ui/PageHero'
 import { SectionHeader } from '../../../../components/ui/SectionHeader'
 import { LoadingSpinner } from '../../../../components/ui/LoadingSpinner'

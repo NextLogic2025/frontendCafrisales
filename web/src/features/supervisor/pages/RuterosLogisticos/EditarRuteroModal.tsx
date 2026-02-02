@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Modal } from 'components/ui/Modal'
 import { FormField } from 'components/ui/FormField'
-import { Plus, X } from 'lucide-react'
+import { Plus, X } from 'components/ui/Icons'
 import type { RuteroLogistico, UpdateVehiclePayload, AddOrderToRuteroPayload } from '../../services/types'
 import { getVehicles, type Vehicle } from '../../services/vehiclesApi'
 import { obtenerPedidos, type Pedido } from '../../services/pedidosApi'

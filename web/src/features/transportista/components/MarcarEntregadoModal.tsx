@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Modal } from 'components/ui/Modal'
-import { CheckCircle, FileText } from 'lucide-react'
+import { CheckCircle, FileText } from 'components/ui/Icons'
 import { completarEntrega, marcarEnRuta } from 'features/shared/services/deliveryApi'
 
 interface MarcarEntregadoModalProps {

@@ -1,6 +1,6 @@
 
 
-import { Trash2, Plus, Minus, Tag } from 'lucide-react'
+import { Trash2, Plus, Minus, Tag } from 'components/ui/Icons'
 import type { CartItem as CartItemType } from '../types'
 import { useState } from 'react'
 

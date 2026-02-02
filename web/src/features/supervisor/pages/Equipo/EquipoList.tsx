@@ -1,4 +1,4 @@
-import { Users } from 'lucide-react'
+import { Users } from 'components/ui/Icons'
 import { EmptyContent } from 'components/ui/EmptyContent'
 import { LoadingSpinner } from 'components/ui/LoadingSpinner'
 import { type Usuario } from '../../services/usuariosApi'

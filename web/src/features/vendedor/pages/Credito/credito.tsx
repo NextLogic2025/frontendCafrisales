@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { PageHero } from '../../../../components/ui/PageHero'
-import { CreditCard, TrendingUp, AlertCircle, History, Filter, Loader2, Calendar, FileText } from 'lucide-react'
+import { CreditCard, TrendingUp, AlertCircle, History, Filter, Loader2, Calendar, FileText } from 'components/ui/Icons'
 import { SectionHeader } from '../../../../components/ui/SectionHeader'
 import { getCredits, getCreditDetail, approveCredit, rejectCredit, type CreditListItem, type CreditDetail } from '../../services/creditosApi'
 import { getOrders, getOrderById, cancelOrder } from '../../services/pedidosApi'

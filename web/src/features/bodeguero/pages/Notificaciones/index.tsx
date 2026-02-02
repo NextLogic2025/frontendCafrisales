@@ -1,4 +1,4 @@
-import { Bell, Package, CheckCircle, XCircle, Truck, AlertTriangle, Box } from 'lucide-react'
+import { Bell, Package, CheckCircle, XCircle, Truck, AlertTriangle, Box } from 'components/ui/Icons'
 import { PageHero } from 'components/ui/PageHero'
 import { EmptyContent } from 'components/ui/EmptyContent'
 import { useNotificationsContext } from '../../../../context/notifications/NotificationsProvider'

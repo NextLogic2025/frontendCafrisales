@@ -1,5 +1,5 @@
 
-import { Search, Filter } from 'lucide-react'
+import { Search, Filter } from 'components/ui/Icons'
 import type { FiltrosState, Category } from '../types'
 
 interface ProductFiltersProps {

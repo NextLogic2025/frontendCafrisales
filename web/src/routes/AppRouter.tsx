@@ -4,13 +4,11 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { ForgotPasswordPage } from '../pages/auth/ForgotPasswordPage'
 import { LoginPage } from '../pages/auth/LoginPage'
 import { SplashPage } from '../pages/SplashPage'
-import BodegueroLayout from '../features/bodeguero/BodegueroPage'
-import {
-  DashboardPage,
-  PedidosPage,
-  PerfilPage,
-  PreparacionPage,
-} from '../features/bodeguero/pages'
+const BodegueroLayout = React.lazy(() => import('../features/bodeguero/BodegueroPage'))
+const DashboardPage = React.lazy(() => import('../features/bodeguero/pages/Dashboard'))
+const PedidosPage = React.lazy(() => import('../features/bodeguero/pages/Pedidos/pedidos'))
+const PerfilPage = React.lazy(() => import('../features/bodeguero/pages/Perfil'))
+const PreparacionPage = React.lazy(() => import('../features/bodeguero/pages/Preparacion').then(m => ({ default: m.PreparacionPage })))
 
 const NotificacionesBodegaPage = React.lazy(() => import('../features/bodeguero/pages/Notificaciones'))
 

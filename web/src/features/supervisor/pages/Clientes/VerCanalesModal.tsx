@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { X, Layout, RefreshCw, CheckCircle, XCircle } from 'lucide-react'
+import { X, Layout, RefreshCw, CheckCircle, XCircle } from 'components/ui/Icons'
 import { Button } from 'components/ui/Button'
 import { channelsApi, type Channel } from '../../../../services/api/channelsApi'
 

@@ -33,7 +33,24 @@ export function useNotificationsContext() {
 export function NotificationsProvider({ children }: { children: React.ReactNode }) {
   const { notifications: toastNotifications, show, remove } = useNotification()
   const { isAuthenticated } = useAuth()
-  const socketData = useSocket() // Solo una llamada a useSocket en toda la app
+
+  // Always call useSocket (hooks must be called unconditionally)
+  // but only use its data when authenticated
+  const rawSocketData = useSocket()
+
+  // Use socket data only when authenticated, otherwise provide defaults
+  const socketData = isAuthenticated ? rawSocketData : {
+    notifications: [],
+    isConnected: false,
+    clearNotifications: () => { },
+    pushNotification: () => { },
+    unreadCount: 0,
+    markAsRead: async () => ({ success: false }),
+    markAllAsRead: async () => ({ success: false }),
+    refresh: async () => { },
+    subscribeToNotificationType: async () => { },
+    unsubscribeFromNotificationType: async () => { },
+  }
 
   // Keep track of seen notifications to avoid duplicates. Prefer backend `id`
   // when provided; otherwise use a composed key.

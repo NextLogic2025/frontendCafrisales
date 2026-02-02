@@ -1,5 +1,5 @@
 import { Modal } from 'components/ui/Modal'
-import { Tag, Calendar, DollarSign, History, Edit2, Package } from 'lucide-react'
+import { Tag, Calendar, DollarSign, History, Edit2, Package } from 'components/ui/Icons'
 import { type CatalogSkuPrice } from '../../../services/preciosApi'
 
 interface PrecioDetailModalProps {

@@ -1,4 +1,4 @@
-import { Search, RefreshCcw } from 'lucide-react'
+import { Search, RefreshCcw } from 'components/ui/Icons'
 import type { EstadoFiltro } from '../hooks/useBodegueroPedidos'
 
 interface PedidosFiltersProps {

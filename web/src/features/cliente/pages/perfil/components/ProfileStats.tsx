@@ -1,5 +1,5 @@
 
-import { ShoppingBag, Clock } from 'lucide-react'
+import { ShoppingBag, Clock } from 'components/ui/Icons'
 
 interface ProfileStatsProps {
     created: string

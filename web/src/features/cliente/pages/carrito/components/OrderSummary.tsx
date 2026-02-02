@@ -1,5 +1,5 @@
 
-import { CheckCircle2 } from 'lucide-react'
+import { CheckCircle2 } from 'components/ui/Icons'
 import { PaymentConditionSelector } from './PaymentConditionSelector'
 import type { PerfilCliente } from '../../../types'
 

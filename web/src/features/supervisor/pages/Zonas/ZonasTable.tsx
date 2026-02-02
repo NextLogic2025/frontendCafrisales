@@ -1,4 +1,4 @@
-import { Edit2, Power, Eye } from 'lucide-react'
+import { Edit2, Power, Eye } from 'components/ui/Icons'
 import { type ZonaComercial } from '../../services/zonasApi'
 
 interface ZonasTableProps {

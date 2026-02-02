@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Package, Search, Pencil, Trash2, Tag } from 'lucide-react'
+import { Package, Search, Pencil, Trash2, Tag } from 'components/ui/Icons'
 import { CardGrid } from 'components/ui/CardGrid'
 import { type CatalogSku } from '../../../services/skusApi'
 import { type Product } from '../../../services/productosApi'

@@ -1,4 +1,4 @@
-import { Users, UserPlus, Layout } from 'lucide-react'
+import { Users, UserPlus, Layout } from 'components/ui/Icons'
 import { SectionHeader } from 'components/ui/SectionHeader'
 import { PageHero } from 'components/ui/PageHero'
 import { Button } from 'components/ui/Button'

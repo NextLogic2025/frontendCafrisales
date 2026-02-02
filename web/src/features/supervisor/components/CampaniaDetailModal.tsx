@@ -1,7 +1,7 @@
 import React from 'react'
 import { Modal } from 'components/ui/Modal'
 import { Button } from 'components/ui/Button'
-import { Trash2 } from 'lucide-react'
+import { Trash2 } from 'components/ui/Icons'
 import type { Campania, ProductoPromocion, ClienteCampania } from '../services/promocionesApi'
 
 interface CampaniaDetailModalProps {

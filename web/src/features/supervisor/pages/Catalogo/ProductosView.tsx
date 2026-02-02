@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { PlusCircle, Package, Percent, Trash2, Eye } from 'lucide-react'
+import { PlusCircle, Package, Percent, Trash2, Eye } from 'components/ui/Icons'
 import { Alert } from 'components/ui/Alert'
 import { NotificationStack } from 'components/ui/NotificationStack'
 // import { useEntityCrud } from '../../../../hooks/useEntityCrud' // Removed in favor of specific hook

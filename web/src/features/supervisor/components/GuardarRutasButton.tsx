@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save } from 'lucide-react';
+import { Save } from 'components/ui/Icons';
 import { crearRuta, CrearRutaPayload } from '../services/ruteroApi';
 
 interface GuardarRutasButtonProps {

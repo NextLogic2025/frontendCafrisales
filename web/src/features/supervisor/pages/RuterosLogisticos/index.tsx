@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { PageHero } from 'components/ui/PageHero'
-import { Plus, Filter, Truck } from 'lucide-react'
+import { Plus, Filter, Truck } from 'components/ui/Icons'
 import { RuteroCard } from '../../components/RuteroCard'
 import { HistorialModal } from '../../components/HistorialModal'
 import { CrearRuteroModal } from './CrearRuteroModal'

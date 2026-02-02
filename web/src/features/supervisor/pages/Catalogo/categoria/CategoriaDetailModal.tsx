@@ -1,5 +1,5 @@
 import { Modal } from 'components/ui/Modal'
-import { Tag, Edit2, Image as ImageIcon, Code } from 'lucide-react'
+import { Tag, Edit2, Image as ImageIcon, Code } from 'components/ui/Icons'
 import type { Category } from '../../../services/catalogApi'
 
 interface CategoriaDetailModalProps {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X, AlertTriangle } from 'lucide-react'
+import { X, AlertTriangle } from 'components/ui/Icons'
 import { EstadoPedido, Pedido, COLORES_MARCA } from '../../../types'
 import { respondToAdjustment } from '../../../../vendedor/services/pedidosApi'
 import { formatEstadoPedido, getEstadoPedidoColor } from 'utils/statusHelpers'

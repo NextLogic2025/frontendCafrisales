@@ -1,5 +1,5 @@
 
-import { Info } from 'lucide-react'
+import { Info } from 'components/ui/Icons'
 import { CartItem } from './CartItem'
 import type { CartItem as CartItemType } from '../types'
 

@@ -1,4 +1,4 @@
-import { Mail, Phone, User, Shield, CheckCircle2, Clock } from 'lucide-react'
+import { Mail, Phone, User, Shield, CheckCircle2, Clock } from 'components/ui/Icons'
 import { useEffect } from 'react'
 
 import { PageHero } from 'components/ui/PageHero'

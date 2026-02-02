@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ClipboardList } from 'lucide-react'
+import { ClipboardList } from 'components/ui/Icons'
 import { SectionHeader } from '../../../../components/ui/SectionHeader'
 import { PageHero } from '../../../../components/ui/PageHero'
 import { LoadingSpinner } from '../../../../components/ui/LoadingSpinner'

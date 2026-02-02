@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Modal } from 'components/ui/Modal'
-import { XCircle, FileText } from 'lucide-react'
+import { XCircle, FileText } from 'components/ui/Icons'
 import { marcarNoEntregado, marcarEnRuta } from 'features/shared/services/deliveryApi'
 
 interface MarcarNoEntregadoModalProps {

@@ -1,4 +1,4 @@
-import { Pencil, Trash2, Percent, Package, UserPlus } from 'lucide-react'
+import { Pencil, Trash2, Percent, Package, UserPlus } from 'components/ui/Icons'
 import type { Campania } from '../services/promocionesApi'
 
 interface CampaniaCardProps {

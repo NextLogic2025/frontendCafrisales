@@ -1,6 +1,6 @@
 
 import React from 'react'
-import { Search, User, Check, X } from 'lucide-react'
+import { Search, User, Check, X } from 'components/ui/Icons'
 import type { Cliente } from '../../../../supervisor/services/clientesApi'
 
 interface ClientSelectorProps {

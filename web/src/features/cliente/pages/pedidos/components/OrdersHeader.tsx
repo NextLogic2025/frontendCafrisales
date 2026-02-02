@@ -1,5 +1,5 @@
 
-import { Plus } from 'lucide-react'
+import { Plus } from 'components/ui/Icons'
 import { useNavigate } from 'react-router-dom'
 import { SectionHeader } from 'components/ui/SectionHeader'
 import { COLORES_MARCA } from '../../../types'

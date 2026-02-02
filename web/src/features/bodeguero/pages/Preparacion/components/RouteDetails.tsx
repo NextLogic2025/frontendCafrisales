@@ -1,4 +1,4 @@
-import { CheckCircle, Clock, Package, ChevronLeft, User, Calendar } from 'lucide-react'
+import { CheckCircle, Clock, Package, ChevronLeft, User, Calendar } from 'components/ui/Icons'
 import type { RuteroLogistico } from '../../../../supervisor/services/types'
 
 interface RouteDetailsProps {

@@ -1,5 +1,5 @@
 import { Modal } from 'components/ui/Modal'
-import { Package, Tag, Info, List, Edit2, Image as ImageIcon, ScanBarcode } from 'lucide-react'
+import { Package, Tag, Info, List, Edit2, Image as ImageIcon, ScanBarcode } from 'components/ui/Icons'
 import { type Product } from '../../../services/productosApi'
 import { StatusBadge } from 'components/ui/StatusBadge'
 

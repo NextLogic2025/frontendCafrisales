@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ShoppingCart, Plus, Minus, X, CheckCircle2 } from 'lucide-react'
+import { ShoppingCart, Plus, Minus, X, CheckCircle2 } from 'components/ui/Icons'
 
 import { useCart } from '../cart/CartContext'
 

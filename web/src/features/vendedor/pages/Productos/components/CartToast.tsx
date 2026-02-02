@@ -1,5 +1,5 @@
 
-import { ShoppingCart, Plus, Minus } from 'lucide-react'
+import { ShoppingCart, Plus, Minus } from 'components/ui/Icons'
 import type { Producto, CartItem } from '../types'
 
 interface CartToastProps {

@@ -10,7 +10,7 @@ import {
 	Plus,
 	Truck,
 	Wallet,
-} from 'lucide-react'
+} from 'components/ui/Icons'
 import { useNavigate } from 'react-router-dom'
 
 import { EstadoFactura, EstadoPedido } from '../../types'

@@ -1,4 +1,4 @@
-import { Truck, Package, MapPin, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react'
+import { Truck, Package, MapPin, CheckCircle, AlertCircle, RefreshCw } from 'components/ui/Icons'
 import { SectionHeader } from 'components/ui/SectionHeader'
 import { MetricCard, SectionCard, QuickActionButton, EmptyState } from 'components/ui/Cards'
 import { PageHero } from 'components/ui/PageHero'

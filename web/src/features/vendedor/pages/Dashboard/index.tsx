@@ -1,5 +1,5 @@
 import { PageHero } from '../../../../components/ui/PageHero'
-import { AlertCircle, TrendingUp, Users, Package, Calendar } from 'lucide-react'
+import { AlertCircle, TrendingUp, Users, Package, Calendar } from 'components/ui/Icons'
 
 export default function VendedorDashboard() {
   return (

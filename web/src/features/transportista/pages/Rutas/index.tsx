@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { MapPin, Filter, Truck } from 'lucide-react'
+import { MapPin, Filter, Truck } from 'components/ui/Icons'
 import { SectionHeader } from 'components/ui/SectionHeader'
 import { PageHero } from 'components/ui/PageHero'
 import { RuteroCard } from '../../../supervisor/components/RuteroCard'

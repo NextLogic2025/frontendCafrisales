@@ -1,4 +1,4 @@
-import { Package } from 'lucide-react'
+import { Package } from 'components/ui/Icons'
 
 export interface GenericTableColumn<T> {
   key: keyof T

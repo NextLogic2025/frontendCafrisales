@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { Search, Filter, Package } from 'lucide-react'
+import { Search, Filter, Package } from 'components/ui/Icons'
 import { useCart } from '../../cart/CartContext'
 import { SkeletonCard } from 'components/ui/LoadingSpinner'
 import { Alert } from 'components/ui/Alert'

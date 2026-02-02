@@ -1,7 +1,7 @@
 import { useMemo, useCallback } from 'react'
-import { Pencil, Trash2, Search, Package, UserPlus } from 'lucide-react'
+import { Pencil, Trash2, Search, Package, UserPlus } from 'components/ui/Icons'
 import { LoadingSpinner } from 'components/ui/LoadingSpinner'
-import { Percent } from 'lucide-react'
+import { Percent } from 'components/ui/Icons'
 import type { Campania } from '../../../services/promocionesApi'
 import { PromocionesFilters } from '../../../components/PromocionesFilters'
 

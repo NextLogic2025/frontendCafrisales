@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { PageHero } from '../../../../components/ui/PageHero'
-import { ArrowLeft, MapPin, Users, Calendar, CheckCircle, RefreshCcw, Flag } from 'lucide-react'
+import { ArrowLeft, MapPin, Users, Calendar, CheckCircle, RefreshCcw, Flag } from 'components/ui/Icons'
 import { ParadasList } from '../../../supervisor/components/ParadasList'
 import { ZonaMapaGoogle } from '../../../supervisor/components/ZonaMapaGoogle'
 import { HistorialModal } from '../../../supervisor/components/HistorialModal'

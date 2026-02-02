@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { ShoppingCart } from 'lucide-react'
+import { ShoppingCart } from 'components/ui/Icons'
 import { Producto } from '../../features/cliente/types'
 import { getAllCampanias, getProductosByCampania } from '../../features/supervisor/services/promocionesApi'
 

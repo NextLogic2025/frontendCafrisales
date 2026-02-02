@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { PlusCircle, Tag } from 'lucide-react'
+import { PlusCircle, Tag } from 'components/ui/Icons'
 import { Alert } from 'components/ui/Alert'
 import { LoadingSpinner } from 'components/ui/LoadingSpinner'
 import { NotificationStack } from 'components/ui/NotificationStack'

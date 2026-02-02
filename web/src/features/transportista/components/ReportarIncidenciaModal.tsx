@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Modal } from 'components/ui/Modal'
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle } from 'components/ui/Icons'
 import { reportarIncidencia } from 'features/shared/services/deliveryApi'
 import type { SeveridadIncidencia } from 'features/shared/types/deliveryTypes'
 

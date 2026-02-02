@@ -1,5 +1,5 @@
 import React from 'react'
-import { Calendar, User, MapPin, Clock } from 'lucide-react'
+import { Calendar, User, MapPin, Clock } from 'components/ui/Icons'
 import type { RutaVendedor } from '../services/rutasVendedorTypes'
 import { ESTADO_RUTA_COLORS, ESTADO_RUTA_LABELS } from '../services/rutasVendedorTypes'
 

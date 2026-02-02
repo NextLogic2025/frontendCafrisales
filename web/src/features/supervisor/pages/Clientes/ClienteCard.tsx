@@ -1,4 +1,4 @@
-import { Building2, CheckCircle, XCircle } from 'lucide-react'
+import { Building2, CheckCircle, XCircle } from 'components/ui/Icons'
 import { StatusBadge } from 'components/ui/StatusBadge'
 import { QuickActionButton } from 'components/ui/Cards'
 import { type Cliente, type ZonaComercial } from '../../services/clientesApi'

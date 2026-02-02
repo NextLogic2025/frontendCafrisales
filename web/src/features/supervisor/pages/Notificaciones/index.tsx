@@ -1,4 +1,4 @@
-import { BarChart3, Bell, CheckCircle2, AlertCircle } from 'lucide-react'
+import { BarChart3, Bell, CheckCircle2, AlertCircle } from 'components/ui/Icons'
 import { PageHero } from 'components/ui/PageHero'
 import { EmptyContent } from 'components/ui/EmptyContent'
 import { useNotificationsContext } from '../../../../context/notifications/NotificationsProvider'
@@ -23,19 +23,7 @@ export default function NotificacionesPage() {
                 ]}
             />
 
-            <div className="flex justify-end">
-                <Button size="sm" variant="outline" onClick={() => {
-                    // Simulate a notification (useful for testing UI)
-                    pushNotification({
-                        id: `sim-${Date.now()}`,
-                        title: 'Pedido de prueba',
-                        message: 'Pedido #SIM1234 requiere atención',
-                        tipo: 'ALERT_SUPERVISOR',
-                    })
-                }}>
-                    Simular notificación
-                </Button>
-            </div>
+
 
             {!isConnected && (
                 <Alert

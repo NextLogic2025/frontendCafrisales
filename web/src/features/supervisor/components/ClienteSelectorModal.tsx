@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { X, Search, Trash2, Check } from 'lucide-react'
+import { X, Search, Trash2, Check } from 'components/ui/Icons'
 import { obtenerClientes } from '../services/clientesApi'
 import type { Cliente } from '../services/clientesApi'
 import type { ClienteCampania, AddClienteCampaniaDto } from '../services/promocionesApi'

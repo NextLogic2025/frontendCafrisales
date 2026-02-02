@@ -1,5 +1,5 @@
 
-import { Minus, Plus, Trash2, Info } from 'lucide-react'
+import { Minus, Plus, Trash2, Info } from 'components/ui/Icons'
 import type { CartItem as CartItemType } from '../../../cart/CartContext'
 import { Alert } from 'components/ui/Alert'
 

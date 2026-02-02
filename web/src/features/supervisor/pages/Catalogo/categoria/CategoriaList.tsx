@@ -1,4 +1,4 @@
-import { Image as ImageIcon, Pencil, Trash2, RotateCcw } from 'lucide-react'
+import { Image as ImageIcon, Pencil, Trash2, RotateCcw } from 'components/ui/Icons'
 import { StatusBadge } from 'components/ui/StatusBadge'
 import { CardGrid } from 'components/ui/CardGrid'
 import type { Category } from '../../../services/catalogApi'

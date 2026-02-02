@@ -1,5 +1,5 @@
 import React from 'react'
-import { ShoppingCart } from 'lucide-react'
+import { ShoppingCart } from 'components/ui/Icons'
 import { Modal } from 'components/ui/Modal'
 import type { Producto } from '../types'
 

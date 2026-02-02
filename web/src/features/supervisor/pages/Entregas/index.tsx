@@ -1,4 +1,4 @@
-import { Truck } from 'lucide-react'
+import { Truck } from 'components/ui/Icons'
 import { SectionHeader } from 'components/ui/SectionHeader'
 import { EmptyContent } from 'components/ui/EmptyContent'
 import { PageHero } from 'components/ui/PageHero'

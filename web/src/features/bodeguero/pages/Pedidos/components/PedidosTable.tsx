@@ -1,4 +1,4 @@
-import { Eye, CheckCircle } from 'lucide-react'
+import { Eye, CheckCircle } from 'components/ui/Icons'
 import type { Pedido } from '../../../../supervisor/services/pedidosApi'
 
 interface PedidosTableProps {

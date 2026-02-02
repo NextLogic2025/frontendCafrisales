@@ -1,4 +1,4 @@
-import { X, Calendar, DollarSign, FileText, History, CheckCircle2, Clock } from 'lucide-react'
+import { X, Calendar, DollarSign, FileText, History, CheckCircle2, Clock } from 'components/ui/Icons'
 import { type CreditDetail } from '../../../services/creditosApi'
 
 interface CreditDetailModalProps {

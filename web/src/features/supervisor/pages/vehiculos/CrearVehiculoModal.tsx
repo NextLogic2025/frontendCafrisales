@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Modal } from 'components/ui/Modal'
 import { Button } from 'components/ui/Button'
 import { TextField } from 'components/ui/TextField'
-import { Truck, Check } from 'lucide-react'
+import { Truck, Check } from 'components/ui/Icons'
 import { Alert } from 'components/ui/Alert'
 import { createVehicle, type CreateVehiclePayload } from '../../services/vehiclesApi'
 

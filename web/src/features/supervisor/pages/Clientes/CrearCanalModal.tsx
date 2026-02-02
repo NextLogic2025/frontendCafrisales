@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Save, Tag, FileText, Layout } from 'lucide-react'
+import { X, Save, Tag, FileText, Layout } from 'components/ui/Icons'
 import { Button } from 'components/ui/Button'
 import { channelsApi, type ChannelPayload } from '../../../../services/api/channelsApi'
 

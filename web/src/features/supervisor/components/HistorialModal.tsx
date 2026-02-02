@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Modal } from 'components/ui/Modal'
-import { Clock, User, FileText } from 'lucide-react'
+import { Clock, User, FileText } from 'components/ui/Icons'
 import type { HistorialEstadoRutero } from '../services/types'
 import { ESTADO_RUTERO_LABELS } from '../services/types'
 import { getHistorialRutero } from '../services/logisticsApi'

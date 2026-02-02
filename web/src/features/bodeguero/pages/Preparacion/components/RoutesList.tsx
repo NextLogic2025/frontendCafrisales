@@ -1,4 +1,4 @@
-import { MapPin, Truck, Calendar, ArrowRight } from 'lucide-react'
+import { MapPin, Truck, Calendar, ArrowRight } from 'components/ui/Icons'
 import type { RuteroLogistico } from '../../../../supervisor/services/types'
 
 interface RoutesListProps {

@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Mail, Phone, Truck, CheckCircle2, Clock } from 'lucide-react'
+import { Mail, Phone, Truck, CheckCircle2, Clock } from 'components/ui/Icons'
 
 import { PageHero } from 'components/ui/PageHero'
 import { InfoCard } from 'components/ui/InfoCard'

@@ -1,5 +1,5 @@
 import React from 'react'
-import { AlertCircle, CheckCircle, Info, AlertTriangle, X } from 'lucide-react'
+import { AlertCircle, CheckCircle, Info, AlertTriangle, X } from 'components/ui/Icons'
 import type { Notification } from '../../hooks/useNotification'
 
 interface NotificationStackProps {

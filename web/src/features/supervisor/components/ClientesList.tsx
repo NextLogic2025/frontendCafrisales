@@ -1,5 +1,5 @@
 import React from 'react'
-import { MapPin, CheckCircle, Circle } from 'lucide-react'
+import { MapPin, CheckCircle, Circle } from 'components/ui/Icons'
 import type { ParadaRuta } from '../services/rutasVendedorTypes'
 
 interface ClientesListProps {

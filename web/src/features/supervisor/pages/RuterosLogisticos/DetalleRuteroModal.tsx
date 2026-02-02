@@ -1,6 +1,6 @@
 import React from 'react'
 import { Modal } from 'components/ui/Modal'
-import { Truck, User, MapPin, Calendar, Package } from 'lucide-react'
+import { Truck, User, MapPin, Calendar, Package } from 'components/ui/Icons'
 import type { RuteroLogistico } from '../../services/types'
 import { ESTADO_RUTERO_COLORS, ESTADO_RUTERO_LABELS } from '../../services/types'
 import { ParadasList } from '../../components/ParadasList'

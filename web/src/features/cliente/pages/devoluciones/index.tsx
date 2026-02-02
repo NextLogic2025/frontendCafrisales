@@ -2,7 +2,7 @@ import { SectionHeader } from 'components/ui/SectionHeader'
 import { Alert } from 'components/ui/Alert'
 import { EmptyContent } from 'components/ui/EmptyContent'
 import { PageHero } from 'components/ui/PageHero'
-import { RotateCcw } from 'lucide-react'
+import { RotateCcw } from 'components/ui/Icons'
 
 export default function PaginaDevoluciones() {
   return (

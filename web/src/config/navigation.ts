@@ -2,7 +2,7 @@ import {
   Home, Package, Boxes, ClipboardList, ListChecks, Truck, RotateCcw,
   BarChart3, User, Bell, CreditCard, LifeBuoy, ShoppingCart,
   Percent, MessageCircle, Users, FileText, Map, Calendar, BookOpen, Route, Archive
-} from 'lucide-react'
+} from 'components/ui/Icons'
 import type { SidebarItem } from '../components/ui/SidebarNav'
 
 // ========================================

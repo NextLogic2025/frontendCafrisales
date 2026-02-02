@@ -1,5 +1,5 @@
 import { useMemo, useCallback, useState } from 'react'
-import { Image as ImageIcon, Package, Tag, Search, Filter, Pencil, Trash2, RotateCcw, Eye } from 'lucide-react'
+import { Image as ImageIcon, Package, Tag, Search, Filter, Pencil, Trash2, RotateCcw, Eye } from 'components/ui/Icons'
 import { LoadingSpinner } from 'components/ui/LoadingSpinner'
 import { StatusBadge } from 'components/ui/StatusBadge'
 import { CardGrid, type CardGridItem } from 'components/ui/CardGrid'

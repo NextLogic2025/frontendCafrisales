@@ -1,5 +1,5 @@
 import React from 'react'
-import { LogOut } from 'lucide-react'
+import { LogOut } from 'components/ui/Icons'
 import { SidebarNav, SidebarItem } from 'components/ui/SidebarNav'
 
 type RoleLayoutProps = {
@@ -12,17 +12,22 @@ type RoleLayoutProps = {
   children: React.ReactNode
 }
 
+import { NotificationBell } from './NotificationBell'
+
 export function RoleLayout({ roleLabel, avatarText, systemLabel = 'Sistema', navItems, onSignOut, topRightSlot, children }: RoleLayoutProps) {
   return (
     <div className="min-h-dvh bg-neutral-50 text-neutral-900">
       <div className="grid min-h-dvh w-full grid-cols-1 gap-6 lg:grid-cols-[260px_1fr]">
         <aside className="flex flex-col overflow-hidden rounded-3xl border border-neutral-200 bg-white p-4 shadow-sm lg:sticky lg:top-6 lg:h-[calc(100dvh-3rem)] lg:self-start">
-          <div className="mb-4 flex items-center gap-3 rounded-2xl bg-neutral-50 px-3 py-3">
-            <div className="grid h-10 w-10 place-items-center rounded-full bg-brand-red text-sm font-semibold text-white">{avatarText}</div>
-            <div>
-              <p className="text-xs uppercase tracking-[0.18em] text-neutral-500">Rol</p>
-              <p className="text-sm font-semibold text-neutral-900">{roleLabel}</p>
+          <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl bg-neutral-50 px-3 py-3">
+            <div className="flex items-center gap-3">
+              <div className="grid h-10 w-10 place-items-center rounded-full bg-brand-red text-sm font-semibold text-white">{avatarText}</div>
+              <div>
+                <p className="text-xs uppercase tracking-[0.18em] text-neutral-500">Rol</p>
+                <p className="text-sm font-semibold text-neutral-900">{roleLabel}</p>
+              </div>
             </div>
+            <NotificationBell />
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto">
