@@ -6,10 +6,8 @@ import { Header } from '../../../../components/ui/Header'
 import { SupervisorHeaderMenu } from '../../../../components/ui/SupervisorHeaderMenu'
 import { SearchBar } from '../../../../components/ui/SearchBar'
 import { GenericList } from '../../../../components/ui/GenericList'
-import { FloatingIconButton } from '../../../../components/ui/FloatingIconButton'
-import { CategoryFilter } from '../../../../components/ui/CategoryFilter'
 import { BRAND_COLORS } from '../../../../shared/types'
-import { Zone, ZoneService, ZoneStatusFilter } from '../../../../services/api/ZoneService'
+import { Zone, ZoneService } from '../../../../services/api/ZoneService'
 
 export function SupervisorZonesScreen() {
   const navigation = useNavigation<any>()
@@ -17,19 +15,18 @@ export function SupervisorZonesScreen() {
   const [zones, setZones] = React.useState<Zone[]>([])
   const [filteredZones, setFilteredZones] = React.useState<Zone[]>([])
   const [searchQuery, setSearchQuery] = React.useState('')
-  const [statusFilter, setStatusFilter] = React.useState<ZoneStatusFilter>('activo')
   const [loading, setLoading] = React.useState(false)
 
   const fetchZones = React.useCallback(async () => {
     setLoading(true)
     try {
-      const data = await ZoneService.getZones(statusFilter)
+      const data = await ZoneService.getZones('todos')
       setZones(data)
       setFilteredZones(data)
     } finally {
       setLoading(false)
     }
-  }, [statusFilter])
+  }, [])
 
   const upsertZone = React.useCallback((incoming: Zone) => {
     setZones((prev) => {
@@ -77,31 +74,13 @@ export function SupervisorZonesScreen() {
     )
   }, [searchQuery, zones])
 
-  const statusOptions = [
-    { id: 'activo', name: 'Activas' },
-    { id: 'inactivo', name: 'Inactivas' },
-  ]
-
-  const menuActions = [
-    {
-      label: 'Nueva zona',
-      icon: 'add-circle-outline' as const,
-      onPress: () => navigation.navigate('SupervisorZoneDetail', { zone: null }),
-    },
-    {
-      label: 'Actualizar',
-      icon: 'refresh' as const,
-      onPress: fetchZones,
-    },
-  ]
-
   return (
     <View className="flex-1 bg-neutral-50">
       <Header
         title="Zonas"
         variant="standard"
         onBackPress={() => navigation.goBack()}
-        rightElement={<SupervisorHeaderMenu extraActions={menuActions} />}
+        rightElement={<SupervisorHeaderMenu />}
       />
 
       <View className="px-5 py-4 bg-white shadow-sm z-10">
@@ -121,13 +100,6 @@ export function SupervisorZonesScreen() {
           >
             <Ionicons name="add" size={28} color="white" />
           </TouchableOpacity>
-        </View>
-        <View className="mt-3">
-          <CategoryFilter
-            categories={statusOptions}
-            selectedId={statusFilter}
-            onSelect={(value) => setStatusFilter(value as ZoneStatusFilter)}
-          />
         </View>
       </View>
 
@@ -165,22 +137,11 @@ export function SupervisorZonesScreen() {
                       {zone.descripcion}
                     </Text>
                   ) : null}
-                  {zone.activo === false ? (
-                    <View className="mt-2 bg-neutral-100 self-start px-2 py-1 rounded-full">
-                      <Text className="text-[10px] text-neutral-600 font-semibold">Inactiva</Text>
-                    </View>
-                  ) : null}
                 </View>
                 <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
               </View>
             </Pressable>
           )}
-        />
-
-        <FloatingIconButton
-          icon="map-outline"
-          accessibilityLabel="Ver mapa general"
-          onPress={() => navigation.navigate('SupervisorZonesMap')}
         />
       </View>
     </View>

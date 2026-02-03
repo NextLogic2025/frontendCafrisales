@@ -7,7 +7,6 @@ import { SupervisorHeaderMenu } from '../../../../components/ui/SupervisorHeader
 import { TextField } from '../../../../components/ui/TextField'
 import { PrimaryButton } from '../../../../components/ui/PrimaryButton'
 import { ToggleSwitch } from '../../../../components/ui/ToggleSwitch'
-import { FeedbackModal } from '../../../../components/ui/FeedbackModal'
 import { PolygonMapEditor } from '../../../../components/ui/PolygonMapEditor'
 import { KeyboardFormLayout } from '../../../../components/ui/KeyboardFormLayout'
 import { showGlobalToast } from '../../../../utils/toastService'
@@ -50,9 +49,6 @@ export function SupervisorZoneDetailScreen() {
   )
   const [nombre, setNombre] = React.useState(zone?.nombre || '')
   const [descripcion, setDescripcion] = React.useState(zone?.descripcion || '')
-  const [activo, setActivo] = React.useState(zone?.activo ?? true)
-  const [confirmVisible, setConfirmVisible] = React.useState(false)
-  const [pendingActive, setPendingActive] = React.useState<boolean | null>(null)
   const [schedules, setSchedules] = React.useState<ZoneSchedule[]>(DEFAULT_SCHEDULE)
   const [loadingSchedules, setLoadingSchedules] = React.useState(false)
   const [existingZones, setExistingZones] = React.useState<Zone[]>([])
@@ -83,14 +79,12 @@ export function SupervisorZoneDetailScreen() {
           codigoSuffix?: string
           nombre?: string
           descripcion?: string
-          activo?: boolean
         }
       | undefined
     if (!draft) return
     if (typeof draft.codigoSuffix === 'string') setCodigoSuffix(draft.codigoSuffix)
     if (typeof draft.nombre === 'string') setNombre(draft.nombre)
     if (typeof draft.descripcion === 'string') setDescripcion(draft.descripcion)
-    if (typeof draft.activo === 'boolean') setActivo(draft.activo)
     navigation.setParams({ draft: undefined })
   }, [navigation, route.params?.draft])
 
@@ -145,17 +139,6 @@ export function SupervisorZoneDetailScreen() {
     }
   }, [overlapZone])
 
-  const requestToggleActive = () => {
-    setPendingActive(!activo)
-    setConfirmVisible(true)
-  }
-
-  const handleConfirmToggle = () => {
-    if (pendingActive === null) return
-    setActivo(pendingActive)
-    setPendingActive(null)
-  }
-
   const updateSchedule = (day: number, key: 'entregasHabilitadas' | 'visitasHabilitadas') => {
     setSchedules((prev) =>
       prev.map((item) =>
@@ -201,7 +184,6 @@ export function SupervisorZoneDetailScreen() {
           codigo,
           nombre: nombre.trim(),
           descripcion: descripcion.trim() || undefined,
-          activo,
           zonaGeom: geometry,
         })
         if (!updated) {
@@ -295,12 +277,6 @@ export function SupervisorZoneDetailScreen() {
                 onChangeText={setDescripcion}
               />
 
-              {isEditing ? (
-                <View className="flex-row items-center justify-between bg-neutral-50 border border-neutral-200 rounded-2xl px-4 py-3">
-                  <Text className="text-neutral-700 font-semibold">Activo</Text>
-                  <ToggleSwitch checked={activo} onToggle={requestToggleActive} />
-                </View>
-              ) : null}
             </View>
 
             <View className="bg-white rounded-3xl border border-neutral-200 p-5 gap-4">
@@ -325,7 +301,6 @@ export function SupervisorZoneDetailScreen() {
                         codigoSuffix,
                         nombre,
                         descripcion,
-                        activo,
                       },
                     })
                   }
@@ -403,20 +378,6 @@ export function SupervisorZoneDetailScreen() {
         </View>
       </KeyboardFormLayout>
 
-      <FeedbackModal
-        visible={confirmVisible}
-        type="warning"
-        title={pendingActive ? 'Activar zona' : 'Desactivar zona'}
-        message={`¿Estas seguro de querer ${pendingActive ? 'activar' : 'desactivar'} esta zona?`}
-        confirmText="Si"
-        cancelText="No"
-        showCancel
-        onClose={() => {
-          setConfirmVisible(false)
-          setPendingActive(null)
-        }}
-        onConfirm={handleConfirmToggle}
-      />
     </View>
   )
 }
