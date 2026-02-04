@@ -55,7 +55,7 @@ type DecodedToken = {
 }
 
 export async function signIn(email: string, password: string) {
-    const url = `${env.api.auth}/api/auth/login`
+    const url = `${env.api.auth}/api/v1/auth/login`
 
     let res: Response
     try {
@@ -149,8 +149,8 @@ export async function getValidToken(): Promise<string | null> {
 }
 
 const AUTH_PATHS = {
-    refresh: '/api/auth/refresh',
-    logout: '/api/auth/logout',
+    refresh: '/api/v1/auth/refresh',
+    logout: '/api/v1/auth/logout',
 } as const
 
 function normalizeTokenString(token: string) {
