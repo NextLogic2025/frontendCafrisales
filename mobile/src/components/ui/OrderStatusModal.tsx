@@ -61,7 +61,7 @@ export function OrderStatusModal({
         }
     }
 
-    const getStatusDescription(status: OrderStatus): string => {
+    const getStatusDescription = (status: OrderStatus): string => {
         switch (status) {
             case 'pendiente_validacion':
                 return 'Pedido pendiente de validacion por bodega'

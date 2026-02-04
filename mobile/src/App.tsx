@@ -21,7 +21,7 @@ import { TransportistaNavigator } from './navigation/TransportistaNavigator'
 import { WarehouseNavigator } from './navigation/WarehouseNavigator'
 import { navigationRef } from './navigation/navigationRef'
 import type { RootStackParamList } from './navigation/types'
-import { getToken } from './storage/authStorage'
+import { getValidToken } from './services/auth/authClient'
 import { CartProvider } from './context/CartContext'
 import { ToastProvider } from './context/ToastContext'
 import { NotificationProvider } from './context/NotificationContext'
@@ -54,6 +54,13 @@ const getRouteForRole = (role?: string | null): AuthStartRoute => {
 
 export default function App() {
     React.useEffect(() => {
+        if (!__DEV__) {
+            console.log = () => {}
+            console.info = () => {}
+            console.warn = () => {}
+            console.debug = () => {}
+        }
+
         ExpoSplashScreen.hideAsync().catch(() => {})
 
         if (Platform.OS === 'android') {
@@ -63,7 +70,7 @@ export default function App() {
     }, [])
 
     const handleSplashDone = async (navigation: NativeStackNavigationProp<RootStackParamList, 'Splash'>) => {
-        const token = await getToken()
+        const token = await getValidToken()
         if (token) {
             try {
                 const decoded = jwtDecode<DecodedAccessToken>(token)

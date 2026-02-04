@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, Text, Pressable, TouchableOpacity, StyleSheet } from 'react-native'
+import { View, Text, Pressable, TouchableOpacity, StyleSheet, Image } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { Header } from '../../../../../components/ui/Header'
@@ -166,9 +166,13 @@ export function SupervisorProductsScreen() {
               style={styles.card}
             >
               <View style={styles.cardRow}>
-                <View style={styles.iconWrap}>
-                  <Ionicons name="cube-outline" size={20} color={BRAND_COLORS.red} />
-                </View>
+                {product.img_url ? (
+                  <Image source={{ uri: product.img_url }} style={styles.imageThumb} resizeMode="cover" />
+                ) : (
+                  <View style={styles.iconWrap}>
+                    <Ionicons name="image-outline" size={20} color="#9CA3AF" />
+                  </View>
+                )}
                 <View style={styles.cardContent}>
                   <Text style={styles.title} numberOfLines={1}>
                     {product.nombre}
@@ -242,7 +246,15 @@ const styles = StyleSheet.create({
     marginRight: 12,
     borderWidth: 1,
     borderColor: '#FECACA',
-    backgroundColor: '#FEF2F2',
+    backgroundColor: '#F5F5F5',
+  },
+  imageThumb: {
+    width: 46,
+    height: 46,
+    borderRadius: 14,
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   cardContent: {
     flex: 1,

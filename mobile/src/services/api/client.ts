@@ -6,7 +6,6 @@ import { ERROR_MESSAGES, logErrorForDebugging } from '../../utils/errorMessages'
 import { showGlobalToast } from '../../utils/toastService'
 
 interface ApiRequestOptions extends RequestInit {
-    useIdInsteadOfNumber?: boolean
     silent?: boolean
     auth?: boolean
 }

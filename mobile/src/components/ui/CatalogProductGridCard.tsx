@@ -30,15 +30,14 @@ export function CatalogProductGridCard({ product, categoryName, priceLabel, onPr
         )}
       </View>
 
-      <View className="px-4 py-3">
-        <Text className="text-base font-bold text-neutral-900" numberOfLines={2}>
+      <View className="px-4 py-3" style={styles.body}>
+        <Text className="text-base font-bold text-neutral-900" numberOfLines={2} style={styles.title}>
           {product.nombre}
         </Text>
-        <Text className="text-xs text-neutral-500 mt-1" numberOfLines={1}>
+        <Text className="text-xs text-neutral-500 mt-1" numberOfLines={1} style={styles.category}>
           {categoryName ?? 'Catalogo general'}
         </Text>
-
-        <View className="mt-3">
+        <View style={styles.actionWrap}>
           {onQuickAdd ? (
             <Pressable
               onPress={(event) => {
@@ -63,11 +62,26 @@ export function CatalogProductGridCard({ product, categoryName, priceLabel, onPr
 
 const styles = StyleSheet.create({
   card: {
+    height: 284,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.08,
     shadowRadius: 10,
     elevation: 3,
+  },
+  body: {
+    flex: 1,
+  },
+  title: {
+    minHeight: 44,
+    lineHeight: 22,
+  },
+  category: {
+    minHeight: 16,
+  },
+  actionWrap: {
+    marginTop: 'auto',
+    paddingTop: 12,
   },
   image: {
     width: '100%',

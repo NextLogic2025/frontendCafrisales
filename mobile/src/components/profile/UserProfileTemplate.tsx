@@ -1,6 +1,6 @@
 /// <reference types="nativewind/types" />
 import React, { useState } from 'react'
-import { View, Text, ScrollView, TouchableOpacity, Pressable, ActivityIndicator, TextInput, Image } from 'react-native'
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, TextInput, Image } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { BRAND_COLORS } from '../../shared/types'
 import { FeedbackModal, FeedbackType } from '../ui/FeedbackModal'
@@ -86,16 +86,6 @@ export function UserProfileTemplate({
                 setFeedbackVisible(false)
                 onLogout()
             }
-        })
-        setFeedbackVisible(true)
-    }
-
-    const handleChangePassword = () => {
-        setFeedbackConfig({
-            type: 'info',
-            title: 'Próximamente',
-            message: 'La función de cambiar contraseña estará disponible pronto.',
-            showCancel: false
         })
         setFeedbackVisible(true)
     }
@@ -391,22 +381,6 @@ export function UserProfileTemplate({
                             </View>
                         </View>
                     </View>
-
-                    <Pressable
-                        className="bg-white border border-neutral-200 rounded-xl p-4 flex-row justify-between items-center active:bg-neutral-50"
-                        onPress={handleChangePassword}
-                    >
-                        <View className="flex-row items-center flex-1">
-                            <View className="bg-neutral-100 p-2.5 rounded-full">
-                                <Ionicons name="lock-closed-outline" size={20} color="#6B7280" />
-                            </View>
-                            <View className="flex-1" style={{ marginLeft: 12 }}>
-                                <Text className="text-neutral-800 font-semibold text-sm">Cambiar Contraseña</Text>
-                                <Text className="text-neutral-400 text-xs" style={{ marginTop: 2 }}>Próximamente disponible</Text>
-                            </View>
-                        </View>
-                        <Ionicons name="chevron-forward" size={20} color="#D1D5DB" />
-                    </Pressable>
                 </SectionContainer>
 
                 {/* Logout Button */}

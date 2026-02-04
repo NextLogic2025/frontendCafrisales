@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, Text, Pressable, TouchableOpacity, StyleSheet, Switch } from 'react-native'
+import { View, Text, Pressable, TouchableOpacity, StyleSheet, Switch, Image } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { Header } from '../../../../../components/ui/Header'
@@ -88,8 +88,7 @@ export function SupervisorCategoriesScreen() {
     }
   }
 
-  const handleToggleActive = async (category: CatalogCategory) => {
-    const nextValue = !category.activo
+  const handleToggleActive = async (category: CatalogCategory, nextValue: boolean) => {
     setTogglingId(category.id)
     setCategories((prev) =>
       prev.map((item) => (item.id === category.id ? { ...item, activo: nextValue } : item)),
@@ -105,6 +104,26 @@ export function SupervisorCategoriesScreen() {
     } finally {
       setTogglingId(null)
     }
+  }
+
+  const requestToggleActive = (category: CatalogCategory) => {
+    const nextValue = !category.activo
+    if (nextValue) {
+      void handleToggleActive(category, true)
+      return
+    }
+    setFeedbackConfig({
+      type: 'warning',
+      title: 'Desactivar categoria?',
+      message: `Estas seguro de desactivar ${category.nombre}?`,
+      showCancel: true,
+      confirmText: 'Si, desactivar',
+      onConfirm: () => {
+        setFeedbackVisible(false)
+        void handleToggleActive(category, false)
+      },
+    })
+    setFeedbackVisible(true)
   }
 
   const filterOptions = [
@@ -180,9 +199,13 @@ export function SupervisorCategoriesScreen() {
               style={styles.card}
             >
               <View style={styles.cardRow}>
-                <View style={styles.iconWrap}>
-                  <Ionicons name="pricetag-outline" size={20} color={BRAND_COLORS.red} />
-                </View>
+                {category.img_url ? (
+                  <Image source={{ uri: category.img_url }} style={styles.imageThumb} resizeMode="cover" />
+                ) : (
+                  <View style={styles.iconWrap}>
+                    <Ionicons name="image-outline" size={20} color="#9CA3AF" />
+                  </View>
+                )}
                 <View style={styles.cardContent}>
                   <Text style={styles.title} numberOfLines={1}>
                     {category.nombre}
@@ -197,7 +220,7 @@ export function SupervisorCategoriesScreen() {
                 <View style={styles.actions} onStartShouldSetResponder={() => true}>
                   <Switch
                     value={category.activo ?? true}
-                    onValueChange={() => handleToggleActive(category)}
+                    onValueChange={() => requestToggleActive(category)}
                     disabled={loading || togglingId === category.id}
                     trackColor={{ false: '#E5E7EB', true: '#FECACA' }}
                     thumbColor={category.activo ? BRAND_COLORS.red : '#9CA3AF'}
@@ -215,7 +238,9 @@ export function SupervisorCategoriesScreen() {
         type={feedbackConfig.type}
         title={feedbackConfig.title}
         message={feedbackConfig.message}
-        onClose={() => setFeedbackVisible(false)}
+        onClose={() => {
+          setFeedbackVisible(false)
+        }}
         onConfirm={feedbackConfig.onConfirm}
         showCancel={feedbackConfig.showCancel}
         confirmText={feedbackConfig.confirmText}
@@ -244,8 +269,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 12,
     borderWidth: 1,
-    borderColor: '#FECACA',
-    backgroundColor: '#FEF2F2',
+    borderColor: '#E5E7EB',
+    backgroundColor: '#F5F5F5',
+  },
+  imageThumb: {
+    width: 46,
+    height: 46,
+    borderRadius: 14,
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   cardContent: {
     flex: 1,
