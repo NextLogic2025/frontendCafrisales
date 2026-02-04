@@ -101,7 +101,7 @@ export const UserService = {
             const userId = decoded.sub || decoded.userId
             if (!userId) return null
 
-            const user = await apiRequest<UserApiUser>(`${USERS_API_URL}/v1/users/${userId}`)
+            const user = await apiRequest<UserApiUser>(`${USERS_API_URL}/users/${userId}`)
             // Profile is already included in user object from backend
             const profile = user.perfil || null
 
@@ -114,7 +114,7 @@ export const UserService = {
     async updateProfile(userId: string, data: { nombre: string; telefono: string }): Promise<boolean> {
         try {
             const nameParts = splitName(data.nombre)
-            await apiRequest(`${USERS_API_URL}/v1/users/${userId}`, {
+            await apiRequest(`${USERS_API_URL}/users/${userId}`, {
                 method: 'PATCH',
                 body: JSON.stringify({
                     perfil: {
