@@ -6,8 +6,8 @@ import { Header } from '../../../../../components/ui/Header'
 import { SupervisorHeaderMenu } from '../../../../../components/ui/SupervisorHeaderMenu'
 import { GenericList } from '../../../../../components/ui/GenericList'
 import { PrimaryButton } from '../../../../../components/ui/PrimaryButton'
-import { CatalogSku, CatalogSkuService } from '../../../../../services/api/CatalogSkuService'
-import { CatalogPriceService, CatalogSkuPrice } from '../../../../../services/api/CatalogPriceService'
+import { CatalogSku, CatalogSkuPrice, CatalogSkuService } from '../../../../../services/api/CatalogSkuService'
+import { CatalogPriceService } from '../../../../../services/api/CatalogPriceService'
 import { BRAND_COLORS } from '../../../../../shared/types'
 
 export function SupervisorPriceDetailScreen() {

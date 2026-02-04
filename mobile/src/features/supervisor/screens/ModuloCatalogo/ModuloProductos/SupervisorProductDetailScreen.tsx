@@ -8,6 +8,8 @@ import { PrimaryButton } from '../../../../../components/ui/PrimaryButton'
 import { BRAND_COLORS } from '../../../../../shared/types'
 import { CatalogProduct, CatalogProductService } from '../../../../../services/api/CatalogProductService'
 
+type ProductSku = NonNullable<CatalogProduct['skus']>[number]
+
 export function SupervisorProductDetailScreen() {
   const navigation = useNavigation<any>()
   const route = useRoute<any>()
@@ -16,7 +18,7 @@ export function SupervisorProductDetailScreen() {
 
   const [product, setProduct] = React.useState<CatalogProduct | null>(productParam ?? null)
   const [loading, setLoading] = React.useState(false)
-  const getCurrentPrice = React.useCallback((sku: CatalogProduct['skus'][number]) => {
+  const getCurrentPrice = React.useCallback((sku: ProductSku) => {
     const current = sku.precios?.find((price) => !price.vigente_hasta)
     if (!current) return 'Sin precio'
     return `${current.moneda} ${current.precio}`

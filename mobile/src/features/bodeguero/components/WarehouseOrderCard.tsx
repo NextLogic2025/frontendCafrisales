@@ -13,8 +13,9 @@ type Props = {
 export function WarehouseOrderCard({ order, onPress, onAction }: Props) {
     const isUrgent = false // order.priority is not in interface yet
     const clientName = order.cliente?.razon_social || 'Cliente Desconocido'
-    const createdDate = order.created_at ? new Date(order.created_at).toLocaleDateString() : 'Fecha desc.'
-    const isVendedor = order.origen_pedido === 'VENDEDOR'
+    const createdAt = order.created_at || order.creado_en
+    const createdDate = createdAt ? new Date(createdAt).toLocaleDateString() : 'Fecha desc.'
+    const isVendedor = String(order.origen || '').toLowerCase() === 'vendedor'
 
     return (
         <Pressable

@@ -21,14 +21,20 @@ import { TransportistaNavigator } from './navigation/TransportistaNavigator'
 import { WarehouseNavigator } from './navigation/WarehouseNavigator'
 import { navigationRef } from './navigation/navigationRef'
 import type { RootStackParamList } from './navigation/types'
-import { getValidToken } from './services/auth/authClient'
+import { getSessionTimeLeftMs, getValidToken, refreshSession, signOut } from './services/auth/authClient'
+import { getToken, subscribeToTokenChanges } from './storage/authStorage'
 import { CartProvider } from './context/CartContext'
 import { ToastProvider } from './context/ToastContext'
 import { NotificationProvider } from './context/NotificationContext'
+import { FeedbackModal } from './components/ui/FeedbackModal'
+import { resetToLogin } from './navigation/navigationRef'
+import { showGlobalToast } from './utils/toastService'
 
 ExpoSplashScreen.preventAutoHideAsync().catch(() => {})
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
+const SESSION_WARNING_WINDOW_MS = 2 * 60 * 1000
+const SESSION_CHECK_INTERVAL_MS = 15000
 
 type DecodedAccessToken = {
     role?: string
@@ -53,6 +59,11 @@ const getRouteForRole = (role?: string | null): AuthStartRoute => {
 }
 
 export default function App() {
+    const [sessionWarningVisible, setSessionWarningVisible] = React.useState(false)
+    const [secondsLeft, setSecondsLeft] = React.useState<number | null>(null)
+    const [refreshingSession, setRefreshingSession] = React.useState(false)
+    const warnedTokenRef = React.useRef<string | null>(null)
+
     React.useEffect(() => {
         if (!__DEV__) {
             console.log = () => {}
@@ -67,6 +78,79 @@ export default function App() {
             NavigationBar.setBackgroundColorAsync('#f3f4f6').catch(() => {})
             NavigationBar.setButtonStyleAsync('dark').catch(() => {})
         }
+    }, [])
+
+    const checkSessionExpiry = React.useCallback(async () => {
+        const token = await getToken()
+        if (!token) {
+            setSessionWarningVisible(false)
+            setSecondsLeft(null)
+            warnedTokenRef.current = null
+            return
+        }
+
+        const timeLeftMs = await getSessionTimeLeftMs()
+        if (timeLeftMs == null || timeLeftMs <= 0) {
+            setSessionWarningVisible(false)
+            setSecondsLeft(null)
+            warnedTokenRef.current = null
+            return
+        }
+
+        const roundedSeconds = Math.max(1, Math.ceil(timeLeftMs / 1000))
+        setSecondsLeft(roundedSeconds)
+
+        if (timeLeftMs <= SESSION_WARNING_WINDOW_MS && warnedTokenRef.current !== token) {
+            warnedTokenRef.current = token
+            setSessionWarningVisible(true)
+        }
+
+        if (timeLeftMs > SESSION_WARNING_WINDOW_MS && warnedTokenRef.current === token) {
+            warnedTokenRef.current = null
+            setSessionWarningVisible(false)
+        }
+    }, [])
+
+    React.useEffect(() => {
+        checkSessionExpiry()
+        const interval = setInterval(() => {
+            checkSessionExpiry()
+        }, SESSION_CHECK_INTERVAL_MS)
+        const unsubscribe = subscribeToTokenChanges(() => {
+            warnedTokenRef.current = null
+            checkSessionExpiry()
+        })
+
+        return () => {
+            clearInterval(interval)
+            unsubscribe()
+        }
+    }, [checkSessionExpiry])
+
+    const handleExtendSession = React.useCallback(async () => {
+        if (refreshingSession) return
+        setRefreshingSession(true)
+        try {
+            const ok = await refreshSession()
+            if (ok) {
+                setSessionWarningVisible(false)
+                warnedTokenRef.current = null
+                showGlobalToast('Tu sesion se extendio correctamente.', 'success')
+                await checkSessionExpiry()
+                return
+            }
+            await signOut()
+            resetToLogin()
+        } finally {
+            setRefreshingSession(false)
+        }
+    }, [checkSessionExpiry, refreshingSession])
+
+    const handleLogoutNow = React.useCallback(async () => {
+        await signOut()
+        setSessionWarningVisible(false)
+        warnedTokenRef.current = null
+        resetToLogin()
     }, [])
 
     const handleSplashDone = async (navigation: NativeStackNavigationProp<RootStackParamList, 'Splash'>) => {
@@ -120,6 +204,22 @@ export default function App() {
                                     <Stack.Screen name="Bodeguero" component={WarehouseNavigator} />
                                 </Stack.Navigator>
                             </NavigationContainer>
+                            <FeedbackModal
+                                visible={sessionWarningVisible}
+                                type="warning"
+                                title="Tu sesion caducara pronto"
+                                message={
+                                    secondsLeft
+                                        ? `Tu sesion vence en ${secondsLeft} segundos. Quieres continuar?`
+                                        : 'Tu sesion esta por vencer. Quieres continuar?'
+                                }
+                                confirmText={refreshingSession ? 'Continuando...' : 'Continuar'}
+                                cancelText="Salir"
+                                onClose={() => setSessionWarningVisible(false)}
+                                onConfirm={handleExtendSession}
+                                onCancel={handleLogoutNow}
+                                showCancel
+                            />
                         </ToastProvider>
                     </NotificationProvider>
                 </SafeAreaProvider>

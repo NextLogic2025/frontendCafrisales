@@ -41,6 +41,18 @@ type DecodedToken = {
   userId?: string
 }
 
+export async function getSessionTimeLeftMs(): Promise<number | null> {
+  const token = await getToken()
+  if (!token) return null
+
+  try {
+    const decoded = jwtDecode<DecodedToken>(token)
+    return decoded.exp * 1000 - Date.now()
+  } catch {
+    return null
+  }
+}
+
 export async function signIn(email: string, password: string) {
   const url = env.auth.loginUrl
   if (!url) throw new Error(ERROR_MESSAGES.SERVER_UNAVAILABLE)
@@ -129,6 +141,11 @@ export async function getValidToken(): Promise<string | null> {
   }
 
   return await refreshAccessToken()
+}
+
+export async function refreshSession(): Promise<boolean> {
+  const refreshedToken = await refreshAccessToken()
+  return !!refreshedToken
 }
 
 const AUTH_PATHS = {

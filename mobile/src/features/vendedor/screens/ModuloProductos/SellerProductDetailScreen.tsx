@@ -12,6 +12,8 @@ import { SkuPickerModal } from '../../../../components/catalog/SkuPickerModal'
 import { useCart } from '../../../../context/CartContext'
 import { showGlobalToast } from '../../../../utils/toastService'
 
+type ProductSku = NonNullable<CatalogProduct['skus']>[number]
+
 export function SellerProductDetailScreen() {
   const navigation = useNavigation<any>()
   const route = useRoute<any>()
@@ -40,7 +42,7 @@ export function SellerProductDetailScreen() {
     loadData()
   }, [loadData])
 
-  const getCurrentPrice = React.useCallback((sku: CatalogProduct['skus'][number]) => {
+  const getCurrentPrice = React.useCallback((sku: ProductSku) => {
     const current = sku.precios?.find((price) => !price.vigente_hasta) ?? sku.precios?.[0]
     if (!current) return 'Precio a confirmar'
     const parsed = Number(current.precio)

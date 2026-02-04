@@ -15,8 +15,8 @@ export type Zone = {
   nombre: string
   descripcion?: string | null
   activo?: boolean
-  zonaGeom?: object | null
-  zona_geom?: object | null
+  zonaGeom?: any | null
+  zona_geom?: any | null
 }
 
 export type ZoneSchedule = {
@@ -30,7 +30,7 @@ export type CreateZonePayload = {
   codigo: string
   nombre: string
   descripcion?: string
-  zonaGeom?: object
+  zonaGeom?: any
 }
 
 export type ZoneStatusFilter = 'activo' | 'inactivo' | 'todos'
@@ -67,6 +67,22 @@ const unwrapPaginated = <T>(response: any): T[] => {
   return []
 }
 
+const withGeometry = async (zones: Zone[]): Promise<Zone[]> => {
+  const hydrated = await Promise.all(
+    zones.map(async (zone) => {
+      const parsed = safeParseGeom(zone.zonaGeom ?? zone.zona_geom ?? null)
+      if (parsed) return normalizeZone(zone)
+      try {
+        const fullZone = await ApiService.get<Zone>(`${ZONES_BASE_URL}/zones/${zone.id}`)
+        return normalizeZone(fullZone)
+      } catch {
+        return normalizeZone(zone)
+      }
+    })
+  )
+  return hydrated
+}
+
 const rawService = {
   async getZones(status: ZoneStatusFilter = 'activo'): Promise<Zone[]> {
     try {
@@ -89,10 +105,20 @@ const rawService = {
       const normalizedStatus = status === 'todos' ? '' : status
       const query = normalizedStatus ? `?status=${encodeURIComponent(normalizedStatus)}` : ''
       const data = await ApiService.get<Zone[]>(`${ZONES_BASE_URL}/zones/map${query}`)
-      return unwrapPaginated<Zone>(data).map(normalizeZone)
+      const mapped = unwrapPaginated<Zone>(data).map(normalizeZone)
+      return withGeometry(mapped)
     } catch (error) {
-      logErrorForDebugging(error, 'ZoneService.getZonesMap')
-      return []
+      logErrorForDebugging(error, 'ZoneService.getZonesMap.primary')
+      try {
+        const normalizedStatus = status === 'todos' ? '' : status
+        const query = normalizedStatus ? `?status=${encodeURIComponent(normalizedStatus)}` : ''
+        const fallback = await ApiService.get<Zone[]>(`${ZONES_BASE_URL}/zones${query}`)
+        const mapped = unwrapPaginated<Zone>(fallback).map(normalizeZone)
+        return withGeometry(mapped)
+      } catch (fallbackError) {
+        logErrorForDebugging(fallbackError, 'ZoneService.getZonesMap.fallback')
+        return []
+      }
     }
   },
 

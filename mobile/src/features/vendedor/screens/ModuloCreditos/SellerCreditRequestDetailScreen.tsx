@@ -12,6 +12,8 @@ import { TextField } from '../../../../components/ui/TextField'
 import { GenericModal } from '../../../../components/ui/GenericModal'
 import { showGlobalToast } from '../../../../utils/toastService'
 
+type OrderDetailItem = NonNullable<OrderDetail['items']>[number]
+
 const formatMoney = (value?: number | string | null) => {
   const amount = Number(value)
   const safeAmount = Number.isFinite(amount) ? amount : 0
@@ -37,7 +39,7 @@ const computeOrderTotal = (pedido?: OrderDetail['pedido'], items: OrderDetail['i
   }, 0)
 }
 
-const buildItemTitle = (item: OrderDetail['items'][number]) => {
+const buildItemTitle = (item: OrderDetailItem) => {
   const anyItem = item as any
   const name =
     item?.sku_nombre_snapshot ||
@@ -49,7 +51,7 @@ const buildItemTitle = (item: OrderDetail['items'][number]) => {
   return name
 }
 
-const buildItemPresentation = (item: OrderDetail['items'][number]) => {
+const buildItemPresentation = (item: OrderDetailItem) => {
   const parts: string[] = []
   if (item?.sku_tipo_empaque_snapshot) parts.push(item.sku_tipo_empaque_snapshot)
   if (item?.sku_peso_gramos_snapshot) parts.push(`${item.sku_peso_gramos_snapshot} g`)

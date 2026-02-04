@@ -267,7 +267,7 @@ export function SellerCreditsScreen() {
           <ActivityIndicator size="large" color={BRAND_COLORS.red} />
         </View>
       ) : (
-        <FlatList
+        <FlatList<any>
           data={
             activeTab === 'pendientes'
               ? filteredPending
@@ -278,7 +278,11 @@ export function SellerCreditsScreen() {
                   : filteredAprobados
           }
           keyExtractor={(item) => item.id}
-          renderItem={activeTab === 'pendientes' ? renderPendingItem : renderItem}
+          renderItem={({ item }) =>
+            activeTab === 'pendientes'
+              ? renderPendingItem({ item: item as OrderListItem })
+              : renderItem({ item: item as CreditListItem })
+          }
           contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
           refreshControl={<RefreshControl refreshing={loading} onRefresh={loadCredits} tintColor={BRAND_COLORS.red} />}
           ListEmptyComponent={

@@ -94,6 +94,13 @@ export function SupervisorZonesScreen() {
             />
           </View>
           <TouchableOpacity
+            className="w-14 h-14 rounded-2xl items-center justify-center shadow-sm mr-2"
+            style={{ backgroundColor: '#374151' }}
+            onPress={() => navigation.navigate('SupervisorZonesMap')}
+          >
+            <Ionicons name="map-outline" size={24} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity
             className="w-14 h-14 rounded-2xl items-center justify-center shadow-sm"
             style={{ backgroundColor: BRAND_COLORS.red }}
             onPress={() => navigation.navigate('SupervisorZoneDetail', { zone: null })}

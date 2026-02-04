@@ -57,6 +57,8 @@ export function OrderCard({ order, onPress, onCancel, actionButtons, showClientI
                 return { bg: 'bg-red-50', text: 'text-red-600', border: 'border-red-200' }
             case 'secondary':
                 return { bg: 'bg-neutral-50', text: 'text-neutral-600', border: 'border-neutral-200' }
+            default:
+                return { bg: 'bg-neutral-50', text: 'text-neutral-600', border: 'border-neutral-200' }
         }
     }
 

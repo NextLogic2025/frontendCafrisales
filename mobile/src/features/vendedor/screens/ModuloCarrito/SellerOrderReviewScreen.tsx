@@ -145,7 +145,7 @@ export function SellerOrderReviewScreen() {
           descuento_item_tipo: item.discountType,
           descuento_item_valor: item.discountValue,
           requiere_aprobacion: item.requiresApproval,
-          origen_precio: item.discountType ? 'negociado' : 'catalogo',
+          origen_precio: (item.discountType ? 'negociado' : 'catalogo') as 'catalogo' | 'negociado',
         })),
       }
 

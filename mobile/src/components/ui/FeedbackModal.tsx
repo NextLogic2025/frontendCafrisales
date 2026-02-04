@@ -13,6 +13,7 @@ interface FeedbackModalProps {
     onClose: () => void
     confirmText?: string
     onConfirm?: () => void
+    onCancel?: () => void
     showCancel?: boolean
     cancelText?: string
     children?: React.ReactNode
@@ -26,6 +27,7 @@ export const FeedbackModal = ({
     onClose,
     confirmText = 'Entendido',
     onConfirm,
+    onCancel,
     showCancel = false,
     cancelText = 'Cancelar',
     children
@@ -108,7 +110,14 @@ export const FeedbackModal = ({
                         {showCancel && (
                             <TouchableOpacity
                                 className="flex-1 py-3.5 rounded-xl border border-neutral-200 items-center justify-center bg-white"
-                                onPress={onClose}
+                                onPress={() => {
+                                    onClose()
+                                    if (onCancel) {
+                                        setTimeout(() => {
+                                            onCancel()
+                                        }, 150)
+                                    }
+                                }}
                                 activeOpacity={0.7}
                             >
                                 <Text className="text-neutral-600 font-bold text-base">

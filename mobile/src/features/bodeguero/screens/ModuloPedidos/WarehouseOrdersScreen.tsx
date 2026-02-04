@@ -22,7 +22,9 @@ export function WarehouseOrdersScreen() {
     try {
       const data = await OrderService.getPendingValidationOrders()
       setOrders(data)
-      const uniqueClientIds = Array.from(new Set(data.map((order) => order.cliente_id).filter(Boolean)))
+      const uniqueClientIds = Array.from(
+        new Set(data.map((order) => order.cliente_id).filter((id): id is string => typeof id === 'string' && id.length > 0)),
+      )
       if (uniqueClientIds.length === 0) {
         setClientNameMap({})
         return

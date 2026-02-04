@@ -32,7 +32,9 @@ export function SupervisorCreditApprovalsScreen() {
       )
       setRequests(pending)
 
-      const uniqueClientIds = Array.from(new Set(pending.map((order) => order.cliente_id).filter(Boolean)))
+      const uniqueClientIds = Array.from(
+        new Set(pending.map((order) => order.cliente_id).filter((id): id is string => typeof id === 'string' && id.length > 0)),
+      )
       if (uniqueClientIds.length === 0) {
         setClientNameMap({})
         return

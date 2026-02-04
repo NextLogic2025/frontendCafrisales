@@ -89,10 +89,28 @@ export function SupervisorZoneDetailScreen() {
   }, [navigation, route.params?.draft])
 
   React.useEffect(() => {
-    const geometry = zone?.zonaGeom ?? zone?.zona_geom ?? null
-    const polygons = extractPolygons(geometry)
-    if (polygons.length > 0) {
-      setMapPoints(polygons[0])
+    let cancelled = false
+
+    const loadGeometry = async () => {
+      if (!zone?.id) return
+      const rawGeometry = zone?.zonaGeom ?? zone?.zona_geom ?? null
+      const localPolygons = extractPolygons(rawGeometry)
+      if (localPolygons.length > 0) {
+        if (!cancelled) setMapPoints(localPolygons[0])
+        return
+      }
+
+      const fullZone = await ZoneService.getZoneById(zone.id)
+      const remoteGeometry = fullZone?.zonaGeom ?? fullZone?.zona_geom ?? null
+      const remotePolygons = extractPolygons(remoteGeometry)
+      if (!cancelled && remotePolygons.length > 0) {
+        setMapPoints(remotePolygons[0])
+      }
+    }
+
+    loadGeometry()
+    return () => {
+      cancelled = true
     }
   }, [zone?.id, zone?.zonaGeom, zone?.zona_geom])
 

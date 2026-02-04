@@ -65,6 +65,7 @@ export type OrderResponse = {
   total?: number
   subtotal?: number
   impuesto?: number
+  descuento_pedido_tipo?: 'porcentaje' | 'monto_fijo'
   descuento_pedido_valor?: number
   estado?: OrderStatus | string
   cliente_id?: string
