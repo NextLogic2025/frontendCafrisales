@@ -27,7 +27,7 @@ export async function getAllCategories(): Promise<Category[]> {
   if (!token) throw new Error('No hay sesión activa')
 
   const res = await fetch(`${CATALOG_API_URL}/v1/categorias`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` },
   })
   if (!res.ok) return []
   return await res.json()
@@ -38,7 +38,7 @@ export async function getCategoryById(id: string): Promise<Category | null> {
   if (!token) throw new Error('No hay sesión activa')
 
   const res = await fetch(`${CATALOG_API_URL}/v1/categorias/${id}`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` },
   })
   if (!res.ok) return null
   return await res.json()
@@ -52,7 +52,7 @@ export async function createCategory(data: CreateCategoryDto): Promise<Category>
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify(data),
   })
@@ -73,7 +73,7 @@ export async function updateCategory(id: string, data: Partial<CreateCategoryDto
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify(data),
   })
@@ -92,7 +92,7 @@ export async function deleteCategory(id: string): Promise<void> {
 
   const res = await fetch(`${CATALOG_API_URL}/v1/categorias/${id}`, {
     method: 'DELETE',
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` },
   })
 
   if (!res.ok) {
@@ -105,7 +105,7 @@ export async function getDeletedCategories(): Promise<Category[]> {
   if (!token) throw new Error('No hay sesión activa')
 
   const res = await fetch(`${CATALOG_API_URL}/v1/categorias/eliminadas`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` },
   })
   if (!res.ok) return []
   return await res.json()
@@ -117,7 +117,7 @@ export async function restoreCategory(id: string | number): Promise<void> {
 
   const res = await fetch(`${CATALOG_API_URL}/v1/categorias/${id}/restaurar`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` },
   })
 
   if (!res.ok) {
@@ -139,7 +139,7 @@ export async function obtenerCanales(): Promise<Canal[]> {
     const base = env.api.usuarios
     const url = `${base}/api/v1/canales`
     const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` },
     })
     if (!res.ok) return []
     const data = await res.json().catch(() => [])

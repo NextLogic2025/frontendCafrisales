@@ -25,7 +25,7 @@ export async function createRuteroLogistico(
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
     })
@@ -61,7 +61,7 @@ export async function getRuterosLogisticos(params?: {
     const url = `${BASE_URL}/api/v1/routes${query ? `?${query}` : ''}`
 
     const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` },
     })
 
     if (!res.ok) {
@@ -81,7 +81,7 @@ export async function getRuteroLogistico(id: string): Promise<RuteroLogistico | 
     if (!token) throw new Error('No hay sesión activa')
 
     const res = await fetch(`${BASE_URL}/api/v1/routes/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` },
     })
 
     if (!res.ok) {
@@ -99,7 +99,7 @@ export async function getHistorialRutero(id: string): Promise<HistorialEstadoRut
     if (!token) throw new Error('No hay sesión activa')
 
     const res = await fetch(`${BASE_URL}/api/v1/routes/${id}/history`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` },
     })
 
     if (!res.ok) {
@@ -120,7 +120,7 @@ export async function publicarRutero(id: string): Promise<RuteroLogistico> {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
     })
 
@@ -146,7 +146,7 @@ export async function cancelarRutero(
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
     })
@@ -173,7 +173,7 @@ export async function addOrderToRutero(
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
     })
@@ -194,7 +194,7 @@ export async function removeOrderFromRutero(id: string, pedidoId: string): Promi
     const res = await fetch(`${BASE_URL}/api/v1/routes/${id}/orders/${pedidoId}`, {
         method: 'DELETE',
         headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
     })
 
@@ -218,7 +218,7 @@ export async function updateVehicleRutero(
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
     })

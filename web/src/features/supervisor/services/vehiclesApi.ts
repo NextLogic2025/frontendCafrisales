@@ -28,7 +28,7 @@ export async function createVehicle(payload: CreateVehiclePayload): Promise<Vehi
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
   })
@@ -48,7 +48,7 @@ export async function getVehicles(estado?: string): Promise<Vehicle[]> {
   const query = estado ? `?estado=${encodeURIComponent(estado)}` : ''
   const base = env.api.transportista || ''
   const res = await fetch(`${base}/api/v1/vehiculos${query}`, {
-    headers: { Authorization: `Bearer ${token}` }
+    headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` }
   })
 
   if (!res.ok) return []

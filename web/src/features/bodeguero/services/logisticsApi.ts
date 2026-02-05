@@ -15,7 +15,7 @@ export async function getRuterosPublicados(): Promise<RuteroLogistico[]> {
     if (!token) throw new Error('No hay sesión activa')
 
     const res = await fetch(`${BASE_URL}/api/v1/routes?status=publicado`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` },
     })
 
     if (!res.ok) {
@@ -34,7 +34,7 @@ export async function getRuteroConParadas(id: string): Promise<RuteroLogistico |
     if (!token) throw new Error('No hay sesión activa')
 
     const res = await fetch(`${BASE_URL}/api/v1/routes/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` },
     })
 
     if (!res.ok) {
@@ -55,7 +55,7 @@ export async function prepararParada(routeId: string, pedidoId: string): Promise
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
     })
 

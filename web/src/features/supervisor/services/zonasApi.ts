@@ -41,7 +41,7 @@ export async function obtenerZonas(estado: 'activo' | 'inactivo' | 'todos' = 'ac
   }
 
   const res = await fetch(`${ZONES_BASE_URL}/api/v1/zones${query}`, {
-    headers: { Authorization: `Bearer ${token}` }
+    headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` }
   })
 
   if (!res.ok) return []
@@ -64,7 +64,7 @@ export async function obtenerZonaPorId(id: string | number): Promise<ZonaComerci
   if (!token) throw new Error('No hay sesión activa')
 
   const res = await fetch(`${ZONES_BASE_URL}/api/v1/zones/${id}`, {
-    headers: { Authorization: `Bearer ${token}` }
+    headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` }
   })
 
   if (!res.ok) return null
@@ -91,7 +91,7 @@ export async function obtenerZonasParaMapa(estado?: 'activo' | 'inactivo'): Prom
   }
 
   const res = await fetch(`${ZONES_BASE_URL}/api/v1/zones/map${query}`, {
-    headers: { Authorization: `Bearer ${token}` }
+    headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` }
   })
 
   if (!res.ok) return []
@@ -125,7 +125,7 @@ export async function crearZona(data: CreateZonaDto): Promise<ZonaComercial> {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
   })
@@ -150,7 +150,7 @@ export async function getZoneSchedules(zoneId: string | number): Promise<ZoneSch
   if (!token) throw new Error('No hay sesión activa')
 
   const res = await fetch(`${ZONES_BASE_URL}/api/v1/zones/${zoneId}/horarios`, {
-    headers: { Authorization: `Bearer ${token}` }
+    headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` }
   })
 
   if (!res.ok) return []
@@ -165,7 +165,7 @@ export async function updateZoneSchedules(zoneId: string | number, schedules: Zo
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`
+      Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`
     },
     body: JSON.stringify(schedules)
   })
@@ -189,7 +189,7 @@ export async function actualizarZona(id: string | number, data: Partial<CreateZo
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`
+      Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`
     },
     body: JSON.stringify(payload)
   })
@@ -208,7 +208,7 @@ export async function eliminarZona(id: string | number): Promise<void> {
 
   const res = await fetch(`${ZONES_BASE_URL}/api/v1/zones/${id}`, {
     method: 'DELETE',
-    headers: { Authorization: `Bearer ${token}` }
+    headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` }
   })
 
   if (!res.ok) {

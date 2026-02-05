@@ -20,7 +20,7 @@ export async function getNotificationTypes(token?: string) {
   let lastErr: any = null
   for (const p of paths) {
     try {
-      const res = await fetch(p, { headers: { Authorization: getToken(token) } })
+      const res = await fetch(p, { headers: { Authorization: getToken(token), 'X-Authorization': getToken(token) } })
       if (res.ok) return res.json()
       lastErr = `HTTP ${res.status} ${await res.text().catch(() => '')}`
     } catch (err) {
@@ -42,7 +42,7 @@ export async function getSubscriptions(token?: string) {
   let lastErr: any = null
   for (const p of paths) {
     try {
-      const res = await fetch(p, { headers: { Authorization: getToken(token) } })
+      const res = await fetch(p, { headers: { Authorization: getToken(token), 'X-Authorization': getToken(token) } })
       if (res.ok) return res.json()
       lastErr = `HTTP ${res.status} ${await res.text().catch(() => '')}`
     } catch (err) {
@@ -73,7 +73,7 @@ export async function upsertSubscription(tipoId: string, opts: { websocketEnable
     }
   }
   // Try the canonical endpoint first, but fall back to common alternatives
-  const tokenHeader = { 'Content-Type': 'application/json', Authorization: getToken(token) }
+  const tokenHeader = { 'Content-Type': 'application/json', Authorization: getToken(token), 'X-Authorization': getToken(token) }
 
   // helper to parse non-2xx
   async function tryFetch(input: string, init: RequestInit) {

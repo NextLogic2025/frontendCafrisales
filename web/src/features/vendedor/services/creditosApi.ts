@@ -45,7 +45,7 @@ export async function approveCredit(payload: ApproveCreditPayload): Promise<Cred
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
     })
@@ -86,7 +86,7 @@ export async function getCredits(estados?: string[]): Promise<CreditListItem[]> 
 
     const res = await fetch(`${CREDIT_API_URL}/v1/credits?${params.toString()}`, {
         headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
     })
 
@@ -105,7 +105,7 @@ export async function getCreditsByCustomer(customerId: string): Promise<CreditLi
 
     const res = await fetch(`${CREDIT_API_URL}/v1/credits?${params.toString()}`, {
         headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
     })
 
@@ -136,7 +136,7 @@ export async function getCreditDetail(id: string): Promise<CreditDetail> {
 
     const res = await fetch(`${CREDIT_API_URL}/v1/credits/${id}`, {
         headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
     })
 
@@ -154,7 +154,7 @@ export async function rejectCredit(id: string, motivo?: string): Promise<boolean
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ motivo: motivo || 'Crédito rechazado por vendedor' }),
     })

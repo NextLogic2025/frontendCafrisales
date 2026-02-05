@@ -35,7 +35,7 @@ export async function getRutasVendedor(filtros?: {
     const url = `${BASE_URL}?${params.toString()}`
     const res = await fetch(url, {
         headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
     })
 
@@ -59,7 +59,7 @@ export async function getRutaVendedorById(id: string): Promise<RutaVendedor> {
     const url = `${BASE_URL}/${id}`
     const res = await fetch(url, {
         headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
     })
 
@@ -85,7 +85,7 @@ export async function createRutaVendedor(
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
     })
@@ -113,7 +113,7 @@ export async function updateVendedorRuta(
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
     })
@@ -141,7 +141,7 @@ export async function addClienteToRuta(
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
     })
@@ -168,7 +168,7 @@ export async function removeClienteFromRuta(
     const res = await fetch(url, {
         method: 'DELETE',
         headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
     })
 
@@ -193,7 +193,7 @@ export async function publicarRuta(rutaId: string): Promise<RutaVendedor> {
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ action: 'publish' }),
     })
@@ -221,7 +221,7 @@ export async function cancelarRuta(
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
     })
@@ -244,7 +244,7 @@ export async function getHistorialRuta(rutaId: string): Promise<HistorialEstadoR
     const url = `${BASE_URL}/${rutaId}/historial`
     const res = await fetch(url, {
         headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
     })
 
@@ -275,7 +275,7 @@ export async function getMisRutas(filtros?: {
     const url = `${BASE_URL}?${params.toString()}`
     const res = await fetch(url, {
         headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
     })
 
@@ -301,7 +301,7 @@ export async function iniciarRuta(rutaId: string): Promise<RutaVendedor> {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({}),
     })
@@ -326,7 +326,7 @@ export async function completarRuta(rutaId: string): Promise<RutaVendedor> {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({}),
     })

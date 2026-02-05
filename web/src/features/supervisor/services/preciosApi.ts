@@ -28,7 +28,7 @@ export async function getCurrentPrice(skuId: string): Promise<CatalogSkuPrice | 
   if (!token) throw new Error('No hay sesión activa')
 
   const res = await fetch(`${CATALOG_API_URL}/v1/skus/${skuId}/precio-vigente`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` },
   })
   if (!res.ok) return null
   return await res.json()
@@ -42,7 +42,7 @@ export async function createPrice(skuId: string, payload: CatalogPriceCreatePayl
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
   })
@@ -63,7 +63,7 @@ export async function updatePrice(skuId: string, payload: CatalogPriceUpdatePayl
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
   })
@@ -81,7 +81,7 @@ export async function getPriceHistory(skuId: string): Promise<CatalogSkuPrice[]>
   if (!token) throw new Error('No hay sesión activa')
 
   const res = await fetch(`${CATALOG_API_URL}/v1/skus/${skuId}/precios-historial`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` },
   })
   if (!res.ok) return []
   return await res.json()

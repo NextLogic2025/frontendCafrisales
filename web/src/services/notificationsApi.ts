@@ -7,7 +7,8 @@ function getAuthHeader(token?: string) {
     const t = token || getStoredToken()
     return {
         'Content-Type': 'application/json',
-        'Authorization': t ? (t.startsWith('Bearer ') ? t : `Bearer ${t}`) : ''
+        'Authorization': t ? (t.startsWith('Bearer ') ? t : `Bearer ${t}`) : '',
+        'X-Authorization': t ? (t.startsWith('Bearer ') ? t : `Bearer ${t}`) : ''
     }
 }
 

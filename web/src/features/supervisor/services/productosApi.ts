@@ -54,7 +54,7 @@ export async function getAllProducts(): Promise<Product[]> {
   if (!token) throw new Error('No hay sesión activa')
 
   const res = await fetch(`${CATALOG_API_URL}/v1/products`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` },
   })
   if (!res.ok) return []
   const response = await res.json()
@@ -67,7 +67,7 @@ export async function getProductById(id: string): Promise<Product | null> {
   if (!token) throw new Error('No hay sesión activa')
 
   const res = await fetch(`${CATALOG_API_URL}/v1/products/${id}`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` },
   })
   if (!res.ok) return null
   return await res.json()
@@ -81,7 +81,7 @@ export async function createProduct(data: CreateProductDto): Promise<Product> {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify(data),
   })
@@ -102,7 +102,7 @@ export async function updateProduct(id: string | number, data: Partial<CreatePro
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify(data),
   })
@@ -121,7 +121,7 @@ export async function deleteProduct(id: string | number): Promise<void> {
 
   const res = await fetch(`${CATALOG_API_URL}/v1/products/${id}`, {
     method: 'DELETE',
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` },
   })
 
   if (!res.ok) {
@@ -134,7 +134,7 @@ export async function getDeletedProducts(): Promise<Product[]> {
   if (!token) throw new Error('No hay sesión activa')
 
   const res = await fetch(`${CATALOG_API_URL}/v1/products/eliminados`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` },
   })
   if (!res.ok) return []
   return await res.json()
@@ -146,7 +146,7 @@ export async function restoreProduct(id: string | number): Promise<void> {
 
   const res = await fetch(`${CATALOG_API_URL}/v1/products/${id}/restaurar`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` },
   })
 
   if (!res.ok) {

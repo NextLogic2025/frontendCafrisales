@@ -79,7 +79,7 @@ async function apiRequest<T>(url: string, options: RequestInit = {}): Promise<T>
         ...options,
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
             ...options.headers,
         },
     })

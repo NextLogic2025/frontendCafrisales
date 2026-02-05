@@ -160,7 +160,10 @@ export async function obtenerClientes(estado: 'activo' | 'inactivo' | 'todos' = 
     const query = estado !== 'todos' ? `?estado=${estado}` : ''
     const url = `${USERS_API_URL}/v1/clientes${query}`
     const headers: any = {}
-    if (token) headers.Authorization = `Bearer ${token}`
+    if (token) {
+      headers.Authorization = `Bearer ${token}`
+      headers['X-Authorization'] = `Bearer ${token}`
+    }
 
     const res = await fetch(url, { headers })
     if (!res.ok) {
@@ -192,7 +195,10 @@ export async function obtenerClientesPorVendedor(vendedorId: string): Promise<Cl
     // Matches mobile: `${USERS_API_URL}/vendedores/${vendedorId}/clientes`
     const url = `${USERS_API_URL}/v1/vendedores/${vendedorId}/clientes`
     const headers: any = {}
-    if (token) headers.Authorization = `Bearer ${token}`
+    if (token) {
+      headers.Authorization = `Bearer ${token}`
+      headers['X-Authorization'] = `Bearer ${token}`
+    }
 
     const res = await fetch(url, { headers })
     if (!res.ok) {
@@ -211,7 +217,10 @@ export async function obtenerClientePorId(id: string): Promise<Cliente | null> {
     const token = await getValidToken()
     const url = `${USERS_API_URL}/v1/clientes/${id}`
     const headers: any = {}
-    if (token) headers.Authorization = `Bearer ${token}`
+    if (token) {
+      headers.Authorization = `Bearer ${token}`
+      headers['X-Authorization'] = `Bearer ${token}`
+    }
 
     const res = await fetch(url, { headers })
     if (!res.ok) return null
@@ -249,7 +258,7 @@ export async function crearCliente(data: CreateClienteDto): Promise<Cliente> {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
   })
@@ -295,7 +304,7 @@ export async function actualizarCliente(id: string, data: Partial<CreateClienteD
 
   const res = await fetch(url, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` },
     body: JSON.stringify(payload),
   })
   if (!res.ok) {
@@ -312,7 +321,7 @@ export async function eliminarCliente(id: string): Promise<void> {
   if (!token) throw new Error('No hay sesión activa')
   const url = `${USERS_API_URL}/v1/clientes/${id}`
 
-  await fetch(url, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }).catch(() => null)
+  await fetch(url, { method: 'DELETE', headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` } }).catch(() => null)
 }
 
 // Zonas
@@ -323,7 +332,10 @@ export async function obtenerZonas(): Promise<ZonaComercial[]> {
     const ZONAS_API_URL = ZONAS_BASE_URL.endsWith('/api') ? ZONAS_BASE_URL : `${ZONAS_BASE_URL}/api`
     const url = `${ZONAS_API_URL}/v1/zones?status=activo`
     const headers: any = {}
-    if (token) headers.Authorization = `Bearer ${token}`
+    if (token) {
+      headers.Authorization = `Bearer ${token}`
+      headers['X-Authorization'] = `Bearer ${token}`
+    }
 
     const res = await fetch(url, { headers })
     if (!res.ok) return []

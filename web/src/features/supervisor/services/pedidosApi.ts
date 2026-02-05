@@ -60,7 +60,7 @@ export async function obtenerPedidos(options: { skipClients?: boolean } = {}): P
     if (!token) throw new Error('No hay sesión activa')
 
     const resPedidos = await fetch(`${ORDERS_API_URL}/v1/orders`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` }
     })
 
     const clientesList = options.skipClients ? [] : await (obtenerClientes('todos').catch(() => []))
@@ -94,7 +94,7 @@ export async function obtenerPedidoPorId(id: string): Promise<Pedido | null> {
     if (!token) throw new Error('No hay sesión activa')
 
     const res = await fetch(`${ORDERS_API_URL}/v1/orders/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` }
     })
 
     if (!res.ok) return null
@@ -186,7 +186,7 @@ export async function cambiarEstadoPedido(id: string, nuevoEstado: string): Prom
         method,
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(body)
     })

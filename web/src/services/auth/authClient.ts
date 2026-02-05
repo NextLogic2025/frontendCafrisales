@@ -216,7 +216,7 @@ export async function signOut() {
                 headers: {
                     Accept: 'application/json',
                     'Content-Type': 'application/json',
-                    Authorization: `Bearer ${accessToken}`,
+                    Authorization: `Bearer ${accessToken}`, 'X-Authorization': `Bearer ${accessToken}`,
                 },
                 body: JSON.stringify({ refresh_token: cleanToken }),
             }).catch(() => { });

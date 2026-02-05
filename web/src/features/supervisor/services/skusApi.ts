@@ -34,7 +34,7 @@ export async function getAllSkus(): Promise<CatalogSku[]> {
     if (!token) throw new Error('No hay sesión activa')
 
     const res = await fetch(`${CATALOG_API_URL}/v1/skus`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` },
     })
     if (!res.ok) return []
     return await res.json()
@@ -48,7 +48,7 @@ export async function createSku(data: CreateSkuDto): Promise<CatalogSku> {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(data),
     })
@@ -69,7 +69,7 @@ export async function updateSku(id: string | number, data: Partial<CreateSkuDto>
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(data),
     })
@@ -88,7 +88,7 @@ export async function deleteSku(id: string | number): Promise<void> {
 
     const res = await fetch(`${CATALOG_API_URL}/v1/skus/${id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` },
     })
 
     if (!res.ok) {

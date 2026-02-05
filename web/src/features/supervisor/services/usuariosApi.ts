@@ -96,7 +96,7 @@ export async function createUsuario(data: CreateUserPayload) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
   })
@@ -136,7 +136,7 @@ export async function updateUsuario(
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
   })
@@ -160,7 +160,7 @@ export async function updateEstadoUsuario(userId: string, estado: 'activo' | 'in
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify(body),
   })
@@ -239,7 +239,7 @@ export async function getUsers(): Promise<Usuario[]> {
   const token = await getValidToken()
   if (!token) throw new Error('No hay sesión activa')
 
-  const headers = { Authorization: `Bearer ${token}` }
+  const headers = { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` }
   const createUrl = (path: string) => `${env.api.usuarios}/api${path}`
 
   try {
@@ -368,7 +368,7 @@ export async function getUserProfile(userId: string): Promise<UserProfile> {
   const url = `${env.api.usuarios}/api/v1/users/${userId}`
   const res = await fetch(url, {
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
     },
   })
 
@@ -391,7 +391,7 @@ export async function getUserById(userId: string): Promise<any> {
   const url = `${env.api.usuarios}/api/v1/users/${userId}`
   const res = await fetch(url, {
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
     },
   })
 
@@ -419,7 +419,7 @@ export async function updateUsuarioCompleto(
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify(data),
   })
@@ -448,7 +448,7 @@ export async function updateUsuarioPassword(
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify({ password }),
   })
@@ -475,7 +475,7 @@ export async function updateUsuarioEmail(
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify({ email }),
   })

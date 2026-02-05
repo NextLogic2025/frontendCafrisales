@@ -24,7 +24,10 @@ export const channelsApi = {
         try {
             const token = await getValidToken()
             const headers: HeadersInit = {}
-            if (token) headers.Authorization = `Bearer ${token}`
+            if (token) {
+              headers.Authorization = `Bearer ${token}`
+              headers['X-Authorization'] = `Bearer ${token}`
+            }
 
             const res = await fetch(`${USERS_API_URL}/v1/canales`, { headers })
             if (!res.ok) return []
@@ -44,7 +47,7 @@ export const channelsApi = {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
+                    Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
                 },
                 body: JSON.stringify(payload),
             })

@@ -24,7 +24,7 @@ export async function createEntregasBatch(payload: CreateEntregasBatchPayload): 
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
     })
@@ -59,7 +59,7 @@ export async function getEntregas(params?: {
     const url = `${BASE_URL}/api/v1/deliveries${query ? `?${query}` : ''}`
 
     const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` },
     })
 
     if (!res.ok) {
@@ -82,7 +82,7 @@ export async function getEntregaById(id: string): Promise<Entrega | null> {
     if (!token) throw new Error('No hay sesión activa')
 
     const res = await fetch(`${BASE_URL}/api/v1/deliveries/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` },
     })
 
     if (!res.ok) {
@@ -106,7 +106,7 @@ export async function marcarEnRuta(id: string): Promise<Entrega> {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
     })
 
@@ -132,7 +132,7 @@ export async function completarEntrega(
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
     })
@@ -159,7 +159,7 @@ export async function completarParcialEntrega(
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
     })
@@ -186,7 +186,7 @@ export async function marcarNoEntregado(
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
     })
@@ -215,7 +215,7 @@ export async function agregarEvidencia(
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
     })
@@ -240,7 +240,7 @@ export async function reportarIncidencia(
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
     })

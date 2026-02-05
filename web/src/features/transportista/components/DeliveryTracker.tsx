@@ -53,7 +53,7 @@ export function DeliveryTracker({ pedidoId, ruteroId, onDeliveryMarked }: Delive
 
             // await fetch(`${env.api.delivery}/api/entregas`, {
             //   method: 'POST',
-            //   headers: { Authorization: `Bearer ${token}` },
+            //   headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` },
             //   body: formData
             // })
 

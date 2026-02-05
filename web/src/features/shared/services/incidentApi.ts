@@ -31,7 +31,7 @@ export async function getIncidencias(params?: {
     const url = `${BASE_URL}/api/incidencias${query ? `?${query}` : ''}`
 
     const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` },
     })
 
     if (!res.ok) {
@@ -58,7 +58,7 @@ export async function resolverIncidencia(
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
     })

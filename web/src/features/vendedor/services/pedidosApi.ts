@@ -50,7 +50,7 @@ export async function createOrder(payload: CreateOrderPayload): Promise<OrderRes
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
     })
@@ -68,7 +68,7 @@ export async function getOrders(): Promise<OrderResponse[]> {
     if (!token) throw new Error('No hay sesión activa')
 
     const res = await fetch(`${ORDERS_API_URL}/v1/orders`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` },
     })
     if (!res.ok) return []
     const response = await res.json()
@@ -80,7 +80,7 @@ export async function getMyOrders(): Promise<OrderResponse[]> {
     if (!token) throw new Error('No hay sesión activa')
 
     const res = await fetch(`${ORDERS_API_URL}/v1/orders/my-orders`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` },
     })
     if (!res.ok) return []
     const response = await res.json()
@@ -95,7 +95,7 @@ export async function cancelOrder(orderId: string, motivo: string): Promise<void
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ motivo }),
     })
@@ -110,7 +110,7 @@ export async function getOrderById(id: string): Promise<OrderResponse> {
     if (!token) throw new Error('No hay sesión activa')
 
     const res = await fetch(`${ORDERS_API_URL}/v1/orders/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` },
     })
 
     if (!res.ok) {
@@ -130,7 +130,7 @@ export async function getPendingPromotions(): Promise<OrderResponse[]> {
 
     const [resPromos, resClientes] = await Promise.all([
         fetch(`${ORDERS_API_URL}/v1/orders/promociones-pendientes`, {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` }
         }),
         obtenerClientes('todos').catch(() => [])
     ])
@@ -161,7 +161,7 @@ export async function approvePromotions(
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(options),
     })
@@ -185,7 +185,7 @@ export async function respondToAdjustment(
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
             pedido_id: orderId,

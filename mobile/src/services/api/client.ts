@@ -92,7 +92,9 @@ export async function apiRequest<T>(endpoint: string, options: ApiRequestOptions
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
             ...headersToObject(options.headers),
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            ...(token
+                ? { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` }
+                : {}),
         }
 
         const url = endpoint.startsWith('http') ? endpoint : `${env.api.catalogUrl}${endpoint}`
