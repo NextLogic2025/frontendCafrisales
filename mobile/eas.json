@@ -10,16 +10,18 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_AUTH_API_URL": "http://192.168.80.4:3001",
-        "EXPO_PUBLIC_AUTH_LOGIN_URL": "http://192.168.80.4:3001/auth/login",
-        "EXPO_PUBLIC_AUTH_FORGOT_PASSWORD_URL": "http://192.168.80.4:3001/auth/forgot-password",
+        "EXPO_PUBLIC_AUTH_API_URL": "http://192.168.80.4:3001/api/v1",
+        "EXPO_PUBLIC_AUTH_LOGIN_URL": "http://192.168.80.4:3001/api/v1/auth/login",
+        "EXPO_PUBLIC_AUTH_FORGOT_PASSWORD_URL": "",
         "EXPO_PUBLIC_API_BASE_URL": "http://192.168.80.4:3001",
         "EXPO_PUBLIC_USERS_API_URL": "http://192.168.80.4:3002",
         "EXPO_PUBLIC_CATALOG_API_URL": "http://192.168.80.4:3003",
-        "EXPO_PUBLIC_ORDERS_API_URL": "http://192.168.80.4:3004",
-        "EXPO_PUBLIC_WAREHOUSE_API_URL": "http://192.168.80.4:3005",
-        "EXPO_PUBLIC_LOGISTICS_API_URL": "http://192.168.80.4:3006",
-        "EXPO_PUBLIC_FINANCE_API_URL": "http://192.168.80.4:3007",
+        "EXPO_PUBLIC_ZONE_API_URL": "http://192.168.80.4:3004",
+        "EXPO_PUBLIC_ORDER_API_URL": "http://192.168.80.4:3005",
+        "EXPO_PUBLIC_CREDIT_API_URL": "http://192.168.80.4:3006",
+        "EXPO_PUBLIC_ROUTE_API_URL": "http://192.168.80.4:3007",
+        "EXPO_PUBLIC_DELIVERY_API_URL": "http://192.168.80.4:3008",
+        "EXPO_PUBLIC_NOTIFICATIONS_API_URL": "http://192.168.80.4:3009",
         "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "LOCAL_GOOGLE_MAPS_KEY"
       }
     },
@@ -29,16 +31,18 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_AUTH_API_URL": "https://staging-auth.cafrilosa.com",
-        "EXPO_PUBLIC_AUTH_LOGIN_URL": "https://staging-auth.cafrilosa.com/auth/login",
-        "EXPO_PUBLIC_AUTH_FORGOT_PASSWORD_URL": "https://staging-auth.cafrilosa.com/auth/forgot-password",
-        "EXPO_PUBLIC_API_BASE_URL": "https://staging-api.cafrilosa.com",
-        "EXPO_PUBLIC_USERS_API_URL": "https://staging-users.cafrilosa.com",
-        "EXPO_PUBLIC_CATALOG_API_URL": "https://staging-catalog.cafrilosa.com",
-        "EXPO_PUBLIC_ORDERS_API_URL": "https://staging-orders.cafrilosa.com",
-        "EXPO_PUBLIC_WAREHOUSE_API_URL": "https://staging-warehouse.cafrilosa.com",
-        "EXPO_PUBLIC_LOGISTICS_API_URL": "https://staging-logistics.cafrilosa.com",
-        "EXPO_PUBLIC_FINANCE_API_URL": "https://staging-finance.cafrilosa.com",
+        "EXPO_PUBLIC_AUTH_API_URL": "https://cafrisales-gateway-gw-4dxrikij.ue.gateway.dev/api/v1",
+        "EXPO_PUBLIC_AUTH_LOGIN_URL": "https://cafrisales-gateway-gw-4dxrikij.ue.gateway.dev/api/v1/auth/login",
+        "EXPO_PUBLIC_AUTH_FORGOT_PASSWORD_URL": "https://cafrisales-gateway-gw-4dxrikij.ue.gateway.dev/api/v1/auth/forgot-password",
+        "EXPO_PUBLIC_API_BASE_URL": "https://cafrisales-gateway-gw-4dxrikij.ue.gateway.dev",
+        "EXPO_PUBLIC_USERS_API_URL": "https://cafrisales-gateway-gw-4dxrikij.ue.gateway.dev",
+        "EXPO_PUBLIC_CATALOG_API_URL": "https://cafrisales-gateway-gw-4dxrikij.ue.gateway.dev",
+        "EXPO_PUBLIC_ZONE_API_URL": "https://cafrisales-gateway-gw-4dxrikij.ue.gateway.dev",
+        "EXPO_PUBLIC_ORDER_API_URL": "https://cafrisales-gateway-gw-4dxrikij.ue.gateway.dev",
+        "EXPO_PUBLIC_CREDIT_API_URL": "https://cafrisales-gateway-gw-4dxrikij.ue.gateway.dev",
+        "EXPO_PUBLIC_ROUTE_API_URL": "https://cafrisales-gateway-gw-4dxrikij.ue.gateway.dev",
+        "EXPO_PUBLIC_DELIVERY_API_URL": "https://cafrisales-gateway-gw-4dxrikij.ue.gateway.dev",
+        "EXPO_PUBLIC_NOTIFICATIONS_API_URL": "https://cafrisales-gateway-gw-4dxrikij.ue.gateway.dev",
         "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "STAGING_GOOGLE_MAPS_KEY"
       }
     },
@@ -48,16 +52,18 @@
         "buildType": "app-bundle"
       },
       "env": {
-        "EXPO_PUBLIC_AUTH_API_URL": "https://auth.cafrilosa.com",
-        "EXPO_PUBLIC_AUTH_LOGIN_URL": "https://auth.cafrilosa.com/auth/login",
-        "EXPO_PUBLIC_AUTH_FORGOT_PASSWORD_URL": "https://auth.cafrilosa.com/auth/forgot-password",
-        "EXPO_PUBLIC_API_BASE_URL": "https://api.cafrilosa.com",
-        "EXPO_PUBLIC_USERS_API_URL": "https://users.cafrilosa.com",
-        "EXPO_PUBLIC_CATALOG_API_URL": "https://catalog.cafrilosa.com",
-        "EXPO_PUBLIC_ORDERS_API_URL": "https://orders.cafrilosa.com",
-        "EXPO_PUBLIC_WAREHOUSE_API_URL": "https://warehouse.cafrilosa.com",
-        "EXPO_PUBLIC_LOGISTICS_API_URL": "https://logistics.cafrilosa.com",
-        "EXPO_PUBLIC_FINANCE_API_URL": "https://finance.cafrilosa.com",
+        "EXPO_PUBLIC_AUTH_API_URL": "https://cafrisales-gateway-gw-4dxrikij.ue.gateway.dev/api/v1",
+        "EXPO_PUBLIC_AUTH_LOGIN_URL": "https://cafrisales-gateway-gw-4dxrikij.ue.gateway.dev/api/v1/auth/login",
+        "EXPO_PUBLIC_AUTH_FORGOT_PASSWORD_URL": "https://cafrisales-gateway-gw-4dxrikij.ue.gateway.dev/api/v1/auth/forgot-password",
+        "EXPO_PUBLIC_API_BASE_URL": "https://cafrisales-gateway-gw-4dxrikij.ue.gateway.dev",
+        "EXPO_PUBLIC_USERS_API_URL": "https://cafrisales-gateway-gw-4dxrikij.ue.gateway.dev",
+        "EXPO_PUBLIC_CATALOG_API_URL": "https://cafrisales-gateway-gw-4dxrikij.ue.gateway.dev",
+        "EXPO_PUBLIC_ZONE_API_URL": "https://cafrisales-gateway-gw-4dxrikij.ue.gateway.dev",
+        "EXPO_PUBLIC_ORDER_API_URL": "https://cafrisales-gateway-gw-4dxrikij.ue.gateway.dev",
+        "EXPO_PUBLIC_CREDIT_API_URL": "https://cafrisales-gateway-gw-4dxrikij.ue.gateway.dev",
+        "EXPO_PUBLIC_ROUTE_API_URL": "https://cafrisales-gateway-gw-4dxrikij.ue.gateway.dev",
+        "EXPO_PUBLIC_DELIVERY_API_URL": "https://cafrisales-gateway-gw-4dxrikij.ue.gateway.dev",
+        "EXPO_PUBLIC_NOTIFICATIONS_API_URL": "https://cafrisales-gateway-gw-4dxrikij.ue.gateway.dev",
         "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "PRODUCTION_GOOGLE_MAPS_KEY"
       }
     }

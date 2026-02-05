@@ -96,7 +96,10 @@ export function SupervisorProductFormScreen() {
 
       if (!result) throw new Error('SAVE_ERROR')
       showGlobalToast(isEditing ? 'Producto actualizado.' : 'Producto creado.', 'success')
-      navigation.goBack()
+      navigation.navigate('SupervisorProducts', {
+        upsertProduct: result,
+        refresh: true,
+      })
     } catch (error) {
       showGlobalToast(getUserFriendlyMessage(error, 'CREATE_ERROR'), 'error')
     } finally {

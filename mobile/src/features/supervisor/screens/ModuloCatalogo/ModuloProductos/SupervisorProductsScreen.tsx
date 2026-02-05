@@ -1,7 +1,7 @@
 import React from 'react'
 import { View, Text, Pressable, TouchableOpacity, StyleSheet, Image } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { useFocusEffect, useNavigation } from '@react-navigation/native'
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native'
 import { Header } from '../../../../../components/ui/Header'
 import { SupervisorHeaderMenu } from '../../../../../components/ui/SupervisorHeaderMenu'
 import { SearchBar } from '../../../../../components/ui/SearchBar'
@@ -17,6 +17,7 @@ type ProductFilter = 'todos' | 'con-sku' | 'sin-sku'
 
 export function SupervisorProductsScreen() {
   const navigation = useNavigation<any>()
+  const route = useRoute<any>()
   const [products, setProducts] = React.useState<CatalogProduct[]>([])
   const [searchQuery, setSearchQuery] = React.useState('')
   const [filter, setFilter] = React.useState<ProductFilter>('todos')
@@ -47,6 +48,30 @@ export function SupervisorProductsScreen() {
       fetchProducts()
     }, [fetchProducts]),
   )
+
+  const upsertProduct = React.useCallback((incoming: CatalogProduct) => {
+    setProducts((prev) => {
+      const exists = prev.find((item) => item.id === incoming.id)
+      if (!exists) {
+        return [incoming, ...prev]
+      }
+      return prev.map((item) => (item.id === incoming.id ? { ...item, ...incoming } : item))
+    })
+  }, [])
+
+  React.useEffect(() => {
+    const incoming = route.params?.upsertProduct as CatalogProduct | undefined
+    if (incoming) {
+      upsertProduct(incoming)
+      setFilter('todos')
+      setSearchQuery('')
+      navigation.setParams({ upsertProduct: undefined })
+    }
+    if (route.params?.refresh) {
+      fetchProducts()
+      navigation.setParams({ refresh: undefined })
+    }
+  }, [fetchProducts, navigation, route.params?.refresh, route.params?.upsertProduct, upsertProduct])
 
   const filteredProducts = React.useMemo(() => {
     const query = searchQuery.trim().toLowerCase()

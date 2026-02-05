@@ -43,6 +43,26 @@ export function PolygonMapEditor({
 }: Props) {
   const mapRef = React.useRef<MapView | null>(null)
   const [mapReady, setMapReady] = React.useState(false)
+  const [userInteracted, setUserInteracted] = React.useState(false)
+
+  const minPointDistanceMeters = 8
+
+  const distanceMeters = React.useCallback((a: MapPoint, b: MapPoint) => {
+    const toRad = (value: number) => (value * Math.PI) / 180
+    const R = 6371000
+    const dLat = toRad(b.latitude - a.latitude)
+    const dLon = toRad(b.longitude - a.longitude)
+    const lat1 = toRad(a.latitude)
+    const lat2 = toRad(b.latitude)
+
+    const sinDLat = Math.sin(dLat / 2)
+    const sinDLon = Math.sin(dLon / 2)
+    const h =
+      sinDLat * sinDLat +
+      Math.cos(lat1) * Math.cos(lat2) * sinDLon * sinDLon
+
+    return 2 * R * Math.asin(Math.sqrt(h))
+  }, [])
 
   const allCoordinates = React.useMemo(() => {
     const existing = existingPolygons.flat()
@@ -51,6 +71,7 @@ export function PolygonMapEditor({
 
   React.useEffect(() => {
     if (!fitToPolygons || !mapReady || allCoordinates.length === 0) return
+    if (editable && userInteracted) return
 
     if (allCoordinates.length === 1) {
       mapRef.current?.animateToRegion(
@@ -68,26 +89,35 @@ export function PolygonMapEditor({
       edgePadding: { top: 48, right: 48, bottom: 48, left: 48 },
       animated: true,
     })
-  }, [allCoordinates, fitToPolygons, initialRegion, mapReady])
+  }, [allCoordinates, editable, fitToPolygons, initialRegion, mapReady, userInteracted])
 
   const handlePress = (event: { nativeEvent: { coordinate: MapPoint } }) => {
     if (!editable || !onChangePoints) return
-    const next = [...points, event.nativeEvent.coordinate]
+    const nextPoint = event.nativeEvent.coordinate
+    const lastPoint = points[points.length - 1]
+    if (lastPoint && distanceMeters(lastPoint, nextPoint) < minPointDistanceMeters) {
+      return
+    }
+    setUserInteracted(true)
+    const next = [...points, nextPoint]
     onChangePoints(next)
   }
 
   const handleUndo = () => {
     if (!onChangePoints || points.length === 0) return
+    setUserInteracted(true)
     onChangePoints(points.slice(0, -1))
   }
 
   const handleClear = () => {
     if (!onChangePoints || points.length === 0) return
+    setUserInteracted(true)
     onChangePoints([])
   }
 
   const primaryStroke = invalid ? '#DC2626' : BRAND_COLORS.red
-  const primaryFill = invalid ? 'rgba(220,38,38,0.32)' : 'rgba(239,68,68,0.22)'
+  const primaryFill = invalid ? 'rgba(220,38,38,0.28)' : 'rgba(239,68,68,0.18)'
+  const previewStroke = invalid ? 'rgba(220,38,38,0.65)' : 'rgba(239,68,68,0.7)'
 
   const containerStyle = fullScreen ? { flex: 1 } : { height }
 
@@ -107,7 +137,7 @@ export function PolygonMapEditor({
             coordinates={polygon}
             strokeColor="rgba(148,163,184,0.9)"
             fillColor="rgba(148,163,184,0.15)"
-            strokeWidth={1.5}
+            strokeWidth={1.7}
           />
         ))}
 
@@ -116,18 +146,41 @@ export function PolygonMapEditor({
             coordinates={points}
             strokeColor={primaryStroke}
             fillColor={primaryFill}
-            strokeWidth={2.2}
+            strokeWidth={2.4}
           />
         ) : points.length >= 2 ? (
-          <Polyline coordinates={points} strokeColor={primaryStroke} strokeWidth={2} />
+          <Polyline coordinates={points} strokeColor={previewStroke} strokeWidth={2.4} />
+        ) : null}
+
+        {points.length >= 2 ? (
+          <Polyline
+            coordinates={[...points, points[0]]}
+            strokeColor="rgba(239,68,68,0.35)"
+            strokeWidth={1.2}
+            lineDashPattern={[6, 6]}
+          />
         ) : null}
 
         {points.map((point, index) => (
           <Marker
             key={`point-${index}`}
             coordinate={point}
-            pinColor={primaryStroke}
-          />
+            anchor={{ x: 0.5, y: 0.5 }}
+          >
+            <View
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: 5,
+                backgroundColor: primaryStroke,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.18,
+                shadowRadius: 3,
+                elevation: 2,
+              }}
+            />
+          </Marker>
         ))}
       </MapView>
 
