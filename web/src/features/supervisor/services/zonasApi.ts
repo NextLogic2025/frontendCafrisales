@@ -9,7 +9,6 @@ export interface ZonaComercial {
   poligono_geografico: unknown | null
   activo: boolean
   created_at: string
-  deleted_at: string | null
   vendedor_asignado?: {
     id: number
     vendedor_usuario_id: string
@@ -202,16 +201,3 @@ export async function actualizarZona(id: string | number, data: Partial<CreateZo
   return await res.json()
 }
 
-export async function eliminarZona(id: string | number): Promise<void> {
-  const token = await getValidToken()
-  if (!token) throw new Error('No hay sesión activa')
-
-  const res = await fetch(`${ZONES_BASE_URL}/api/v1/zones/${id}`, {
-    method: 'DELETE',
-    headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` }
-  })
-
-  if (!res.ok) {
-    throw new Error('Error al eliminar zona')
-  }
-}
