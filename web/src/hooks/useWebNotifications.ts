@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { env } from '../config/env';
 
-const BASE = (import.meta.env.VITE_NOTIFICATIONS_BASE_URL as string) || 'http://localhost:3009';
+const BASE =
+  (import.meta.env.VITE_NOTIFICATIONS_WS_URL as string) ||
+  (import.meta.env.VITE_NOTIFICATIONS_BASE_URL as string) ||
+  env.api.notifications;
 
 export interface NotificationPayload {
   id: string;

@@ -28,7 +28,7 @@ export interface CreateZonaDto {
 
 // Backend uses versioned endpoints: /api/v1/zones
 // Port 3004 verified from docker-compose.yml for zone-service
-const ZONES_BASE_URL = 'http://localhost:3004'
+const ZONES_BASE_URL = env.api.zonas
 
 export async function obtenerZonas(estado: 'activo' | 'inactivo' | 'todos' = 'activo'): Promise<ZonaComercial[]> {
   const token = await getValidToken()
@@ -215,4 +215,3 @@ export async function eliminarZona(id: string | number): Promise<void> {
     throw new Error('Error al eliminar zona')
   }
 }
-

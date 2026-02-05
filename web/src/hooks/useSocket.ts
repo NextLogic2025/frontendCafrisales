@@ -118,7 +118,9 @@ export function useSocket() {
     useEffect(() => {
         if (!token) return
 
-        const base = (env.api.notifications || env.api.catalogo).replace(/\/$/, '')
+        const base =
+            (import.meta.env.VITE_NOTIFICATIONS_WS_URL as string) ||
+            (env.api.notifications || env.api.catalogo).replace(/\/$/, '')
         const sentToken = token?.startsWith('Bearer ') ? token.replace(/^Bearer\s+/i, '') : token
 
         // Connect to namespace /notifications

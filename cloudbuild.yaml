@@ -11,6 +11,7 @@ steps:
     env:
       - 'VITE_API_URL=$_VITE_API_URL'
       - 'VITE_GOOGLE_MAPS_API_KEY=$_VITE_GOOGLE_MAPS_API_KEY'
+      - 'VITE_NOTIFICATIONS_WS_URL=$_VITE_NOTIFICATIONS_WS_URL'
 
   # Paso 2: Desplegar a Firebase (CORREGIDO)
   - name: 'node:20'
