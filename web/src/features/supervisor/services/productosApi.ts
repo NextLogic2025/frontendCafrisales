@@ -54,7 +54,12 @@ export async function getAllProducts(): Promise<Product[]> {
   if (!token) throw new Error('No hay sesión activa')
 
   const res = await fetch(`${CATALOG_API_URL}/v1/products`, {
-    headers: { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` },
+    cache: 'no-store',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'X-Authorization': `Bearer ${token}`,
+      'Cache-Control': 'no-store',
+    },
   })
   if (!res.ok) return []
   const response = await res.json()

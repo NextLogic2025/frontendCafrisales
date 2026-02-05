@@ -1,6 +1,4 @@
 import {
-  ClipboardCheck,
-  Percent,
   ListOrdered,
   PlusCircle,
   LayoutGrid,
@@ -14,7 +12,6 @@ import { useState } from 'react'
 import { CategoriasView } from './CategoriasView'
 import { ProductosView } from './ProductosView'
 import { PreciosView } from './PreciosView'
-import { PromocionesView } from './PromocionesView'
 import { SkusView } from './SkusView'
 
 type CatalogoOption = {
@@ -26,20 +23,6 @@ type CatalogoOption = {
 }
 
 const CATALOGO_OPTIONS: CatalogoOption[] = [
-  {
-    id: 'auditoria',
-    title: 'Auditoría',
-    description: 'Revisión y validación de productos',
-    icon: ClipboardCheck,
-    color: 'from-blue-500 to-blue-600',
-  },
-  {
-    id: 'promociones',
-    title: 'Promociones',
-    description: 'Ofertas y descuentos especiales',
-    icon: Percent,
-    color: 'from-orange-500 to-orange-600',
-  },
   {
     id: 'listas-precios',
     title: 'Listas de Precios',
@@ -154,30 +137,6 @@ export default function CatalogoPage() {
     )
   }
 
-  if (selectedOption === 'promociones') {
-    return (
-      <div className="space-y-6">
-        <PageHero
-          title="Promociones"
-          subtitle="Gestión de campañas promocionales y ofertas especiales"
-          chips={['Catálogo', 'Promociones', 'Descuentos']}
-        />
-
-        <div className="flex justify-start">
-          <Button
-            onClick={handleBack}
-            className="flex items-center gap-2 bg-brand-red text-white hover:bg-brand-red/90 shadow-sm"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Volver al catálogo
-          </Button>
-        </div>
-
-        <PromocionesView />
-      </div>
-    )
-  }
-
   if (selectedOption === 'sku') {
     return (
       <div className="space-y-6">
@@ -207,11 +166,10 @@ export default function CatalogoPage() {
     <div className="space-y-6">
       <PageHero
         title="Gestión de Catálogo"
-        subtitle="Administra productos, precios, promociones y configuraciones del catálogo"
+        subtitle="Administra productos, precios y configuraciones del catálogo"
         chips={[
           'Productos',
           'Precios',
-          'Promociones',
           'Categorías',
         ]}
       />
@@ -274,9 +232,8 @@ export default function CatalogoPage() {
               Gestión centralizada del catálogo
             </h4>
             <p className="mt-1 text-sm text-blue-700">
-              Desde aquí puedes administrar todos los aspectos del catálogo de productos:
-              auditorías, zonas de distribución, promociones activas, listas de precios
-              personalizadas, agregar nuevos productos y organizar categorías.
+              Desde aqui puedes administrar los aspectos clave del catalogo de productos:
+              listas de precios personalizadas, agregar nuevos productos y organizar categorias.
             </p>
           </div>
         </div>

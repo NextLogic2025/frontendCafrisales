@@ -5,9 +5,7 @@ import {
     getAllProducts,
     createProduct,
     updateProduct,
-    deleteProduct,
-    getDeletedProducts,
-    restoreProduct
+    deleteProduct
 } from './productosApi'
 
 const crudOperations = {
@@ -22,7 +20,5 @@ export function useProductoCrud() {
 
     return {
         ...crud,
-        getDeleted: getDeletedProducts,
-        restore: restoreProduct,
     }
 }
