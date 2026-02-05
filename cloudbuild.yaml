@@ -10,6 +10,7 @@ steps:
     args: ['run', 'build', '--prefix', 'web']
     env:
       - 'VITE_API_URL=$_VITE_API_URL'
+      - 'VITE_GOOGLE_MAPS_API_KEY=$_VITE_GOOGLE_MAPS_API_KEY'
 
   # Paso 2: Desplegar a Firebase (CORREGIDO)
   - name: 'node:20'
