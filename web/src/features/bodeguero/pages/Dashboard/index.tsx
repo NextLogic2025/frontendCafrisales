@@ -73,12 +73,12 @@ export default function DashboardPage() {
             <QuickActionButton
               label="Ver Inventario"
               icon={<Package className="h-4 w-4" />}
-              onClick={() => window.location.href = '/bodeguero/inventario'}
+              onClick={() => window.location.href = '/bodeguero/pedidos'}
             />
             <QuickActionButton
               label="Nueva Recepción"
               icon={<Boxes className="h-4 w-4" />}
-              onClick={() => window.location.href = '/bodeguero/recepciones'}
+              onClick={() => window.location.href = '/bodeguero/preparacion'}
             />
           </div>
         </SectionCard>

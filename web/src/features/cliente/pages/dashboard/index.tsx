@@ -168,8 +168,6 @@ export default function PaginaPanelCliente() {
 					<div className="grid gap-2">
 						<QuickActionButton label="Crear nuevo pedido" icon={<Plus className="h-4 w-4" />} onClick={() => navigate('/cliente/productos')} />
 						<QuickActionButton label="Revisar entregas" icon={<Truck className="h-4 w-4" />} onClick={() => navigate('/cliente/entregas')} />
-						<QuickActionButton label="Abrir ticket de soporte" icon={<LifeBuoy className="h-4 w-4" />} onClick={() => navigate('/cliente/soporte')} />
-						<QuickActionButton label="Ver estado de crédito" icon={<CreditCard className="h-4 w-4" />} onClick={() => navigate('/cliente/facturas')} />
 					</div>
 				</SectionCard>
 			</div>
@@ -215,17 +213,11 @@ export default function PaginaPanelCliente() {
 
 			<div className="grid gap-4 lg:grid-cols-2">
 				<SectionCard title="Promociones activas">
-					<div className="rounded-2xl border border-dashed border-brand-red/40 bg-brand-red/5 px-4 py-3 text-sm text-brand-red">
-						10% de descuento en línea de embutidos premium hasta el 30/01.
-					</div>
+
 				</SectionCard>
 
-				<SectionCard title="Soporte y mensajes" actionLabel="Ir a soporte" onAction={() => navigate('/cliente/soporte')}>
+				<SectionCard title="Mensajes" actionLabel="Ir a mensajes" onAction={() => navigate('/cliente/mensajes')}>
 					<div className="space-y-2">
-						<div className="flex items-center gap-2 rounded-xl bg-neutral-50 px-3 py-2 text-sm text-neutral-800">
-							<LifeBuoy className="h-4 w-4 text-brand-red" />
-							Tickets abiertos: <span className="font-semibold">{conversacionesAbiertas}</span>
-						</div>
 						<div className="flex items-center gap-2 rounded-xl bg-neutral-50 px-3 py-2 text-sm text-neutral-800">
 							<Bell className="h-4 w-4 text-brand-red" />
 							Notificaciones pendientes: <span className="font-semibold">{notificacionesNoLeidas}</span>
