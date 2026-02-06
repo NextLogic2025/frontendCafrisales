@@ -167,9 +167,11 @@ export function SupervisorPromosScreen() {
             const qty = Number(promo.cantidad_solicitada ?? 0)
             const label = promo.sku_nombre_snapshot || promo.sku_codigo_snapshot || promo.sku_id
             return (
-              <View key={promo.id || promo.sku_id} className="flex-row items-center justify-between py-1">
-                <Text className="text-xs text-neutral-700" numberOfLines={1}>{label}</Text>
-                <Text className="text-xs text-amber-600">
+              <View key={promo.id || promo.sku_id} className="flex-row items-start justify-between py-1">
+                <Text className="text-xs text-neutral-700 flex-1 pr-2" numberOfLines={2}>
+                  {label}
+                </Text>
+                <Text className="text-xs font-semibold text-amber-700 text-right">
                   -{formatMoney(delta * qty)}
                 </Text>
               </View>

@@ -9,6 +9,7 @@ import { GenericList } from '../../../../components/ui/GenericList'
 import { CategoryFilter } from '../../../../components/ui/CategoryFilter'
 import { BRAND_COLORS } from '../../../../shared/types'
 import { RouteService, LogisticRoute } from '../../../../services/api/RouteService'
+import { ZoneService } from '../../../../services/api/ZoneService'
 
 type StatusFilter = 'todos' | 'borrador' | 'publicado' | 'en_curso' | 'completado' | 'cancelado'
 
@@ -33,12 +34,24 @@ export function SupervisorRoutesScreen() {
   const [loading, setLoading] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState('')
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>('todos')
+  const [zoneNameMap, setZoneNameMap] = React.useState<Record<string, string>>({})
 
   const fetchRoutes = React.useCallback(async () => {
     setLoading(true)
     try {
       const data = await RouteService.getLogisticsRoutes()
       setRoutes(data)
+      const uniqueZoneIds = Array.from(
+        new Set(data.map((route) => route.zona_id).filter((id): id is string => typeof id === 'string' && id.length > 0)),
+      )
+      if (uniqueZoneIds.length) {
+        const zones = await ZoneService.getZones('todos')
+        const mapped: Record<string, string> = {}
+        zones.forEach((zone) => {
+          if (zone?.id) mapped[zone.id] = zone.nombre || zone.codigo || zone.id
+        })
+        setZoneNameMap(mapped)
+      }
     } finally {
       setLoading(false)
     }
@@ -55,13 +68,14 @@ export function SupervisorRoutesScreen() {
     return routes.filter((route) => {
       if (statusFilter !== 'todos' && route.estado !== statusFilter) return false
       if (!query) return true
+      const zoneLabel = zoneNameMap[route.zona_id] || route.zona_id
       return (
         route.id.toLowerCase().includes(query) ||
-        route.zona_id.toLowerCase().includes(query) ||
+        zoneLabel.toLowerCase().includes(query) ||
         route.transportista_id.toLowerCase().includes(query)
       )
     })
-  }, [routes, searchQuery, statusFilter])
+  }, [routes, searchQuery, statusFilter, zoneNameMap])
 
   const statusOptions = [
     { id: 'todos', name: 'Todos' },
@@ -154,7 +168,7 @@ export function SupervisorRoutesScreen() {
                   <View style={styles.cardContent}>
                     <Text style={styles.title}>Rutero {route.id.slice(0, 8)}</Text>
                     <Text style={styles.subtitle}>Fecha: {fecha}</Text>
-                    <Text style={styles.meta}>Zona: {route.zona_id.slice(0, 8)}</Text>
+                    <Text style={styles.meta}>Zona: {zoneNameMap[route.zona_id] || route.zona_id.slice(0, 8)}</Text>
                   </View>
                   <View style={[styles.statusBadge, { backgroundColor: badge.bg }]}>
                     <Text style={[styles.statusText, { color: badge.text }]}>

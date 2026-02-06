@@ -16,10 +16,9 @@ import { getUserFriendlyMessage } from '../../../utils/errorMessages'
 
 type Props = {
   onSignedIn: (role?: string) => void
-  onForgotPassword: () => void
 }
 
-export function LoginScreen({ onSignedIn, onForgotPassword }: Props) {
+export function LoginScreen({ onSignedIn }: Props) {
   const [showPassword, setShowPassword] = React.useState(true)
   const [remember, setRemember] = React.useState(true)
   const [serverError, setServerError] = React.useState<string | null>(null)
@@ -145,13 +144,6 @@ export function LoginScreen({ onSignedIn, onForgotPassword }: Props) {
                       />
                     )}
                   />
-                  <View className="items-end mt-2">
-                    <Pressable onPress={onForgotPassword} hitSlop={10}>
-                      <Text className="text-brand-red font-semibold text-sm py-1">
-                        ¿Olvidaste tu contraseña?
-                      </Text>
-                    </Pressable>
-                  </View>
                 </View>
 
                 <Pressable
@@ -188,3 +180,4 @@ export function LoginScreen({ onSignedIn, onForgotPassword }: Props) {
     </View>
   )
 }
+

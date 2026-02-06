@@ -3,6 +3,7 @@ import { View, Text, ScrollView, Pressable, RefreshControl, StyleSheet } from 'r
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
+import { jwtDecode } from 'jwt-decode'
 
 import { Header } from '../../../../components/ui/Header'
 import { SellerHeaderMenu } from '../../../../components/ui/SellerHeaderMenu'
@@ -10,6 +11,7 @@ import { DashboardCard } from '../../../../components/ui/DashboardCard'
 import { getUserName } from '../../../../storage/authStorage'
 import { OrderService, OrderListItem } from '../../../../services/api/OrderService'
 import { BRAND_COLORS } from '../../../../shared/types'
+import { getValidToken } from '../../../../services/auth/authClient'
 
 type QuickAction = {
     label: string
@@ -35,8 +37,24 @@ export function SellerHomeScreen() {
     const loadData = React.useCallback(async () => {
         setLoading(true)
         try {
+            const token = await getValidToken()
+            if (!token) {
+                setOrders([])
+                return
+            }
+            const decoded = jwtDecode<{ sub?: string; userId?: string }>(token)
+            const vendedorId = decoded.sub || decoded.userId
             const ordersData = await OrderService.getOrders()
-            setOrders(ordersData)
+            if (!vendedorId) {
+                setOrders(ordersData)
+                return
+            }
+            const visibleOrders = ordersData.filter((order) => {
+                const createdByMe = (order as any).creado_por_id === vendedorId || (order as any).creado_por === vendedorId
+                const vendedorMatch = (order as any).vendedor_id === vendedorId
+                return createdByMe || vendedorMatch
+            })
+            setOrders(visibleOrders)
         } catch {
             // Silently fail
         } finally {
@@ -201,7 +219,7 @@ export function SellerHomeScreen() {
                                 className="bg-white p-4 rounded-2xl border border-neutral-200 mb-3 shadow-sm items-center justify-center"
                                 style={{ width: '48%' }}
                                 onPress={() => {
-                                    if (action.route === 'Productos' || action.route === 'Clientes' || action.route === 'Creditos') {
+                                    if (action.route === 'Productos' || action.route === 'Clientes') {
                                         navigateToTab(action.route)
                                     } else {
                                         navigation.navigate(action.route, action.params)

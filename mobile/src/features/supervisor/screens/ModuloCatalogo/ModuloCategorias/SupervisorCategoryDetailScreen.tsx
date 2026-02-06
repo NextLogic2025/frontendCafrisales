@@ -72,11 +72,11 @@ export function SupervisorCategoryDetailScreen() {
       >
         <View className="px-5 py-4">
           <View className="bg-white p-5 rounded-3xl border border-neutral-200" style={styles.card}>
-            <View className="mb-4 rounded-3xl overflow-hidden border border-neutral-200">
+            <View className="mb-5 rounded-3xl overflow-hidden border border-neutral-200">
               {category.img_url ? (
                 <Image source={{ uri: category.img_url }} style={styles.heroImage} resizeMode="cover" />
               ) : (
-                <View className="h-40 bg-neutral-50 items-center justify-center">
+                <View className="h-56 bg-neutral-50 items-center justify-center">
                   <Ionicons name="image-outline" size={32} color="#9CA3AF" />
                   <Text className="text-xs text-neutral-400 mt-2">Sin imagen</Text>
                 </View>
@@ -134,6 +134,6 @@ const styles = StyleSheet.create({
   },
   heroImage: {
     width: '100%',
-    height: 160,
+    height: 240,
   },
 })

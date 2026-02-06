@@ -160,7 +160,10 @@ export function SupervisorProductDetailScreen() {
           </View>
 
           <View className="mt-6">
-            <PrimaryButton title="Editar producto" onPress={() => navigation.navigate('SupervisorProductForm', { product })} />
+            <PrimaryButton
+              title="Editar producto"
+              onPress={() => navigation.navigate('SupervisorProductForm', { product, origin: 'detail' })}
+            />
           </View>
         </View>
       </ScrollView>

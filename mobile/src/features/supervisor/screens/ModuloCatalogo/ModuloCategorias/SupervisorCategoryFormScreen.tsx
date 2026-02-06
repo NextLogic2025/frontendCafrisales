@@ -108,13 +108,32 @@ export function SupervisorCategoryFormScreen() {
         nombre: nombre.trim(),
         slug: slugValue,
         descripcion: descripcion.trim() || undefined,
-        img_url: imgUrl.trim() || undefined,
       }
       const result = isEditing && category?.id
         ? await CatalogCategoryService.updateCategory(category.id, payload)
         : await CatalogCategoryService.createCategory(payload)
 
       if (!result) throw new Error('SAVE_ERROR')
+      if (localImageUri) {
+        const fileName = localImageUri.split('/').pop() || `categoria-${result.id}.jpg`
+        const fileExt = fileName.split('.').pop()?.toLowerCase()
+        const mimeType =
+          fileExt === 'png'
+            ? 'image/png'
+            : fileExt === 'webp'
+              ? 'image/webp'
+              : fileExt === 'heic'
+                ? 'image/heic'
+                : 'image/jpeg'
+        const uploaded = await CatalogCategoryService.uploadCategoryImage(result.id, {
+          uri: localImageUri,
+          name: fileName,
+          type: mimeType,
+        })
+        if (!uploaded) {
+          showGlobalToast('La categoria se guardo, pero la imagen no se pudo subir.', 'warning')
+        }
+      }
       showGlobalToast(isEditing ? 'Categoria actualizada.' : 'Categoria creada.', 'success')
       navigation.goBack()
     } catch (error) {
@@ -164,13 +183,6 @@ export function SupervisorCategoryFormScreen() {
               onChangeText={setDescripcion}
               multiline
             />
-            <TextField
-              label="Imagen (URL)"
-              placeholder="https://..."
-              value={imgUrl}
-              onChangeText={setImgUrl}
-              editable={!localImageUri}
-            />
             <View>
               <Text className="text-xs font-semibold text-neutral-500 mb-2">Imagen</Text>
               {localImageUri ? (
@@ -184,12 +196,30 @@ export function SupervisorCategoryFormScreen() {
                   </Pressable>
                 </View>
               ) : imgUrl.trim() ? (
-                <View className="rounded-2xl overflow-hidden border border-neutral-200">
-                  <Image
-                    source={{ uri: imgUrl.trim() }}
-                    style={{ width: '100%', height: 160 }}
-                    resizeMode="cover"
-                  />
+                <View className="gap-3">
+                  <View className="rounded-2xl overflow-hidden border border-neutral-200">
+                    <Image
+                      source={{ uri: imgUrl.trim() }}
+                      style={{ width: '100%', height: 160 }}
+                      resizeMode="cover"
+                    />
+                  </View>
+                  <View className="flex-row gap-3">
+                    <Pressable
+                      onPress={takePhoto}
+                      className="flex-1 border border-dashed border-neutral-300 rounded-2xl py-4 items-center justify-center bg-neutral-50"
+                    >
+                      <Ionicons name="camera-outline" size={24} color="#EF4444" />
+                      <Text className="text-xs text-neutral-600 mt-2 font-semibold">Tomar foto</Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={pickImage}
+                      className="flex-1 border border-dashed border-neutral-300 rounded-2xl py-4 items-center justify-center bg-neutral-50"
+                    >
+                      <Ionicons name="images-outline" size={24} color="#EF4444" />
+                      <Text className="text-xs text-neutral-600 mt-2 font-semibold">Galeria</Text>
+                    </Pressable>
+                  </View>
                 </View>
               ) : (
                 <View className="flex-row gap-3">

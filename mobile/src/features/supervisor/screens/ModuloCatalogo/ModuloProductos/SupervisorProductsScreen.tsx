@@ -22,6 +22,7 @@ export function SupervisorProductsScreen() {
   const [searchQuery, setSearchQuery] = React.useState('')
   const [filter, setFilter] = React.useState<ProductFilter>('todos')
   const [loading, setLoading] = React.useState(false)
+  const pendingImageFetch = React.useRef<Set<string>>(new Set())
 
   const [feedbackVisible, setFeedbackVisible] = React.useState(false)
   const [feedbackConfig, setFeedbackConfig] = React.useState<{
@@ -48,6 +49,36 @@ export function SupervisorProductsScreen() {
       fetchProducts()
     }, [fetchProducts]),
   )
+
+  React.useEffect(() => {
+    let active = true
+    const loadMissingImages = async () => {
+      const missing = products.filter((product) => !product.img_url && product.id)
+      if (missing.length === 0) return
+      const updates: CatalogProduct[] = []
+      for (const product of missing) {
+        if (pendingImageFetch.current.has(product.id)) continue
+        pendingImageFetch.current.add(product.id)
+        try {
+          const full = await CatalogProductService.getProduct(product.id)
+          if (full?.img_url) {
+            updates.push(full)
+          }
+        } finally {
+          pendingImageFetch.current.delete(product.id)
+        }
+      }
+      if (active && updates.length) {
+        setProducts((prev) =>
+          prev.map((item) => updates.find((u) => u.id === item.id) ?? item),
+        )
+      }
+    }
+    loadMissingImages()
+    return () => {
+      active = false
+    }
+  }, [products])
 
   const upsertProduct = React.useCallback((incoming: CatalogProduct) => {
     setProducts((prev) => {
@@ -127,7 +158,7 @@ export function SupervisorProductsScreen() {
     {
       label: 'Nuevo producto',
       icon: 'add-circle-outline' as const,
-      onPress: () => navigation.navigate('SupervisorProductForm', { product: null }),
+      onPress: () => navigation.navigate('SupervisorProductForm', { product: null, origin: 'list' }),
     },
     {
       label: 'Actualizar',
@@ -158,7 +189,7 @@ export function SupervisorProductsScreen() {
           <TouchableOpacity
             className="w-14 h-14 rounded-2xl items-center justify-center shadow-sm"
             style={{ backgroundColor: BRAND_COLORS.red }}
-            onPress={() => navigation.navigate('SupervisorProductForm', { product: null })}
+            onPress={() => navigation.navigate('SupervisorProductForm', { product: null, origin: 'list' })}
           >
             <Ionicons name="add" size={28} color="white" />
           </TouchableOpacity>

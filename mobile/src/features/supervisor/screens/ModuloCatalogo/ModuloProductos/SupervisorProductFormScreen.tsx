@@ -20,6 +20,7 @@ export function SupervisorProductFormScreen() {
   const route = useRoute<any>()
   const productParam: CatalogProduct | null = route.params?.product ?? null
   const productId: string | undefined = route.params?.productId
+  const origin: 'list' | 'detail' | undefined = route.params?.origin
 
   const [product, setProduct] = React.useState<CatalogProduct | null>(productParam)
   const [categories, setCategories] = React.useState<CatalogCategory[]>([])
@@ -27,7 +28,6 @@ export function SupervisorProductFormScreen() {
   const [nombre, setNombre] = React.useState(productParam?.nombre || '')
   const [slug, setSlug] = React.useState(productParam?.slug || '')
   const [descripcion, setDescripcion] = React.useState(productParam?.descripcion || '')
-  const [imgUrl, setImgUrl] = React.useState(productParam?.img_url || '')
   const [localImageUri, setLocalImageUri] = React.useState<string | null>(null)
   const [saving, setSaving] = React.useState(false)
   const [loading, setLoading] = React.useState(false)
@@ -49,7 +49,6 @@ export function SupervisorProductFormScreen() {
         setNombre(data.nombre)
         setSlug(data.slug)
         setDescripcion(data.descripcion ?? '')
-        setImgUrl(data.img_url ?? '')
         setLocalImageUri(null)
         setCategoriaId(data.categoria?.id || data.categoria_id || '')
       }
@@ -79,7 +78,6 @@ export function SupervisorProductFormScreen() {
 
     if (!result.canceled && result.assets?.[0]?.uri) {
       setLocalImageUri(result.assets[0].uri)
-      setImgUrl('')
     }
   }
 
@@ -98,7 +96,6 @@ export function SupervisorProductFormScreen() {
 
     if (!result.canceled && result.assets?.[0]?.uri) {
       setLocalImageUri(result.assets[0].uri)
-      setImgUrl('')
     }
   }
 
@@ -107,6 +104,7 @@ export function SupervisorProductFormScreen() {
     label: category.nombre,
     description: category.descripcion || undefined,
   }))
+  const existingImage = product?.img_url || productParam?.img_url || ''
 
   const validate = () => {
     if (!nombre.trim()) {
@@ -130,7 +128,6 @@ export function SupervisorProductFormScreen() {
         nombre: nombre.trim(),
         slug: slugValue,
         descripcion: descripcion.trim() || undefined,
-        img_url: imgUrl.trim() || undefined,
       }
 
       const result = isEditing && product?.id
@@ -138,11 +135,43 @@ export function SupervisorProductFormScreen() {
         : await CatalogProductService.createProduct(payload)
 
       if (!result) throw new Error('SAVE_ERROR')
+      let finalProduct = result
+      if (localImageUri) {
+        const fileName = localImageUri.split('/').pop() || `producto-${result.id}.jpg`
+        const fileExt = fileName.split('.').pop()?.toLowerCase()
+        const mimeType =
+          fileExt === 'png'
+            ? 'image/png'
+            : fileExt === 'webp'
+              ? 'image/webp'
+              : fileExt === 'heic'
+                ? 'image/heic'
+                : 'image/jpeg'
+        const uploaded = await CatalogProductService.uploadProductImage(result.id, {
+          uri: localImageUri,
+          name: fileName,
+          type: mimeType,
+        })
+        if (!uploaded) {
+          showGlobalToast('El producto se guardo, pero la imagen no se pudo subir.', 'warning')
+        } else {
+          finalProduct = uploaded
+        }
+      }
+      const refreshed = await CatalogProductService.getProduct(result.id)
+      if (refreshed) {
+        finalProduct = refreshed
+        setProduct(refreshed)
+      } else {
+        setProduct(finalProduct)
+      }
+      setLocalImageUri(null)
       showGlobalToast(isEditing ? 'Producto actualizado.' : 'Producto creado.', 'success')
-      navigation.navigate('SupervisorProducts', {
-        upsertProduct: result,
-        refresh: true,
-      })
+      if (origin === 'detail') {
+        navigation.pop(2)
+      } else {
+        navigation.goBack()
+      }
     } catch (error) {
       showGlobalToast(getUserFriendlyMessage(error, 'CREATE_ERROR'), 'error')
     } finally {
@@ -199,13 +228,6 @@ export function SupervisorProductFormScreen() {
                 onChangeText={setDescripcion}
                 multiline
               />
-              <TextField
-                label="Imagen (URL)"
-                placeholder="https://..."
-                value={imgUrl}
-                onChangeText={setImgUrl}
-                editable={!localImageUri}
-              />
               <View>
                 <Text className="text-xs font-semibold text-neutral-500 mb-2">Imagen</Text>
                 {localImageUri ? (
@@ -218,13 +240,31 @@ export function SupervisorProductFormScreen() {
                       <Ionicons name="close" size={16} color="white" />
                     </Pressable>
                   </View>
-                ) : imgUrl.trim() ? (
-                  <View className="rounded-2xl overflow-hidden border border-neutral-200">
-                    <Image
-                      source={{ uri: imgUrl.trim() }}
-                      style={{ width: '100%', height: 160 }}
-                      resizeMode="cover"
-                    />
+                ) : existingImage.trim() ? (
+                  <View className="gap-3">
+                    <View className="rounded-2xl overflow-hidden border border-neutral-200">
+                      <Image
+                        source={{ uri: existingImage.trim() }}
+                        style={{ width: '100%', height: 160 }}
+                        resizeMode="cover"
+                      />
+                    </View>
+                    <View className="flex-row gap-3">
+                      <Pressable
+                        onPress={takePhoto}
+                        className="flex-1 border border-dashed border-neutral-300 rounded-2xl py-4 items-center justify-center bg-neutral-50"
+                      >
+                        <Ionicons name="camera-outline" size={24} color="#EF4444" />
+                        <Text className="text-xs text-neutral-600 mt-2 font-semibold">Tomar foto</Text>
+                      </Pressable>
+                      <Pressable
+                        onPress={pickImage}
+                        className="flex-1 border border-dashed border-neutral-300 rounded-2xl py-4 items-center justify-center bg-neutral-50"
+                      >
+                        <Ionicons name="images-outline" size={24} color="#EF4444" />
+                        <Text className="text-xs text-neutral-600 mt-2 font-semibold">Galeria</Text>
+                      </Pressable>
+                    </View>
                   </View>
                 ) : (
                   <View className="flex-row gap-3">

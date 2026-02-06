@@ -8,9 +8,18 @@ interface GenericModalProps extends ModalProps {
     title?: string
     children: React.ReactNode
     height?: DimensionValue // e.g. '50%', '70%'
+    scrollable?: boolean
 }
 
-export function GenericModal({ visible, onClose, title, children, height = 'auto', ...props }: GenericModalProps) {
+export function GenericModal({
+    visible,
+    onClose,
+    title,
+    children,
+    height = 'auto',
+    scrollable = true,
+    ...props
+}: GenericModalProps) {
     return (
         <Modal
             animationType="slide"
@@ -54,9 +63,15 @@ export function GenericModal({ visible, onClose, title, children, height = 'auto
                     </View>
 
                     {/* Content */}
-                    <ScrollView className="px-5 pt-2" contentContainerStyle={{ paddingBottom: 40 }}>
-                        {children}
-                    </ScrollView>
+                    {scrollable ? (
+                        <ScrollView className="px-5 pt-2" contentContainerStyle={{ paddingBottom: 40 }}>
+                            {children}
+                        </ScrollView>
+                    ) : (
+                        <View className="px-5 pt-2" style={{ flex: 1, paddingBottom: 40 }}>
+                            {children}
+                        </View>
+                    )}
                 </View>
             </KeyboardAvoidingView>
         </Modal>
