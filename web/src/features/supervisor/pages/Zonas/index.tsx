@@ -5,7 +5,7 @@ import { SectionHeader } from 'components/ui/SectionHeader'
 import { Alert } from 'components/ui/Alert'
 import { Modal } from 'components/ui/Modal'
 import { LoadingSpinner } from 'components/ui/LoadingSpinner'
-import { type ZonaComercial, type CreateZonaDto, type ZoneSchedule, getZoneSchedules, updateZoneSchedules, obtenerZonasParaMapa } from '../../services/zonasApi'
+import { type ZonaComercial, type CreateZonaDto, type ZoneSchedule, getZoneSchedules, updateZoneSchedules, obtenerZonasParaMapa, obtenerZonaPorId } from '../../services/zonasApi'
 import { useZonas } from '../../services/useZonas'
 import { ZonasTable } from './ZonasTable'
 import { CrearZonaForm } from './CrearZonaForm'
@@ -84,6 +84,19 @@ export default function ZonasPage() {
       descripcion: zona.descripcion || '',
       poligono_geografico: zona.poligono_geografico ?? null,
     })
+
+    // Fetch full detail (including geometry) for the one we are editing
+    try {
+      const fullZona = await obtenerZonaPorId(zona.id)
+      if (fullZona) {
+        setFormData(prev => ({
+          ...prev,
+          poligono_geografico: fullZona.poligono_geografico ?? null
+        }))
+      }
+    } catch (e) {
+      console.error('Error fetching zone details for edit:', e)
+    }
 
     // Load zones with geometry for map overlay
     try {
