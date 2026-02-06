@@ -33,7 +33,10 @@ export function RoutesList({ ruteros, onSelect }: RoutesListProps) {
                         <div className="space-y-1.5 text-sm text-gray-600">
                             <div className="flex items-center gap-2">
                                 <Truck className="h-4 w-4 text-gray-400" />
-                                <span>{rutero.vehiculo?.placa || 'Sin vehículo'} - {rutero.transportista?.nombre} {rutero.transportista?.apellido}</span>
+                                <span>
+                                    {rutero.vehiculo?.placa || 'Sin vehículo'}
+                                    {rutero.transportista ? ` - ${rutero.transportista.nombre} ${rutero.transportista.apellido}` : ' - Sin transportista'}
+                                </span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <Calendar className="h-4 w-4 text-gray-400" />

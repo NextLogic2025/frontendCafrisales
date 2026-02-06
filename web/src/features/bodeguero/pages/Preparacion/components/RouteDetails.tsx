@@ -1,4 +1,4 @@
-import { CheckCircle, Clock, Package, ChevronLeft, User, Calendar } from 'components/ui/Icons'
+import { CheckCircle, Clock, Package, ChevronLeft, User } from 'components/ui/Icons'
 import type { RuteroLogistico } from '../../../../supervisor/services/types'
 
 interface RouteDetailsProps {
@@ -26,8 +26,10 @@ export function RouteDetails({ rutero, onBack, onPreparar }: RouteDetailsProps) 
                             Preparación de Carga - Zona {rutero.zona?.nombre}
                         </h2>
                         <p className="text-sm text-gray-600 mt-1">
-                            Vehículo: <span className="font-medium">{rutero.vehiculo?.placa}</span> |
-                            Transportista: <span className="font-medium">{rutero.transportista?.nombre} {rutero.transportista?.apellido}</span>
+                            Vehículo: <span className="font-medium">{rutero.vehiculo?.placa || 'No asignado'}</span> |
+                            Transportista: <span className="font-medium">
+                                {rutero.transportista ? `${rutero.transportista.nombre} ${rutero.transportista.apellido}` : 'No asignado'}
+                            </span>
                         </p>
                     </div>
                     <div className="text-right">
@@ -64,7 +66,7 @@ export function RouteDetails({ rutero, onBack, onPreparar }: RouteDetailsProps) 
                                             </div>
                                             <div>
                                                 <div className="flex items-center gap-2">
-                                                    <h4 className="font-bold text-gray-900">Pedido #{parada.pedido?.numero_pedido}</h4>
+                                                    <h4 className="font-bold text-gray-900">Pedido #{parada.pedido?.numero_pedido || parada.pedido_id.slice(0, 8)}</h4>
                                                     {parada.preparado_en && (
                                                         <span className="flex items-center gap-1 text-xs font-medium text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
                                                             <CheckCircle className="h-3 w-3" />
@@ -72,8 +74,8 @@ export function RouteDetails({ rutero, onBack, onPreparar }: RouteDetailsProps) 
                                                         </span>
                                                     )}
                                                 </div>
-                                                <p className="text-sm text-gray-700 font-medium mt-0.5">{parada.pedido?.cliente_nombre}</p>
-                                                <p className="text-xs text-gray-500 mt-1 line-clamp-1">{parada.pedido?.direccion_entrega}</p>
+                                                <p className="text-sm text-gray-700 font-medium mt-0.5">{parada.pedido?.cliente_nombre || 'Cliente no identificado'}</p>
+                                                <p className="text-xs text-gray-500 mt-1 line-clamp-1">{parada.pedido?.direccion_entrega || 'Sin dirección registrada'}</p>
 
                                                 {parada.preparado_en && (
                                                     <div className="mt-2 flex items-center gap-3 text-[10px] text-gray-500">
