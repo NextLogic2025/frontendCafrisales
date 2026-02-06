@@ -1,7 +1,8 @@
+import { useState, useEffect } from 'react'
 import { GoogleMap, Polygon, useJsApiLoader } from '@react-google-maps/api'
 import { Alert } from 'components/ui/Alert'
 import { Modal } from 'components/ui/Modal'
-import { type ZonaComercial } from '../../services/zonasApi'
+import { type ZonaComercial, obtenerZonaPorId } from '../../services/zonasApi'
 
 import { GOOGLE_MAP_LIBRARIES, GOOGLE_MAP_SCRIPT_ID, GOOGLE_MAPS_API_KEY } from '../../../../config/googleMaps'
 
@@ -15,7 +16,26 @@ interface ZonaDetailModalProps {
 }
 
 export function ZonaDetailModal({ isOpen, onClose, zona }: ZonaDetailModalProps) {
-  const path = parseGeoPolygon(zona?.poligono_geografico)
+  const [fullZona, setFullZona] = useState<ZonaComercial | null>(null)
+
+  // Fetch full details when zona changes or modal opens
+  useEffect(() => {
+    if (isOpen && zona?.id) {
+      // Reset fullZona to initial zona while fetching (so we at least show basic info)
+      setFullZona(zona)
+
+      obtenerZonaPorId(zona.id)
+        .then((data) => {
+          if (data) setFullZona(data)
+        })
+        .catch((err) => console.error('Error fetching zone details:', err))
+    } else if (!isOpen) {
+      setFullZona(null)
+    }
+  }, [isOpen, zona])
+
+  const displayZona = fullZona || zona
+  const path = parseGeoPolygon(displayZona?.poligono_geografico)
 
   const { isLoaded, loadError } = useJsApiLoader({
     id: GOOGLE_MAP_SCRIPT_ID,
@@ -24,16 +44,16 @@ export function ZonaDetailModal({ isOpen, onClose, zona }: ZonaDetailModalProps)
   })
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={zona ? `Zona ${zona.nombre}` : 'Detalle de zona'} headerGradient="red" maxWidth="xl">
-      {!zona ? (
+    <Modal isOpen={isOpen} onClose={onClose} title={displayZona ? `Zona ${displayZona.nombre}` : 'Detalle de zona'} headerGradient="red" maxWidth="xl">
+      {!displayZona ? (
         <Alert type="error" message="No se encontró información de la zona." />
       ) : (
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3 text-sm text-neutral-700">
-            <Info label="Código" value={zona.codigo} />
-            <Info label="Nombre" value={zona.nombre} />
-            <Info label="Descripción" value={zona.descripcion || '—'} />
-            <Info label="Estado" value={zona.activo ? 'Activa' : 'Inactiva'} highlight={zona.activo ? 'green' : 'gray'} />
+            <Info label="Código" value={displayZona.codigo} />
+            <Info label="Nombre" value={displayZona.nombre} />
+            <Info label="Descripción" value={displayZona.descripcion || '—'} />
+            <Info label="Estado" value={displayZona.activo ? 'Activa' : 'Inactiva'} highlight={displayZona.activo ? 'green' : 'gray'} />
           </div>
 
           <div className="space-y-2">
