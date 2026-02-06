@@ -168,6 +168,7 @@ export default function PaginaPanelCliente() {
 				</SectionCard>
 			</div>
 
+
 			<div className="grid gap-4 lg:grid-cols-2">
 				<SectionCard title="Estado de pedidos" actionLabel="Ver historial" onAction={() => navigate('/cliente/pedidos')}>
 					<div className="grid grid-cols-2 gap-3 md:grid-cols-3">
