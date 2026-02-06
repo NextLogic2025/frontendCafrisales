@@ -166,3 +166,49 @@ export async function rejectCredit(id: string, motivo?: string): Promise<boolean
 
     return true
 }
+
+export type RegisterPaymentPayload = {
+    monto_pago: number
+    fecha_pago?: string
+    referencia?: string
+    notas?: string
+}
+
+export async function registerPayment(creditId: string, payload: RegisterPaymentPayload): Promise<boolean> {
+    const token = await getValidToken()
+    if (!token) throw new Error('No hay sesión activa')
+
+    // Try normalized payments endpoint, fallback to spanish path if needed
+    const endpoints = [
+        `${CREDIT_API_URL}/v1/credits/${creditId}/payments`,
+        `${CREDIT_API_URL}/v1/creditos/${creditId}/pagos`
+    ]
+
+    for (const url of endpoints) {
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify(payload),
+            })
+
+            if (!res.ok) {
+                // If 404 try next endpoint
+                if (res.status === 404) continue
+                const errData = await res.json().catch(() => null)
+                throw new Error(errData?.message || `Error al registrar pago (${res.status})`)
+            }
+
+            return true
+        } catch (err) {
+            // try next endpoint
+            // if last, rethrow
+            // continue to next
+        }
+    }
+
+    throw new Error('No se pudo registrar el pago en el servicio de créditos')
+}

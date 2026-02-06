@@ -221,7 +221,6 @@ export function CrearRuteroModal({ isOpen, onClose, onSubmit }: CrearRuteroModal
                         value={transportistaId}
                         onChange={setTransportistaId}
                         options={[
-                            { label: 'Seleccionar transportista...', value: '' },
                             ...transportistas.map(t => ({
                                 label: `${t.nombre} ${t.nombreCompleto ? `(${t.nombreCompleto})` : ''}`,
                                 value: t.id,
@@ -236,7 +235,6 @@ export function CrearRuteroModal({ isOpen, onClose, onSubmit }: CrearRuteroModal
                         value={vehiculoId}
                         onChange={setVehiculoId}
                         options={[
-                            { label: 'Seleccionar vehículo...', value: '' },
                             ...vehiculos.map(v => ({
                                 label: `${v.placa}${v.modelo ? ` - ${v.modelo}` : ''}${v.capacidad_kg ? ` (${v.capacidad_kg}kg)` : ''}`,
                                 value: v.id,
@@ -251,7 +249,6 @@ export function CrearRuteroModal({ isOpen, onClose, onSubmit }: CrearRuteroModal
                         value={zonaId}
                         onChange={setZonaId}
                         options={[
-                            { label: 'Todas las zonas', value: '' },
                             ...zonas.map(z => ({
                                 label: z.nombre,
                                 value: String(z.id),

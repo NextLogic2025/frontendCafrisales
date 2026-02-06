@@ -1,5 +1,7 @@
 import { X, Calendar, DollarSign, FileText, History, CheckCircle2, Clock } from 'components/ui/Icons'
-import { type CreditDetail } from '../../../services/creditosApi'
+import { useEffect, useState } from 'react'
+import { type CreditDetail, registerPayment, getCreditDetail } from '../../../services/creditosApi'
+import { RegisterPaymentModal } from './RegisterPaymentModal'
 
 interface CreditDetailModalProps {
     isOpen: boolean
@@ -11,7 +13,50 @@ interface CreditDetailModalProps {
 }
 
 export function CreditDetailModal({ isOpen, onClose, detail, loading, onApprove, onReject }: CreditDetailModalProps) {
+    const [localDetail, setLocalDetail] = useState<CreditDetail | null>(detail)
+    const [showPaymentForm, setShowPaymentForm] = useState(false)
+    const [payAmount, setPayAmount] = useState<string>('0.00')
+    const [payDate, setPayDate] = useState<string>(new Date().toISOString().split('T')[0])
+    const [payRef, setPayRef] = useState<string>('')
+    const [payNotes, setPayNotes] = useState<string>('')
+    const [isPaying, setIsPaying] = useState(false)
+    const [payError, setPayError] = useState<string | null>(null)
+
+    useEffect(() => {
+        setLocalDetail(detail)
+    }, [detail])
+
     if (!isOpen) return null
+    const display = localDetail ?? detail
+
+    const handleConfirmPayment = async () => {
+        if (!localDetail) return
+        setPayError(null)
+        const amount = Number(payAmount)
+        if (!amount || amount <= 0) {
+            setPayError('Ingresa un monto válido')
+            return
+        }
+
+        setIsPaying(true)
+        try {
+            await registerPayment(localDetail.credito.id, {
+                monto_pago: amount,
+                fecha_pago: payDate,
+                referencia: payRef,
+                notas: payNotes,
+            })
+
+            // Refresh detail
+            const refreshed = await getCreditDetail(localDetail.credito.id)
+            setLocalDetail(refreshed)
+            setShowPaymentForm(false)
+        } catch (err: any) {
+            setPayError(err?.message || 'Error al registrar pago')
+        } finally {
+            setIsPaying(false)
+        }
+    }
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
@@ -54,19 +99,19 @@ export function CreditDetailModal({ isOpen, onClose, detail, loading, onApprove,
                                 <div className="bg-neutral-50 rounded-xl p-4 border border-neutral-100">
                                     <p className="text-xs font-bold text-neutral-500 uppercase mb-1">Aprobado</p>
                                     <p className="text-xl font-black text-neutral-900">
-                                        ${Number(detail.totales.total_aprobado).toFixed(2)}
+                                        ${Number(display?.totales.total_aprobado || 0).toFixed(2)}
                                     </p>
                                 </div>
                                 <div className="bg-green-50 rounded-xl p-4 border border-green-100">
                                     <p className="text-xs font-bold text-green-600 uppercase mb-1">Pagado</p>
                                     <p className="text-xl font-black text-green-700">
-                                        ${Number(detail.totales.total_pagado).toFixed(2)}
+                                        ${Number(display?.totales.total_pagado || 0).toFixed(2)}
                                     </p>
                                 </div>
                                 <div className="bg-red-50 rounded-xl p-4 border border-red-100">
                                     <p className="text-xs font-bold text-red-600 uppercase mb-1">Saldo</p>
                                     <p className="text-xl font-black text-red-700">
-                                        ${Number(detail.totales.saldo).toFixed(2)}
+                                        ${Number(display?.totales.saldo || 0).toFixed(2)}
                                     </p>
                                 </div>
                             </div>
@@ -81,18 +126,18 @@ export function CreditDetailModal({ isOpen, onClose, detail, loading, onApprove,
                                         <div className="flex items-center justify-between text-sm">
                                             <span className="text-neutral-500">Fecha Aprobación:</span>
                                             <span className="font-bold text-neutral-900">
-                                                {new Date(detail.credito.fecha_aprobacion).toLocaleDateString()}
+                                                {display?.credito.fecha_aprobacion ? new Date(display.credito.fecha_aprobacion).toLocaleDateString() : '-'}
                                             </span>
                                         </div>
                                         <div className="flex items-center justify-between text-sm">
                                             <span className="text-neutral-500">Vencimiento:</span>
                                             <span className="font-bold text-neutral-900">
-                                                {new Date(detail.credito.fecha_vencimiento).toLocaleDateString()}
+                                                {display?.credito.fecha_vencimiento ? new Date(display.credito.fecha_vencimiento).toLocaleDateString() : '-'}
                                             </span>
                                         </div>
                                         <div className="flex items-center justify-between text-sm">
                                             <span className="text-neutral-500">Plazo otorgado:</span>
-                                            <span className="font-bold text-neutral-900">{detail.credito.plazo_dias} días</span>
+                                            <span className="font-bold text-neutral-900">{display?.credito.plazo_dias ?? '-'} días</span>
                                         </div>
                                     </div>
                                 </div>
@@ -102,11 +147,11 @@ export function CreditDetailModal({ isOpen, onClose, detail, loading, onApprove,
                                         <Clock className="h-4 w-4" /> Estado Actual
                                     </h3>
                                     <div className="flex items-center gap-3 p-4 rounded-xl border border-neutral-100 bg-neutral-50/50">
-                                        {detail.credito.estado === 'activo' ? (
+                                        {display?.credito.estado === 'activo' ? (
                                             <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
                                                 <CheckCircle2 className="h-6 w-6 text-green-600" />
                                             </div>
-                                        ) : detail.credito.estado === 'vencido' ? (
+                                        ) : display?.credito.estado === 'vencido' ? (
                                             <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
                                                 <Clock className="h-6 w-6 text-red-600" />
                                             </div>
@@ -116,7 +161,7 @@ export function CreditDetailModal({ isOpen, onClose, detail, loading, onApprove,
                                             </div>
                                         )}
                                         <div>
-                                            <p className="font-bold text-neutral-900 capitalize">{detail.credito.estado}</p>
+                                            <p className="font-bold text-neutral-900 capitalize">{display?.credito.estado}</p>
                                             <p className="text-xs text-neutral-500">Estado del crédito en sistema</p>
                                         </div>
                                     </div>
@@ -129,13 +174,13 @@ export function CreditDetailModal({ isOpen, onClose, detail, loading, onApprove,
                                     <History className="h-4 w-4" /> Historial de Pagos
                                 </h3>
 
-                                {detail.pagos.length === 0 ? (
+                                {(localDetail?.pagos || []).length === 0 ? (
                                     <div className="p-8 border-2 border-dashed border-neutral-100 rounded-2xl text-center">
                                         <p className="text-neutral-400 text-sm">No se han registrado pagos para este crédito todavía.</p>
                                     </div>
                                 ) : (
                                     <div className="space-y-3">
-                                        {detail.pagos.map((pago) => (
+                                        {(localDetail?.pagos || []).map((pago) => (
                                             <div key={pago.id} className="flex items-center justify-between p-4 rounded-xl border border-neutral-100 hover:bg-neutral-50 transition-colors">
                                                 <div className="flex items-center gap-4">
                                                     <div className="h-10 w-10 rounded-lg bg-neutral-100 flex items-center justify-center">
@@ -143,13 +188,13 @@ export function CreditDetailModal({ isOpen, onClose, detail, loading, onApprove,
                                                     </div>
                                                     <div>
                                                         <p className="font-bold text-neutral-900">${Number(pago.monto).toFixed(2)}</p>
-                                                        <p className="text-xs text-neutral-500">{pago.metodo_pago.toUpperCase()} • {pago.referencia || 'Sin ref'}</p>
+                                                        <p className="text-xs text-neutral-500">{String(pago.metodo_pago ?? '').toUpperCase() || 'Manual'} • {pago.referencia || 'Sin ref'}</p>
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className="text-xs font-bold text-neutral-900">
-                                                        {new Date(pago.fecha_pago).toLocaleDateString()}
-                                                    </p>
+                                                        <p className="text-xs font-bold text-neutral-900">
+                                                            {new Date(pago.fecha_pago).toLocaleDateString()}
+                                                        </p>
                                                     <p className="text-[10px] text-neutral-400 uppercase font-black">Registrado</p>
                                                 </div>
                                             </div>
@@ -169,24 +214,51 @@ export function CreditDetailModal({ isOpen, onClose, detail, loading, onApprove,
                         Cerrar Detalle
                     </button>
 
-                    {detail?.credito.estado === 'pendiente' && onApprove && onReject && (
-                        <div className="flex gap-2">
+                    <div className="flex gap-2 items-center">
+                        {/* Registrar pago si hay saldo pendiente */}
+                        {Number(localDetail?.totales.saldo || 0) > 0 && (
                             <button
-                                onClick={() => onReject(detail.credito.id)}
-                                className="px-6 py-2 rounded-xl bg-white border border-red-200 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors"
+                                onClick={() => setShowPaymentForm(true)}
+                                className="px-4 py-2 rounded-xl bg-green-600 text-sm font-bold text-white hover:bg-green-700 transition-colors"
                             >
-                                Rechazar
+                                Registrar pago
                             </button>
-                            <button
-                                onClick={() => onApprove(detail.credito)}
-                                className="px-6 py-2 rounded-xl bg-brand-red text-sm font-bold text-white hover:bg-brand-red/90 transition-colors shadow-lg shadow-brand-red/20"
-                            >
-                                Aprobar Crédito
-                            </button>
-                        </div>
-                    )}
+                        )}
+
+                        {detail?.credito.estado === 'pendiente' && onApprove && onReject && (
+                            <div className="flex gap-2">
+                                    <button
+                                        onClick={() => onReject(display?.credito.id || '')}
+                                    className="px-6 py-2 rounded-xl bg-white border border-red-200 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors"
+                                >
+                                    Rechazar
+                                </button>
+                                <button
+                                        onClick={() => onApprove(display?.credito)}
+                                    className="px-6 py-2 rounded-xl bg-brand-red text-sm font-bold text-white hover:bg-brand-red/90 transition-colors shadow-lg shadow-brand-red/20"
+                                >
+                                    Aprobar Crédito
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
+            <RegisterPaymentModal
+                isOpen={showPaymentForm}
+                onClose={() => setShowPaymentForm(false)}
+                amount={payAmount}
+                setAmount={setPayAmount}
+                date={payDate}
+                setDate={setPayDate}
+                reference={payRef}
+                setReference={setPayRef}
+                notes={payNotes}
+                setNotes={setPayNotes}
+                onConfirm={handleConfirmPayment}
+                loading={isPaying}
+                error={payError}
+            />
         </div>
     )
 }

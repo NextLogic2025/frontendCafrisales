@@ -21,6 +21,7 @@ interface CrearZonaFormProps {
   onCancel: () => void
   isEditing?: boolean
   zonas: ZonaComercial[]
+  editingZoneId?: number | string
 }
 
 export function CrearZonaForm({
@@ -70,7 +71,7 @@ export function CrearZonaForm({
       const overlapping = findOverlappingZones(
         geoJson,
         zonas,
-        isEditing ? (formData as any).id : undefined
+        isEditing ? editingZoneId : undefined
       )
 
       if (overlapping.length > 0) {

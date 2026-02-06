@@ -205,7 +205,6 @@ export function CrearRutaModal({ isOpen, onClose, onSubmit }: CrearRutaModalProp
                         value={vendedorId}
                         onChange={setVendedorId}
                         options={[
-                            { label: 'Seleccionar vendedor...', value: '' },
                             ...vendedores.map(v => ({
                                 label: v.nombre,
                                 value: v.id,
@@ -220,7 +219,6 @@ export function CrearRutaModal({ isOpen, onClose, onSubmit }: CrearRutaModalProp
                         value={zonaId}
                         onChange={setZonaId}
                         options={[
-                            { label: 'Seleccionar zona...', value: '' },
                             ...zonas.map(z => ({
                                 label: z.nombre,
                                 value: String(z.id),

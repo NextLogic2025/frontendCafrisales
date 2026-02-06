@@ -313,6 +313,7 @@ export default function ZonasPage() {
           onCancel={handleCloseModal}
           isEditing={modalMode === 'editar'}
           zonas={zonasParaMapa}
+          editingZoneId={zonaEditando?.id}
         />
       </Modal>
 
