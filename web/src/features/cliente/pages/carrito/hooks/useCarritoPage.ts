@@ -18,13 +18,20 @@ export const useCarritoPage = () => {
     const confirmarPedido = async () => {
         if (items.length === 0) return
 
+        const missingSkuItems = items.filter(item => !item.selectedSkuId)
+        if (missingSkuItems.length > 0) {
+            const nombres = missingSkuItems.map(item => item.name).join(', ')
+            alert(`Faltan presentaciones (SKU) para: ${nombres}. Selecciona una presentación antes de confirmar.`)
+            return
+        }
+
         try {
             const payload: any = {
                 // Mobile app does NOT send cliente_id, backend likely takes it from token
                 // cliente_id: perfil?.id, 
                 metodo_pago: condicionPagoManual === 'CREDITO' ? 'credito' : 'contado',
                 items: items.map(item => ({
-                    sku_id: item.selectedSkuId || item.id,
+                    sku_id: item.selectedSkuId!,
                     cantidad: item.quantity,
                     // Mobile sends only sku_id and quantity. We omit price so backend uses catalog price.
                     // Sending price triggers 'negotiation' check which fails for clients.

@@ -124,7 +124,11 @@ export default function PaginaProductos() {
 
     // Add to Cart Logic with SKU handling
     const handleAddToCart = (producto: Producto) => {
-        if (producto.skus && producto.skus.length > 1) {
+        if (!producto.skus || producto.skus.length === 0) {
+            alert('Este producto no tiene presentaciones disponibles. Contacta a soporte o verifica el catálogo.')
+            return
+        }
+        if (producto.skus.length > 1) {
             setProductForSkuSelection(producto)
         } else {
             const sku = producto.skus && producto.skus.length === 1 ? producto.skus[0] : null
@@ -134,6 +138,10 @@ export default function PaginaProductos() {
 
     const confirmSkuSelection = (producto: Producto, sku: any) => {
         try {
+            if (!sku) {
+                alert('Debes seleccionar una presentación válida para continuar.')
+                return
+            }
             const cartProduct = { ...producto }
             let skuId = undefined
             let skuCode = undefined
