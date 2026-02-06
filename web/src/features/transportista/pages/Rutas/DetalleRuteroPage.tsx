@@ -14,6 +14,8 @@ import { ESTADO_RUTERO_COLORS, ESTADO_RUTERO_LABELS } from '../../../supervisor/
 import { getRuteroLogistico, completarRutero, iniciarRutero } from '../../services/logisticsApi'
 import { obtenerPedidoPorId } from '../../../supervisor/services/pedidosApi'
 import { obtenerZonas } from '../../../supervisor/services/clientesApi'
+import { getUserById } from '../../../supervisor/services/usuariosApi'
+import { getVehicles } from '../../../supervisor/services/vehiclesApi'
 import { getEntregas } from 'features/shared/services/deliveryApi'
 import type { Entrega } from 'features/shared/types/deliveryTypes'
 import { ESTADO_ENTREGA_COLORS, ESTADO_ENTREGA_LABELS } from 'features/shared/types/deliveryTypes'
@@ -54,6 +56,43 @@ export default function DetalleRuteroPage() {
 
                 const zona = zonas.find(z => String(z.id) === String(data.zona_id))
 
+                // Manually enrich Transportista and Vehicle if missing
+                let transportista = data.transportista
+                let vehiculo = data.vehiculo
+
+                try {
+                    const promises = []
+                    if (!transportista && data.transportista_id) {
+                        promises.push(getUserById(data.transportista_id).then(u => {
+                            if (u) {
+                                transportista = {
+                                    id: u.id,
+                                    nombre: u.perfil?.nombres || 'Sin nombre',
+                                    apellido: u.perfil?.apellidos || '',
+                                    email: u.email
+                                }
+                            }
+                        }).catch(() => { }))
+                    }
+                    if (!vehiculo && data.vehiculo_id) {
+                        promises.push(getVehicles().then(all => {
+                            const found = all.find(v => v.id === data.vehiculo_id)
+                            if (found) {
+                                vehiculo = {
+                                    id: found.id,
+                                    placa: found.placa,
+                                    modelo: found.modelo,
+                                    capacidad_kg: found.capacidad_kg,
+                                    estado: found.estado
+                                }
+                            }
+                        }).catch(() => { }))
+                    }
+                    if (promises.length > 0) await Promise.all(promises)
+                } catch (e) {
+                    console.error("Error enriching rutero detail:", e)
+                }
+
                 // Hydrate Paradas
                 const hydratedParadas = await Promise.all(
                     (data.paradas || []).map(async (p: ParadaRutero) => {
@@ -80,6 +119,8 @@ export default function DetalleRuteroPage() {
                 setRutero({
                     ...data,
                     zona: zona ? { id: zona.id, nombre: zona.nombre } : undefined,
+                    transportista,
+                    vehiculo,
                     paradas: hydratedParadas
                 })
 

@@ -1,13 +1,13 @@
-import React from 'react'
-import { MapPin, CheckCircle, Circle } from 'components/ui/Icons'
+import { MapPin, CheckCircle, Circle, User } from 'components/ui/Icons'
 import type { ParadaRuta } from '../services/rutasVendedorTypes'
 
 interface ClientesListProps {
     paradas: ParadaRuta[]
     showStatus?: boolean
+    vendorName?: string
 }
 
-export function ClientesList({ paradas, showStatus = false }: ClientesListProps) {
+export function ClientesList({ paradas, showStatus = false, vendorName }: ClientesListProps) {
     if (!paradas || paradas.length === 0) {
         return (
             <div className="text-center py-8 text-neutral-500">
@@ -34,8 +34,19 @@ export function ClientesList({ paradas, showStatus = false }: ClientesListProps)
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-neutral-900 truncate">
-                            {parada.cliente?.razon_social || 'Cliente'}
+                            {parada.cliente?.razon_social === 'Cliente' || !parada.cliente?.razon_social
+                                ? (parada.cliente_id ? `CLIENTE #${parada.cliente_id.slice(0, 8)}` : 'ID no disponible')
+                                : parada.cliente.razon_social
+                            }
                         </h4>
+
+                        {vendorName && (
+                            <div className="flex items-center gap-1 mt-0.5 text-[11px] font-medium text-brand-red/80 uppercase">
+                                <User className="h-3 w-3" />
+                                <span>Vendedor: {vendorName}</span>
+                            </div>
+                        )}
+
                         {parada.cliente?.direccion && (
                             <div className="flex items-start gap-1.5 mt-1 text-sm text-neutral-600">
                                 <MapPin className="h-4 w-4 text-neutral-400 flex-shrink-0 mt-0.5" />

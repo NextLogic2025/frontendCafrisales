@@ -1,10 +1,11 @@
-import React from 'react'
+import { useState, useEffect } from 'react'
 import { Modal } from 'components/ui/Modal'
-import { X } from 'components/ui/Icons'
-import type { RutaVendedor } from '../../services/rutasVendedorTypes'
+import { LoadingSpinner } from 'components/ui/LoadingSpinner'
+import type { RutaVendedor, ParadaRuta } from '../../services/rutasVendedorTypes'
 import { ClientesList } from '../../components/ClientesList'
 import { ZonaMapaGoogle } from '../../components/ZonaMapaGoogle'
 import { ESTADO_RUTA_LABELS } from '../../services/rutasVendedorTypes'
+import { obtenerClientePorId, type Cliente } from '../../services/clientesApi'
 
 interface DetalleRutaModalProps {
     isOpen: boolean
@@ -13,6 +14,56 @@ interface DetalleRutaModalProps {
 }
 
 export function DetalleRutaModal({ isOpen, onClose, ruta }: DetalleRutaModalProps) {
+    const [resolvedClients, setResolvedClients] = useState<Record<string, Cliente>>({})
+    const [resolvedVendorName, setResolvedVendorName] = useState<string | null>(null)
+    const [isLoadingClients, setIsLoadingClients] = useState(false)
+
+    useEffect(() => {
+        if (!isOpen || !ruta) return
+
+        // Resolve Vendor if name is missing but ID exists
+        if (ruta.vendedor_id && (!ruta.vendedor?.nombre || ruta.vendedor.nombre === 'No asignado')) {
+            import('../../services/usuariosApi').then(({ getUserById }) => {
+                getUserById(ruta.vendedor_id).then(user => {
+                    if (user && (user.nombre || user.nombres)) {
+                        setResolvedVendorName(user.nombre || `${user.nombres} ${user.apellidos || ''}`.trim())
+                    }
+                }).catch(err => console.error('Error fetching vendor:', err))
+            })
+        }
+
+        if (!ruta.paradas) return
+
+        const missingClientIds = ruta.paradas
+            .filter(p => !p.cliente?.razon_social)
+            .map(p => p.cliente_id)
+            .filter((id, index, self) => self.indexOf(id) === index) // Unique IDs
+
+        if (missingClientIds.length === 0) return
+
+        const fetchClients = async () => {
+            setIsLoadingClients(true)
+            const newResolved: Record<string, Cliente> = { ...resolvedClients }
+
+            for (const id of missingClientIds) {
+                if (newResolved[id]) continue
+                try {
+                    const client = await obtenerClientePorId(id)
+                    if (client) {
+                        newResolved[id] = client
+                    }
+                } catch (error) {
+                    console.error(`Error fetching client ${id}:`, error)
+                }
+            }
+
+            setResolvedClients(newResolved)
+            setIsLoadingClients(false)
+        }
+
+        fetchClients()
+    }, [isOpen, ruta])
+
     if (!ruta) return null
 
     const formatDate = (dateString?: string, alternate?: string) => {
@@ -27,8 +78,31 @@ export function DetalleRutaModal({ isOpen, onClose, ruta }: DetalleRutaModalProp
         })
     }
 
+    const vendorName = resolvedVendorName || ruta.vendedor?.nombre || 'No asignado'
+
+    // Enhance paradas with resolved client data
+    const enhancedParadas: ParadaRuta[] = (ruta.paradas || []).map(p => {
+        const resolved = resolvedClients[p.cliente_id]
+        const baseParada = { ...p }
+
+        // Add vendor info to parada if needed (using observations or meta if we want ClientesList to see it)
+        // For now, we'll just ensure the client info is there
+        if (!p.cliente && resolved) {
+            baseParada.cliente = {
+                id: resolved.id,
+                razon_social: resolved.nombre_comercial || resolved.razon_social,
+                direccion: resolved.direccion_texto || undefined,
+                latitud: resolved.latitud || undefined,
+                longitud: resolved.longitud || undefined
+            }
+        }
+
+        // We can pass vendor names by extending the type locally or using a prop in ClientesList
+        return baseParada
+    })
+
     // Prepare markers for map
-    const puntos = (ruta.paradas || [])
+    const puntos = enhancedParadas
         .filter(p => p.cliente?.latitud && p.cliente?.longitud)
         .map(p => ({
             lat: p.cliente!.latitud!,
@@ -50,7 +124,7 @@ export function DetalleRutaModal({ isOpen, onClose, ruta }: DetalleRutaModalProp
                     <div>
                         <p className="text-sm text-neutral-600">Vendedor</p>
                         <p className="font-semibold text-neutral-900">
-                            {ruta.vendedor?.nombre || 'No asignado'}
+                            {vendorName}
                         </p>
                     </div>
                     <div>
@@ -87,10 +161,22 @@ export function DetalleRutaModal({ isOpen, onClose, ruta }: DetalleRutaModalProp
 
                 {/* Lista de Clientes */}
                 <div>
-                    <h3 className="text-lg font-semibold text-neutral-900 mb-3">
-                        Clientes a Visitar
-                    </h3>
-                    <ClientesList paradas={ruta.paradas || []} showStatus={ruta.estado === 'en_curso' || ruta.estado === 'completado'} />
+                    <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-lg font-semibold text-neutral-900">
+                            Clientes a Visitar
+                        </h3>
+                        {isLoadingClients && (
+                            <div className="flex items-center gap-2 text-xs text-neutral-500">
+                                <LoadingSpinner className="h-3 w-3" />
+                                Resolviendo nombres...
+                            </div>
+                        )}
+                    </div>
+                    <ClientesList
+                        paradas={enhancedParadas}
+                        showStatus={ruta.estado === 'en_curso' || ruta.estado === 'completado'}
+                        vendorName={vendorName}
+                    />
                 </div>
 
                 {/* Motivo Cancelación */}
