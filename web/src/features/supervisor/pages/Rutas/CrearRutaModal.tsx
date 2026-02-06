@@ -83,10 +83,15 @@ export function CrearRutaModal({ isOpen, onClose, onSubmit }: CrearRutaModalProp
         setSubmitError(null)
         setLoading(true)
         try {
+            if (!zonaId) {
+                setSubmitError('Debe seleccionar una zona comercial')
+                return
+            }
+            const resolvedFecha = fechaProgramada || new Date().toISOString().slice(0, 10)
             const payload: CreateRutaVendedorPayload = {
                 vendedor_id: vendedorId,
                 zona_id: zonaId,
-                fecha_rutero: fechaProgramada,
+                fecha_rutero: resolvedFecha,
                 paradas: clientesSeleccionados.map(c => ({
                     cliente_id: c.cliente_id,
                     orden_visita: c.orden_visita,
@@ -362,7 +367,7 @@ export function CrearRutaModal({ isOpen, onClose, onSubmit }: CrearRutaModalProp
                     <div className="flex gap-3 pt-4 border-t border-neutral-200">
                         <button
                             type="submit"
-                            disabled={loading || !vendedorId || clientesSeleccionados.length === 0}
+                            disabled={loading || !vendedorId || !zonaId || clientesSeleccionados.length === 0}
                             className="flex-1 bg-brand-red text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-brand-red-dark transition-all duration-150 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {loading ? 'Creando...' : 'Crear Ruta'}
