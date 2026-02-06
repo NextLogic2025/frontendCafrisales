@@ -8,9 +8,12 @@ function getToken(provided?: string) {
 }
 
 const base = (env.api.notifications || env.api.catalogo || '').replace(/\/$/, '')
+const baseApiV1 = `${base}/api/v1`
 
 export async function getNotificationTypes(token?: string) {
   const paths = [
+    `${baseApiV1}/notifications/types`,
+    `${baseApiV1}/notifications/tipos`,
     `${base}/api/notifications/types`,
     `${base}/api/notifications/tipos`,
     `${base}/api/notificaciones/types`,
@@ -32,6 +35,9 @@ export async function getNotificationTypes(token?: string) {
 
 export async function getSubscriptions(token?: string) {
   const paths = [
+    `${baseApiV1}/notifications/subscriptions`,
+    `${baseApiV1}/notifications/suscripciones`,
+    `${baseApiV1}/notifications/preferencias`,
     `${base}/api/notifications/subscriptions`,
     `${base}/api/notifications/suscripciones`,
     `${base}/api/notifications/preferencias`,
@@ -88,13 +94,13 @@ export async function upsertSubscription(tipoId: string, opts: { websocketEnable
 
   // The backend exposes PUT /api/notifications/subscriptions for upsert (see controller).
   // Try PUT first, then fall back to POST for compatibility with older variants.
-  let res = await tryFetch(`${base}/api/notifications/subscriptions`, {
+  let res = await tryFetch(`${baseApiV1}/notifications/subscriptions`, {
     method: 'PUT', headers: tokenHeader, body: JSON.stringify(payload)
   })
 
   if (res.status === 404) {
     // fallback: POST /api/notifications/subscriptions
-    res = await tryFetch(`${base}/api/notifications/subscriptions`, {
+    res = await tryFetch(`${baseApiV1}/notifications/subscriptions`, {
       method: 'POST', headers: tokenHeader, body: JSON.stringify(payload)
     })
   }
