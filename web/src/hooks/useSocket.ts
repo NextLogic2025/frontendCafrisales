@@ -3,7 +3,7 @@ import { io, Socket } from 'socket.io-client'
 import { useAuth } from './useAuth'
 import { env } from '../config/env'
 import subscriptionsService from '../services/notificationSubscriptions'
-import { notificationsApi } from '../services/notificationsApi'
+import { NotificationService } from '../services/api/NotificationService'
 import { AppNotification } from '../types/notification'
 
 /* ... keep NotificationPayload, storage helpers unchanged ... */
@@ -84,11 +84,10 @@ export function useSocket() {
         }
     }
 
-    const refresh = useCallback(async (sentToken?: string) => {
+    const refresh = useCallback(async () => {
         try {
             // Fetch notifications
-            const list = await notificationsApi.getAll({ limit: 100 }, sentToken)
-            if (!Array.isArray(list)) return
+            const list = await NotificationService.getNotifications({ limit: 100 })
 
             const normalizedList = list.map(normalizeNotification)
 
@@ -105,7 +104,7 @@ export function useSocket() {
             // Also update unread count from API directly if needed
             try {
                 // We don't use the result yet but it's good to have the API called if needed later
-                await notificationsApi.getUnreadCount(sentToken)
+                // await NotificationService.getUnreadCount() // Optional: if needed
             } catch { }
 
         } catch (err: any) {
@@ -136,7 +135,7 @@ export function useSocket() {
 
         socket.on('connect', () => {
             setIsConnected(true)
-            refresh(sentToken)
+            refresh()
         })
 
         socket.on('disconnect', () => {
@@ -167,30 +166,28 @@ export function useSocket() {
         // Optimistic update
         setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, read: true, readAt: Date.now() } : n))
 
-        const sentToken = token?.startsWith('Bearer ') ? token.replace(/^Bearer\s+/i, '') : token
-
         try {
-            await notificationsApi.markAsRead(notificationId, sentToken)
+            const success = await NotificationService.markAsRead(notificationId)
+            if (!success) return { success: false, error: 'Failed to mark as read' }
             return { success: true }
         } catch (err: any) {
             // Revert or show error? For now just log
             return { success: false, error: String(err) }
         }
-    }, [token])
+    }, [])
 
     const markAllAsRead = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
         // Optimistic update
         setNotifications(prev => prev.map(n => ({ ...n, read: true, readAt: Date.now() })))
 
-        const sentToken = token?.startsWith('Bearer ') ? token.replace(/^Bearer\s+/i, '') : token
-
         try {
-            await notificationsApi.markAllAsRead(sentToken)
+            const success = await NotificationService.markAllRead()
+            if (!success) return { success: false, error: 'Failed to mark all as read' }
             return { success: true }
         } catch (err: any) {
             return { success: false, error: String(err) }
         }
-    }, [token])
+    }, [])
 
     // Subscribe wrappers...
     const subscribeToNotificationType = async (tipoId: string, opts?: { websocketEnabled?: boolean; emailEnabled?: boolean; smsEnabled?: boolean }) => {
@@ -215,7 +212,7 @@ export function useSocket() {
         unreadCount,
         clearNotifications,
         pushNotification,
-        refresh: () => refresh(token?.replace(/^Bearer\s+/i, '')),
+        refresh: () => refresh(),
         markAsRead,
         markAllAsRead,
         subscribeToNotificationType,

@@ -1,20 +1,14 @@
-import { Edit2, Power, Eye } from 'components/ui/Icons'
+import { Edit2, Eye } from 'components/ui/Icons'
 import { type ZonaComercial } from '../../services/zonasApi'
 
 interface ZonasTableProps {
   zonas: ZonaComercial[]
   onView: (zona: ZonaComercial) => void
   onEdit: (zona: ZonaComercial) => void
-  onToggleEstado: (zona: ZonaComercial) => void
 }
 
-export function ZonasTable({ zonas, onView, onEdit, onToggleEstado }: ZonasTableProps) {
-  const handleToggle = (zona: ZonaComercial) => {
-    const accion = zona.activo ? 'desactivar' : 'activar'
-    if (confirm(`¿Estás seguro de ${accion} la zona "${zona.nombre}"?`)) {
-      onToggleEstado(zona)
-    }
-  }
+export function ZonasTable({ zonas, onView, onEdit }: ZonasTableProps) {
+
 
   return (
     <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
@@ -59,16 +53,6 @@ export function ZonasTable({ zonas, onView, onEdit, onToggleEstado }: ZonasTable
                     title="Editar"
                   >
                     <Edit2 className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => handleToggle(zona)}
-                    className={`rounded-lg p-2 transition-colors ${zona.activo
-                      ? 'text-gray-600 hover:bg-gray-50'
-                      : 'text-green-600 hover:bg-green-50'
-                      }`}
-                    title={zona.activo ? 'Desactivar' : 'Activar'}
-                  >
-                    <Power className="h-4 w-4" />
                   </button>
                 </div>
               </td>

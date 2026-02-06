@@ -9,7 +9,7 @@ export type SidebarItem = {
   end?: boolean
 }
 
-export function SidebarNav({ items }: { items: SidebarItem[] }) {
+export function SidebarNav({ items, onItemClick }: { items: SidebarItem[]; onItemClick?: () => void }) {
   return (
     <nav className="grid gap-1">
       {items.map(({ id, label, to, icon: Icon, end }) => (
@@ -17,6 +17,7 @@ export function SidebarNav({ items }: { items: SidebarItem[] }) {
           key={id}
           to={to}
           end={!!end}
+          onClick={onItemClick}
           className={({ isActive }) =>
             [
               'flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition',

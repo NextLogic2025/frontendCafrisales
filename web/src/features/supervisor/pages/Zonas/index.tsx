@@ -23,7 +23,8 @@ const DEFAULT_SCHEDULES: ZoneSchedule[] = Array.from({ length: 7 }, (_, i) => ({
 }))
 
 export default function ZonasPage() {
-  const { zonas, isLoading, error, loadZonas, crearZona, actualizarZona, toggleEstadoZona } = useZonas()
+  const { zonas, isLoading, error, loadZonas, crearZona, actualizarZona } = useZonas()
+
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<ModalMode>('crear')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -140,17 +141,7 @@ export default function ZonasPage() {
     }
   }
 
-  const handleToggleEstado = async (zona: ZonaComercial) => {
-    setIsSubmitting(true)
-    try {
-      await toggleEstadoZona(zona)
-      await loadZonas()
-    } catch (err: any) {
-      alert(err?.message ?? 'No se pudo cambiar el estado de la zona')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
+
 
   const validateForm = () => {
     const errors: Record<string, string> = {}
@@ -291,7 +282,7 @@ export default function ZonasPage() {
           <p className="mt-2 text-sm text-gray-600">Crea la primera zona para empezar a asignar vendedores.</p>
         </div>
       ) : (
-        <ZonasTable zonas={zonas} onView={handleOpenDetalle} onEdit={handleOpenModalEditar} onToggleEstado={handleToggleEstado} />
+        <ZonasTable zonas={zonas} onView={handleOpenDetalle} onEdit={handleOpenModalEditar} />
       )}
 
       <Modal
