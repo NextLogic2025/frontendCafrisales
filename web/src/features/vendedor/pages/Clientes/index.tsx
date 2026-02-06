@@ -118,15 +118,6 @@ export default function VendedorClientes() {
         ]}
       />
 
-      <section className="flex flex-wrap gap-3">
-        <ActionButton variant="primary" icon={<UserPlus className="h-4 w-4" />}>
-          Registrar Prospecto
-        </ActionButton>
-        <ActionButton variant="secondary" icon={<Plus className="h-4 w-4" />}>
-          Solicitar Alta de Cliente
-        </ActionButton>
-      </section>
-
       <section className="rounded-xl border border-neutral-200 bg-white p-6">
         <div className="flex flex-wrap gap-4">
           <div className="flex-1 min-w-[200px]">

@@ -50,6 +50,7 @@ const SupervisorZonas = React.lazy(() => import('../features/supervisor/pages/Zo
 const SupervisorRutas = React.lazy(() => import('../features/supervisor/pages/Rutas/index'))
 const SupervisorPedidos = React.lazy(() => import('../features/supervisor/pages/Pedidos'))
 const SupervisorEntregas = React.lazy(() => import('../features/supervisor/pages/Entregas'))
+const SupervisorDetalleEntrega = React.lazy(() => import('../features/supervisor/pages/Entregas/DetalleEntregaPage'))
 const SupervisorNotificaciones = React.lazy(() => import('../features/supervisor/pages/Notificaciones')) // User created this file
 const SupervisorPerfil = React.lazy(() => import('../features/supervisor/pages/Perfil'))
 const SupervisorPromociones = React.lazy(() => import('../features/supervisor/pages/Pedidos/PromocionesSupervisor'))
@@ -165,7 +166,10 @@ export default function AppRouter() {
           <Route path="pedidos" element={<SupervisorPedidos />} />
           <Route path="promociones" element={<SupervisorPromociones />} />
           <Route path="ruteros-logisticos" element={<SupervisorRuterosLogisticos />} />
-          <Route path="entregas" element={<SupervisorEntregas />} />
+          <Route path="entregas">
+            <Route index element={<SupervisorEntregas />} />
+            <Route path=":id" element={<SupervisorDetalleEntrega />} />
+          </Route>
           <Route path="notificaciones" element={<SupervisorNotificaciones />} />
           <Route path="perfil" element={<SupervisorPerfil />} />
         </Route>

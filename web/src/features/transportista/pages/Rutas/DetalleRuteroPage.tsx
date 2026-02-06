@@ -318,8 +318,10 @@ export default function DetalleRuteroPage() {
                             {entrega && canTakeActions && (
                                 // Only show action buttons if delivery is NOT in a final state
                                 entrega.estado !== 'entregado' &&
+                                entrega.estado !== 'entregado_completo' &&
                                 entrega.estado !== 'no_entregado' &&
-                                entrega.estado !== 'entregado_parcial'
+                                entrega.estado !== 'entregado_parcial' &&
+                                entrega.estado !== 'cancelado'
                             ) && (
                                     <div className="flex flex-wrap gap-2 pt-3 border-t border-neutral-200">
                                         <button
@@ -356,8 +358,10 @@ export default function DetalleRuteroPage() {
                             {/* Show message if delivery is in final state */}
                             {entrega && (
                                 entrega.estado === 'entregado' ||
+                                entrega.estado === 'entregado_completo' ||
                                 entrega.estado === 'no_entregado' ||
-                                entrega.estado === 'entregado_parcial'
+                                entrega.estado === 'entregado_parcial' ||
+                                entrega.estado === 'cancelado'
                             ) && (
                                     <div className="pt-3 border-t border-neutral-200">
                                         <p className="text-xs text-neutral-500 italic">

@@ -46,10 +46,11 @@ export interface Pedido {
     descuento_pedido_valor?: number
     created_at: string
     condicion_pago?: 'CONTADO' | 'CREDITO' | string // Mobile: metodo_pago
-    detalles?: DetallePedido[] // Mobile: items
+    detalles?: DetallePedido[] // Use catalog service for client data, matching mobile implementation
     items?: any[]
 }
 
+// const CATALOG_BASE_URL = env.api.catalogo
 const ORDERS_BASE_URL = env.api.orders
 const ORDERS_API_URL = ORDERS_BASE_URL.endsWith('/api') ? ORDERS_BASE_URL : `${ORDERS_BASE_URL}/api`
 
@@ -136,7 +137,7 @@ function mapMobileToWebPedido(raw: any): Pedido {
         created_at: raw.creado_en || raw.created_at,
         condicion_pago: raw.metodo_pago ? raw.metodo_pago.toUpperCase() : 'CONTADO',
         // Map nested objects if backend returns them, otherwise they might be missing
-        cliente: raw.cliente || { razon_social: 'Cargando...', identificacion: raw.cliente_id },
+        cliente: raw.cliente || { razon_social: 'Cliente', identificacion: raw.cliente_id || 'N/A' },
         vendedor: raw.vendedor || { nombreCompleto: raw.creado_por || 'Sistema', email: '' },
         detalles: (raw.items || []).map((item: any) => ({
             id: item.id || Math.random().toString(),

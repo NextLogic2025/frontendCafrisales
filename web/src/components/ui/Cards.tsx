@@ -9,6 +9,7 @@ export function MetricCard({
   icon,
   tone = 'red',
   onClick,
+  loading = false,
 }: {
   title: string
   value: string
@@ -16,6 +17,7 @@ export function MetricCard({
   icon: React.ReactNode
   tone?: Tone
   onClick?: () => void
+  loading?: boolean
 }) {
   const palettes: Record<Tone, { bg: string; text: string }> = {
     red: { bg: 'bg-red-50', text: 'text-brand-red' },
@@ -30,12 +32,20 @@ export function MetricCard({
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col gap-1 rounded-2xl border border-neutral-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+      disabled={loading}
+      className={`flex flex-col gap-1 rounded-2xl border border-neutral-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${loading ? 'opacity-70' : ''}`}
     >
-      <div className={`mb-2 flex h-10 w-10 items-center justify-center rounded-xl ${palette.bg} ${palette.text}`}>{icon}</div>
+      <div className={`mb-2 flex h-10 w-10 items-center justify-center rounded-xl ${palette.bg} ${palette.text}`}>
+        {loading ? <div className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" /> : icon}
+      </div>
       <p className="text-xs font-semibold uppercase tracking-[0.12em] text-neutral-500">{title}</p>
-      <p className="text-2xl font-bold text-neutral-900">{value}</p>
-      {subtitle ? <p className="text-xs text-neutral-500">{subtitle}</p> : null}
+      {loading ? (
+        <div className="h-8 w-24 animate-pulse rounded bg-neutral-100" />
+      ) : (
+        <p className="text-2xl font-bold text-neutral-900">{value}</p>
+      )}
+      {subtitle && !loading ? <p className="text-xs text-neutral-500">{subtitle}</p> : null}
+      {loading && <div className="h-3 w-32 animate-pulse rounded bg-neutral-50" />}
     </button>
   )
 }

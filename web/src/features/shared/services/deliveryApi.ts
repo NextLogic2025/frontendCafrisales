@@ -38,22 +38,31 @@ export async function createEntregasBatch(payload: CreateEntregasBatchPayload): 
 }
 
 /**
- * Get deliveries by rutero_logistico_id or transportista_id
+ * Get deliveries with pagination and filters
  */
 export async function getEntregas(params?: {
     rutero_logistico_id?: string
     transportista_id?: string
-}): Promise<Entrega[]> {
+    pedido_id?: string
+    estado?: string
+    fromDate?: string
+    toDate?: string
+    hasIncidents?: boolean
+    page?: number
+    limit?: number
+}): Promise<{ data: Entrega[], meta: any }> {
     const token = await getValidToken()
     if (!token) throw new Error('No hay sesión activa')
 
     const queryParams = new URLSearchParams()
-    if (params?.rutero_logistico_id) {
-        queryParams.append('routeId', params.rutero_logistico_id)
-    }
-    if (params?.transportista_id) {
-        queryParams.append('driverId', params.transportista_id)
-    }
+    if (params?.rutero_logistico_id) queryParams.append('routeId', params.rutero_logistico_id)
+    if (params?.transportista_id) queryParams.append('driverId', params.transportista_id)
+    if (params?.estado) queryParams.append('status', params.estado)
+    if (params?.fromDate) queryParams.append('fromDate', params.fromDate)
+    if (params?.toDate) queryParams.append('toDate', params.toDate)
+    if (params?.hasIncidents) queryParams.append('hasIncidents', 'true')
+    if (params?.page) queryParams.append('page', params.page.toString())
+    if (params?.limit) queryParams.append('limit', params.limit.toString())
 
     const query = queryParams.toString()
     const url = `${BASE_URL}/api/v1/deliveries${query ? `?${query}` : ''}`
@@ -63,15 +72,15 @@ export async function getEntregas(params?: {
     })
 
     if (!res.ok) {
-        if (!res.ok) {
-            return []
-        }
-        return []
+        return { data: [], meta: {} }
     }
 
     const response = await res.json()
     // Backend returns paginated response { data, meta }
-    return response.data || response
+    if (response.data && Array.isArray(response.data)) {
+        return response
+    }
+    return { data: response, meta: {} }
 }
 
 /**
@@ -86,10 +95,31 @@ export async function getEntregaById(id: string): Promise<Entrega | null> {
     })
 
     if (!res.ok) {
-        if (!res.ok) {
-            return null
-        }
         return null
+    }
+
+    return await res.json()
+}
+
+/**
+ * Cancel delivery (Supervisor only)
+ */
+export async function cancelarEntrega(id: string, motivo: string): Promise<Entrega> {
+    const token = await getValidToken()
+    if (!token) throw new Error('No hay sesión activa')
+
+    const res = await fetch(`${BASE_URL}/api/v1/deliveries/${id}/cancel`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ motivo }),
+    })
+
+    if (!res.ok) {
+        const err = await res.json().catch(() => null)
+        throw new Error(err?.message || 'Error al cancelar entrega')
     }
 
     return await res.json()

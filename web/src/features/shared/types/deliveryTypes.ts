@@ -1,4 +1,4 @@
-export type EstadoEntrega = 'pendiente' | 'en_ruta' | 'entregado' | 'entregado_parcial' | 'no_entregado'
+export type EstadoEntrega = 'pendiente' | 'en_ruta' | 'entregado' | 'entregado_completo' | 'entregado_parcial' | 'no_entregado' | 'cancelado'
 export type TipoEvidencia = 'foto' | 'firma' | 'documento' | 'audio' | 'otro'
 export type SeveridadIncidencia = 'baja' | 'media' | 'alta' | 'critica'
 
@@ -94,16 +94,20 @@ export const ESTADO_ENTREGA_COLORS: Record<EstadoEntrega, string> = {
     pendiente: 'bg-gray-100 text-gray-800 border-gray-300',
     en_ruta: 'bg-blue-100 text-blue-800 border-blue-300',
     entregado: 'bg-green-100 text-green-800 border-green-300',
+    entregado_completo: 'bg-green-100 text-green-800 border-green-300',
     entregado_parcial: 'bg-yellow-100 text-yellow-800 border-yellow-300',
     no_entregado: 'bg-red-100 text-red-800 border-red-300',
+    cancelado: 'bg-neutral-100 text-neutral-800 border-neutral-300',
 }
 
 export const ESTADO_ENTREGA_LABELS: Record<EstadoEntrega, string> = {
     pendiente: 'Pendiente',
     en_ruta: 'En Ruta',
     entregado: 'Entregado',
+    entregado_completo: 'Entregado',
     entregado_parcial: 'Entregado Parcial',
     no_entregado: 'No Entregado',
+    cancelado: 'Cancelado',
 }
 
 export const SEVERIDAD_COLORS: Record<SeveridadIncidencia, string> = {

@@ -1,9 +1,12 @@
-import { BarChart3, Activity } from 'components/ui/Icons'
+import { BarChart3, Activity, AlertTriangle, Info } from 'components/ui/Icons'
 import { SectionHeader } from 'components/ui/SectionHeader'
 import { MetricCard, SectionCard } from 'components/ui/Cards'
 import { PageHero } from 'components/ui/PageHero'
+import { useDashboardStats } from './hooks/useDashboardStats'
 
 export default function DashboardPage() {
+  const { stats, loading, refresh } = useDashboardStats()
+
   return (
     <div className="space-y-6">
       <PageHero
@@ -16,42 +19,68 @@ export default function DashboardPage() {
         ]}
       />
 
-      <SectionHeader title="Dashboard Supervisión" subtitle="Métricas clave y estado operativo" />
+      <div className="flex items-center justify-between">
+        <SectionHeader title="Dashboard Supervisión" subtitle="Métricas clave y estado operativo" />
+        <button
+          onClick={refresh}
+          disabled={loading}
+          className="px-3 py-1.5 text-xs font-medium text-brand-red bg-white border border-brand-red rounded-lg hover:bg-brand-red hover:text-white transition-all duration-150 disabled:opacity-50"
+        >
+          {loading ? 'Actualizando...' : 'Actualizar ahora'}
+        </button>
+      </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           title="Pedidos Hoy"
-          value="0"
+          value={loading ? '...' : (stats?.pedidosHoy || 0).toString()}
           icon={<BarChart3 className="h-5 w-5" />}
         />
         <MetricCard
           title="En Validación"
-          value="0"
+          value={loading ? '...' : (stats?.enValidacion || 0).toString()}
           icon={<Activity className="h-5 w-5" />}
         />
         <MetricCard
           title="Entregas Pendientes"
-          value="0"
+          value={loading ? '...' : (stats?.entregasPendientes || 0).toString()}
           icon={<BarChart3 className="h-5 w-5" />}
         />
         <MetricCard
           title="Alertas Activas"
-          value="0"
+          value={loading ? '...' : (stats?.alertasActivas || 0).toString()}
           icon={<Activity className="h-5 w-5" />}
         />
       </div>
 
       <SectionCard title="Indicadores de Riesgo">
         <div className="space-y-3">
-          <div className="rounded-lg bg-red-50 p-4 text-sm text-red-800">
-            ⚠️ 2 clientes con crédito bloqueado
-          </div>
-          <div className="rounded-lg bg-yellow-50 p-4 text-sm text-yellow-800">
-            ⚠️ 1 pedido retrasado en entrega
-          </div>
-          <div className="rounded-lg bg-blue-50 p-4 text-sm text-blue-800">
-            ℹ️ 3 devoluciones pendientes de aprobación
-          </div>
+          {loading ? (
+            <div className="animate-pulse flex space-y-3 flex-col">
+              <div className="h-10 bg-neutral-100 rounded"></div>
+              <div className="h-10 bg-neutral-100 rounded"></div>
+            </div>
+          ) : stats?.indicadoresRiesgo && stats.indicadoresRiesgo.length > 0 ? (
+            stats.indicadoresRiesgo.map((item: any, idx: number) => {
+              const bgColor =
+                item.tipo === 'peligro' ? 'bg-red-50 text-red-800 border-red-100' :
+                  item.tipo === 'advertencia' ? 'bg-yellow-50 text-yellow-800 border-yellow-100' :
+                    'bg-blue-50 text-blue-800 border-blue-100'
+
+              return (
+                <div key={idx} className={`flex items-center gap-3 rounded-lg border p-4 text-sm ${bgColor}`}>
+                  {item.tipo === 'peligro' && <AlertTriangle className="h-5 w-5" />}
+                  {item.tipo === 'advertencia' && <AlertTriangle className="h-5 w-5" />}
+                  {item.tipo === 'info' && <Info className="h-5 w-5" />}
+                  <p className="font-medium">{item.mensaje}</p>
+                </div>
+              )
+            })
+          ) : (
+            <div className="bg-neutral-50 border border-neutral-100 rounded-lg p-6 text-center">
+              <p className="text-neutral-500 italic">No hay alertas de riesgo críticas en este momento.</p>
+            </div>
+          )}
         </div>
       </SectionCard>
     </div>

@@ -86,8 +86,7 @@ async function getVendedorId(): Promise<string | null> {
 }
 
 // Use catalog service for client data, matching mobile implementation
-const CATALOG_BASE_URL = env.api.catalogo
-const CATALOG_API_URL = CATALOG_BASE_URL.endsWith('/api') ? CATALOG_BASE_URL : `${CATALOG_BASE_URL}/api`
+// const CATALOG_BASE_URL = env.api.catalogo
 
 type BackendCliente = {
   usuario_id?: string
@@ -110,47 +109,53 @@ type BackendCliente = {
   canal_codigo?: string | null
 }
 
-function mapCliente(raw: BackendCliente | Cliente): Cliente {
-  const usuarioId = (raw as any).usuario_id || (raw as any).usuario_principal_id || (raw as any).id
-  const nombres = (raw as any).nombres ?? null
-  const apellidos = (raw as any).apellidos ?? null
-  const nombreComercial = (raw as any).nombre_comercial ?? null
-  const ruc = (raw as any).ruc ?? (raw as any).identificacion ?? ''
-  const direccion = (raw as any).direccion ?? (raw as any).direccion_texto ?? null
+function mapCliente(raw: BackendCliente | Cliente | any): Cliente {
+  const usuarioId = raw.usuario_id || raw.usuario_principal_id || raw.id
+  const nombres = raw.nombres || raw.first_name || null
+  const apellidos = raw.apellidos || raw.last_name || null
+  const nombreComercial = raw.nombre_comercial || raw.business_name || null
+  const ruc = raw.ruc || raw.identificacion || raw.vat_id || ''
+  const direccion = raw.direccion || raw.direccion_texto || raw.address || null
+
+  const razonSocial = raw.razon_social ||
+    nombreComercial ||
+    (nombres || apellidos ? [nombres, apellidos].filter(Boolean).join(' ') : null) ||
+    raw.email ||
+    'Cliente'
 
   return {
     id: String(usuarioId || ''),
-    usuario_principal_id: usuarioId || null,
+    usuario_principal_id: usuarioId ? String(usuarioId) : null,
     identificacion: String(ruc || ''),
-    tipo_identificacion: (raw as any).tipo_identificacion || 'RUC',
+    tipo_identificacion: raw.tipo_identificacion || (String(ruc).length === 13 ? 'RUC' : 'CÉDULA'),
     nombres,
     apellidos,
-    razon_social: (raw as any).razon_social || nombreComercial || [nombres, apellidos].filter(Boolean).join(' ') || (raw as any).email || 'Cliente',
+    razon_social: razonSocial,
     nombre_comercial: nombreComercial,
-    telefono: (raw as any).telefono ?? null,
-    canal_id: (raw as any).canal_id ?? null,
-    vendedor_asignado_id: (raw as any).vendedor_asignado_id ?? null,
-    zona_comercial_id: (raw as any).zona_id ?? (raw as any).zona_comercial_id ?? null,
+    telefono: raw.telefono || raw.phone || null,
+    canal_id: raw.canal_id ?? null,
+    vendedor_asignado_id: raw.vendedor_asignado_id ?? null,
+    zona_comercial_id: raw.zona_id ?? raw.zona_comercial_id ?? null,
     direccion_texto: direccion,
-    ubicacion_gps: (raw as any).ubicacion_gps ||
+    ubicacion_gps: raw.ubicacion_gps ||
       ((raw.latitud && raw.longitud) ? { type: 'Point', coordinates: [Number(raw.longitud), Number(raw.latitud)] } : null),
-    latitud: (raw as any).latitud !== null && (raw as any).latitud !== undefined ? Number((raw as any).latitud) : null,
-    longitud: (raw as any).longitud !== null && (raw as any).longitud !== undefined ? Number((raw as any).longitud) : null,
-    estado: (raw as any).estado ?? null,
-    email: (raw as any).email ?? null,
-    created_at: (raw as any).created_at || (raw as any).creado_en || new Date().toISOString(),
-    updated_at: (raw as any).updated_at || (raw as any).actualizado_en || new Date().toISOString(),
-    deleted_at: (raw as any).deleted_at ?? null,
-    zona_comercial: (raw as any).zona_comercial ?? undefined,
-    canal_nombre: (raw as any).canal_nombre ?? null,
-    canal_codigo: (raw as any).canal_codigo ?? null,
-    bloqueado: (raw as any).bloqueado ?? false,
-    tiene_credito: (raw as any).tiene_credito ?? false,
-    limite_credito: (raw as any).limite_credito ?? '0.00',
-    saldo_actual: (raw as any).saldo_actual ?? '0.00',
-    dias_plazo: (raw as any).dias_plazo ?? 0,
-    lista_precios: (raw as any).lista_precios ?? null,
-    lista_precios_id: (raw as any).lista_precios_id ?? null,
+    latitud: raw.latitud !== null && raw.latitud !== undefined ? Number(raw.latitud) : null,
+    longitud: raw.longitud !== null && raw.longitud !== undefined ? Number(raw.longitud) : null,
+    estado: raw.estado ?? null,
+    email: raw.email ?? null,
+    created_at: raw.created_at || raw.creado_en || new Date().toISOString(),
+    updated_at: raw.updated_at || raw.actualizado_en || new Date().toISOString(),
+    deleted_at: raw.deleted_at ?? null,
+    zona_comercial: raw.zona_comercial ?? undefined,
+    canal_nombre: raw.canal_nombre ?? null,
+    canal_codigo: raw.canal_codigo ?? null,
+    bloqueado: raw.bloqueado ?? false,
+    tiene_credito: raw.tiene_credito ?? false,
+    limite_credito: String(raw.limite_credito || '0.00'),
+    saldo_actual: String(raw.saldo_actual || '0.00'),
+    dias_plazo: Number(raw.dias_plazo || 0),
+    lista_precios: raw.lista_precios ?? null,
+    lista_precios_id: raw.lista_precios_id ?? null,
   }
 }
 
