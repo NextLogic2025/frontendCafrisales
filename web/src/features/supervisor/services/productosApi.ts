@@ -58,7 +58,6 @@ export async function getAllProducts(): Promise<Product[]> {
     headers: {
       Authorization: `Bearer ${token}`,
       'X-Authorization': `Bearer ${token}`,
-      'Cache-Control': 'no-store',
     },
   })
   if (!res.ok) return []
