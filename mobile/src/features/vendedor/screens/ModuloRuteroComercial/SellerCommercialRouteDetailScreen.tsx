@@ -1,5 +1,6 @@
 import React from 'react'
 import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
+import MapView, { Marker, Polygon, PROVIDER_GOOGLE } from 'react-native-maps'
 import { Ionicons } from '@expo/vector-icons'
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native'
 import { Header } from '../../../../components/ui/Header'
@@ -10,6 +11,8 @@ import { BRAND_COLORS } from '../../../../shared/types'
 import { CommercialRoute, CommercialStop, RouteService, RouteHistoryEntry } from '../../../../services/api/RouteService'
 import { UserClient, UserClientService } from '../../../../services/api/UserClientService'
 import { showGlobalToast } from '../../../../utils/toastService'
+import { extractPolygons, MapPoint } from '../../../../utils/zoneGeometry'
+import { ZoneService } from '../../../../services/api/ZoneService'
 
 const statusBadge = (estado: string) => {
   switch (estado) {
@@ -40,6 +43,22 @@ const RESULT_OPTIONS = [
   { id: 'cobranza', label: 'Cobranza' },
 ]
 
+type StopMarker = {
+  id: string
+  latitude: number
+  longitude: number
+  label: string
+  orden: number
+  address?: string
+}
+
+const FALLBACK_REGION = {
+  latitude: -0.1807,
+  longitude: -78.4678,
+  latitudeDelta: 0.1,
+  longitudeDelta: 0.1,
+}
+
 export function SellerCommercialRouteDetailScreen() {
   const navigation = useNavigation<any>()
   const route = useRoute<any>()
@@ -56,6 +75,11 @@ export function SellerCommercialRouteDetailScreen() {
   const [notes, setNotes] = React.useState('')
   const [history, setHistory] = React.useState<RouteHistoryEntry[]>([])
   const [showHistoryModal, setShowHistoryModal] = React.useState(false)
+  const [zonePolygon, setZonePolygon] = React.useState<MapPoint[] | null>(null)
+  const [mapMarkers, setMapMarkers] = React.useState<StopMarker[]>([])
+  const [showMapModal, setShowMapModal] = React.useState(false)
+  const mapRef = React.useRef<MapView | null>(null)
+  const modalMapRef = React.useRef<MapView | null>(null)
 
   const loadRutero = React.useCallback(async () => {
     if (!ruteroId) return
@@ -97,6 +121,71 @@ export function SellerCommercialRouteDetailScreen() {
     }
     loadClients()
   }, [rutero?.vendedor_id])
+
+  React.useEffect(() => {
+    let cancelled = false
+    const loadZoneGeometry = async () => {
+      if (!rutero?.zona_id) {
+        setZonePolygon(null)
+        return
+      }
+      const zone = await ZoneService.getZoneById(rutero.zona_id)
+      if (cancelled) return
+      const polygons = extractPolygons((zone?.zonaGeom ?? zone?.zona_geom ?? null) as any)
+      setZonePolygon(polygons[0] ?? null)
+    }
+    loadZoneGeometry()
+    return () => {
+      cancelled = true
+    }
+  }, [rutero?.zona_id])
+
+  React.useEffect(() => {
+    const stops = rutero?.paradas || []
+    if (!stops.length) {
+      setMapMarkers([])
+      return
+    }
+    const markers = stops
+      .map((stop) => {
+        const client = clients[stop.cliente_id]
+        if (!client?.latitud || !client?.longitud) return null
+        return {
+          id: stop.id,
+          latitude: Number(client.latitud),
+          longitude: Number(client.longitud),
+          label: client.nombre_comercial || client.ruc || stop.cliente_id.slice(0, 8),
+          orden: stop.orden_visita,
+          address: client.direccion || undefined,
+        } as StopMarker
+      })
+      .filter((item): item is StopMarker => Boolean(item))
+    setMapMarkers(markers)
+  }, [clients, rutero?.paradas])
+
+  React.useEffect(() => {
+    if (!mapRef.current) return
+    const coords: { latitude: number; longitude: number }[] = []
+    if (zonePolygon?.length) coords.push(...zonePolygon)
+    if (mapMarkers.length) coords.push(...mapMarkers.map((m) => ({ latitude: m.latitude, longitude: m.longitude })))
+    if (!coords.length) return
+    mapRef.current.fitToCoordinates(coords, {
+      edgePadding: { top: 40, right: 40, bottom: 40, left: 40 },
+      animated: true,
+    })
+  }, [zonePolygon, mapMarkers])
+
+  React.useEffect(() => {
+    if (!showMapModal || !modalMapRef.current) return
+    const coords: { latitude: number; longitude: number }[] = []
+    if (zonePolygon?.length) coords.push(...zonePolygon)
+    if (mapMarkers.length) coords.push(...mapMarkers.map((m) => ({ latitude: m.latitude, longitude: m.longitude })))
+    if (!coords.length) return
+    modalMapRef.current.fitToCoordinates(coords, {
+      edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+      animated: true,
+    })
+  }, [showMapModal, zonePolygon, mapMarkers])
 
   React.useEffect(() => {
     const loadHistory = async () => {
@@ -338,6 +427,55 @@ export function SellerCommercialRouteDetailScreen() {
               </View>
             )}
           </View>
+
+          <View className="bg-white rounded-2xl border border-neutral-100 p-4 shadow-sm mt-4">
+            <View className="flex-row items-center justify-between">
+              <Text className="text-sm font-semibold text-neutral-700">Mapa de visitas</Text>
+              <Pressable onPress={() => setShowMapModal(true)} className="px-3 py-1 rounded-full bg-red-50">
+                <Text className="text-xs font-semibold text-brand-red">Ampliar</Text>
+              </Pressable>
+            </View>
+            <View className="mt-3 rounded-2xl overflow-hidden border border-neutral-200" style={{ height: 240 }}>
+              <MapView
+                ref={(ref) => { mapRef.current = ref }}
+                provider={PROVIDER_GOOGLE}
+                style={{ flex: 1 }}
+                initialRegion={FALLBACK_REGION}
+                scrollEnabled
+                zoomEnabled
+                pitchEnabled={false}
+                rotateEnabled={false}
+              >
+                {zonePolygon && (
+                  <Polygon
+                    coordinates={zonePolygon}
+                    strokeColor={BRAND_COLORS.red}
+                    fillColor={`${BRAND_COLORS.red}22`}
+                    strokeWidth={2}
+                  />
+                )}
+                {mapMarkers.map((marker) => (
+                  <Marker
+                    key={marker.id}
+                    coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
+                    title={`#${marker.orden} ${marker.label}`}
+                    pinColor={BRAND_COLORS.red}
+                  >
+                    <View className="items-center">
+                      <View className="w-8 h-8 rounded-full items-center justify-center border-2 border-white" style={{ backgroundColor: BRAND_COLORS.red }}>
+                        <Text className="text-[11px] text-white font-bold">{marker.orden}</Text>
+                      </View>
+                    </View>
+                  </Marker>
+                ))}
+              </MapView>
+            </View>
+            {mapMarkers.length === 0 ? (
+              <Text className="text-xs text-neutral-500 mt-3">
+                No hay coordenadas para mostrar en el mapa.
+              </Text>
+            ) : null}
+          </View>
         </ScrollView>
       )}
 
@@ -437,6 +575,48 @@ export function SellerCommercialRouteDetailScreen() {
           ) : (
             <Text className="text-xs text-neutral-500">No hay historial registrado.</Text>
           )}
+        </View>
+      </GenericModal>
+
+      <GenericModal
+        visible={showMapModal}
+        title="Mapa de visitas"
+        onClose={() => setShowMapModal(false)}
+      >
+        <View className="rounded-2xl overflow-hidden border border-neutral-200" style={{ height: 360 }}>
+          <MapView
+            ref={(ref) => { modalMapRef.current = ref }}
+            provider={PROVIDER_GOOGLE}
+            style={{ flex: 1 }}
+            initialRegion={FALLBACK_REGION}
+            scrollEnabled
+            zoomEnabled
+            pitchEnabled={false}
+            rotateEnabled={false}
+          >
+            {zonePolygon && (
+              <Polygon
+                coordinates={zonePolygon}
+                strokeColor={BRAND_COLORS.red}
+                fillColor={`${BRAND_COLORS.red}22`}
+                strokeWidth={2}
+              />
+            )}
+            {mapMarkers.map((marker) => (
+              <Marker
+                key={marker.id}
+                coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
+                title={`#${marker.orden} ${marker.label}`}
+                pinColor={BRAND_COLORS.red}
+              >
+                <View className="items-center">
+                  <View className="w-8 h-8 rounded-full items-center justify-center border-2 border-white" style={{ backgroundColor: BRAND_COLORS.red }}>
+                    <Text className="text-[11px] text-white font-bold">{marker.orden}</Text>
+                  </View>
+                </View>
+              </Marker>
+            ))}
+          </MapView>
         </View>
       </GenericModal>
     </View>

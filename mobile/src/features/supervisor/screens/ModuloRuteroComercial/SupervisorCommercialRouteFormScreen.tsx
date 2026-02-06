@@ -1,5 +1,6 @@
 import React from 'react'
 import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
+import MapView, { Marker, Polygon, PROVIDER_GOOGLE } from 'react-native-maps'
 import { useNavigation } from '@react-navigation/native'
 import { Header } from '../../../../components/ui/Header'
 import { SupervisorHeaderMenu } from '../../../../components/ui/SupervisorHeaderMenu'
@@ -7,15 +8,33 @@ import { PrimaryButton } from '../../../../components/ui/PrimaryButton'
 import { PickerModal, PickerOption } from '../../../../components/ui/PickerModal'
 import { DatePickerModal } from '../../../../components/ui/DatePickerModal'
 import { SearchBar } from '../../../../components/ui/SearchBar'
+import { GenericModal } from '../../../../components/ui/GenericModal'
 import { BRAND_COLORS } from '../../../../shared/types'
 import { RouteService } from '../../../../services/api/RouteService'
 import { Zone, ZoneService } from '../../../../services/api/ZoneService'
 import { UserProfile, UserService } from '../../../../services/api/UserService'
 import { UserClient, UserClientService } from '../../../../services/api/UserClientService'
 import { showGlobalToast } from '../../../../utils/toastService'
+import { extractPolygons, MapPoint } from '../../../../utils/zoneGeometry'
 import { isUuid } from '../../../../utils/validators'
 
 type Option = PickerOption
+
+type StopMarker = {
+  id: string
+  latitude: number
+  longitude: number
+  label: string
+  orden: number
+  address?: string
+}
+
+const FALLBACK_REGION = {
+  latitude: -0.1807,
+  longitude: -78.4678,
+  latitudeDelta: 0.1,
+  longitudeDelta: 0.1,
+}
 
 export function SupervisorCommercialRouteFormScreen() {
   const navigation = useNavigation<any>()
@@ -32,10 +51,15 @@ export function SupervisorCommercialRouteFormScreen() {
   const [loading, setLoading] = React.useState(false)
   const [loadingClients, setLoadingClients] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState('')
+  const [zonePolygon, setZonePolygon] = React.useState<MapPoint[] | null>(null)
+  const [mapMarkers, setMapMarkers] = React.useState<StopMarker[]>([])
+  const mapRef = React.useRef<MapView | null>(null)
+  const modalMapRef = React.useRef<MapView | null>(null)
 
   const [showDatePicker, setShowDatePicker] = React.useState(false)
   const [showZonePicker, setShowZonePicker] = React.useState(false)
   const [showVendorPicker, setShowVendorPicker] = React.useState(false)
+  const [showMapModal, setShowMapModal] = React.useState(false)
 
   const loadData = React.useCallback(async () => {
     setLoading(true)
@@ -170,6 +194,66 @@ export function SupervisorCommercialRouteFormScreen() {
 
   const selectedZone = zones.find((zone) => zone.id === zonaId)
   const selectedVendor = vendors.find((user) => user.id === vendedorId)
+
+  React.useEffect(() => {
+    let cancelled = false
+    const loadZoneGeometry = async () => {
+      if (!zonaId) {
+        setZonePolygon(null)
+        return
+      }
+      const zone = await ZoneService.getZoneById(zonaId)
+      if (cancelled) return
+      const polygons = extractPolygons((zone?.zonaGeom ?? zone?.zona_geom ?? null) as any)
+      setZonePolygon(polygons[0] ?? null)
+    }
+    loadZoneGeometry()
+    return () => {
+      cancelled = true
+    }
+  }, [zonaId])
+
+  React.useEffect(() => {
+    const markers = selectedClients
+      .map((clientId, index) => {
+        const client = clients.find((item) => item.usuario_id === clientId)
+        if (!client?.latitud || !client?.longitud) return null
+        return {
+          id: clientId,
+          latitude: Number(client.latitud),
+          longitude: Number(client.longitud),
+          label: client.nombre_comercial || client.ruc || clientId.slice(0, 8),
+          orden: index + 1,
+          address: client.direccion || undefined,
+        } as StopMarker
+      })
+      .filter((item): item is StopMarker => Boolean(item))
+    setMapMarkers(markers)
+  }, [selectedClients, clients])
+
+  React.useEffect(() => {
+    if (!mapRef.current) return
+    const coords: { latitude: number; longitude: number }[] = []
+    if (zonePolygon?.length) coords.push(...zonePolygon)
+    if (mapMarkers.length) coords.push(...mapMarkers.map((m) => ({ latitude: m.latitude, longitude: m.longitude })))
+    if (!coords.length) return
+    mapRef.current.fitToCoordinates(coords, {
+      edgePadding: { top: 40, right: 40, bottom: 40, left: 40 },
+      animated: true,
+    })
+  }, [zonePolygon, mapMarkers])
+
+  React.useEffect(() => {
+    if (!showMapModal || !modalMapRef.current) return
+    const coords: { latitude: number; longitude: number }[] = []
+    if (zonePolygon?.length) coords.push(...zonePolygon)
+    if (mapMarkers.length) coords.push(...mapMarkers.map((m) => ({ latitude: m.latitude, longitude: m.longitude })))
+    if (!coords.length) return
+    modalMapRef.current.fitToCoordinates(coords, {
+      edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+      animated: true,
+    })
+  }, [showMapModal, zonePolygon, mapMarkers])
 
   return (
     <View className="flex-1 bg-neutral-50">
@@ -319,6 +403,55 @@ export function SupervisorCommercialRouteFormScreen() {
           </View>
         ) : null}
 
+        <View className="bg-white rounded-2xl border border-neutral-100 p-4 shadow-sm mt-4">
+          <View className="flex-row items-center justify-between">
+            <Text className="text-sm font-semibold text-neutral-700">Mapa de visitas</Text>
+            <Pressable onPress={() => setShowMapModal(true)} className="px-3 py-1 rounded-full bg-red-50">
+              <Text className="text-xs font-semibold text-brand-red">Ampliar</Text>
+            </Pressable>
+          </View>
+          <View className="mt-3 rounded-2xl overflow-hidden border border-neutral-200" style={{ height: 240 }}>
+            <MapView
+              ref={(ref) => { mapRef.current = ref }}
+              provider={PROVIDER_GOOGLE}
+              style={{ flex: 1 }}
+              initialRegion={FALLBACK_REGION}
+              scrollEnabled
+              zoomEnabled
+              pitchEnabled={false}
+              rotateEnabled={false}
+            >
+              {zonePolygon && (
+                <Polygon
+                  coordinates={zonePolygon}
+                  strokeColor={BRAND_COLORS.red}
+                  fillColor={`${BRAND_COLORS.red}22`}
+                  strokeWidth={2}
+                />
+              )}
+              {mapMarkers.map((marker) => (
+                <Marker
+                  key={marker.id}
+                  coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
+                  title={`#${marker.orden} ${marker.label}`}
+                  pinColor={BRAND_COLORS.red}
+                >
+                  <View className="items-center">
+                    <View className="w-8 h-8 rounded-full items-center justify-center border-2 border-white" style={{ backgroundColor: BRAND_COLORS.red }}>
+                      <Text className="text-[11px] text-white font-bold">{marker.orden}</Text>
+                    </View>
+                  </View>
+                </Marker>
+              ))}
+            </MapView>
+          </View>
+          {mapMarkers.length === 0 ? (
+            <Text className="text-xs text-neutral-500 mt-3">
+              Selecciona clientes con coordenadas para ver el mapa.
+            </Text>
+          ) : null}
+        </View>
+
         <View className="mt-6">
           <PrimaryButton title={loading ? 'Creando...' : 'Crear rutero'} onPress={handleCreate} disabled={loading} />
         </View>
@@ -362,6 +495,48 @@ export function SupervisorCommercialRouteFormScreen() {
         infoIcon="person-outline"
         infoColor={BRAND_COLORS.red}
       />
+
+      <GenericModal
+        visible={showMapModal}
+        title="Mapa de visitas"
+        onClose={() => setShowMapModal(false)}
+      >
+        <View className="rounded-2xl overflow-hidden border border-neutral-200" style={{ height: 360 }}>
+          <MapView
+            ref={(ref) => { modalMapRef.current = ref }}
+            provider={PROVIDER_GOOGLE}
+            style={{ flex: 1 }}
+            initialRegion={FALLBACK_REGION}
+            scrollEnabled
+            zoomEnabled
+            pitchEnabled={false}
+            rotateEnabled={false}
+          >
+            {zonePolygon && (
+              <Polygon
+                coordinates={zonePolygon}
+                strokeColor={BRAND_COLORS.red}
+                fillColor={`${BRAND_COLORS.red}22`}
+                strokeWidth={2}
+              />
+            )}
+            {mapMarkers.map((marker) => (
+              <Marker
+                key={marker.id}
+                coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
+                title={`#${marker.orden} ${marker.label}`}
+                pinColor={BRAND_COLORS.red}
+              >
+                <View className="items-center">
+                  <View className="w-8 h-8 rounded-full items-center justify-center border-2 border-white" style={{ backgroundColor: BRAND_COLORS.red }}>
+                    <Text className="text-[11px] text-white font-bold">{marker.orden}</Text>
+                  </View>
+                </View>
+              </Marker>
+            ))}
+          </MapView>
+        </View>
+      </GenericModal>
     </View>
   )
 }

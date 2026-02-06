@@ -351,13 +351,6 @@ const rawService = {
         }>,
     ): Promise<{ success: boolean; message?: string }> {
         try {
-            if (data.email) {
-                await ApiService.put(`${AUTH_API_URL}/usuarios/${userId}/email`, { email: data.email.trim() })
-            }
-            if (data.password) {
-                await ApiService.put(`${AUTH_API_URL}/usuarios/${userId}/password`, { password: data.password })
-            }
-
             const payload: Record<string, unknown> = {}
             const roleFromId = data.rolId ? roleIdMap[data.rolId] : undefined
             const rol = (data.rol || roleFromId || '').toLowerCase()
