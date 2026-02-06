@@ -5,8 +5,6 @@ import {
 	CheckCircle2,
 	ClipboardList,
 	CreditCard,
-	LifeBuoy,
-	Package,
 	Plus,
 	Truck,
 	Wallet,
@@ -28,7 +26,6 @@ export default function PaginaPanelCliente() {
 		pedidos,
 		facturas,
 		entregas,
-		conversaciones,
 		error,
 		cargando,
 		fetchPerfilCliente,
@@ -59,7 +56,6 @@ export default function PaginaPanelCliente() {
 	const pedidosRecientes = pedidos.slice(0, 3)
 	const facturasPendientes = facturas.filter(f => f.status === EstadoFactura.PENDING || f.status === EstadoFactura.OVERDUE)
 	const entregasEnRuta = entregas.filter(e => e.currentStatus === 'in_transit')
-	const conversacionesAbiertas = conversaciones.length
 
 	// Filter notifications for client (PROMO and PROMO_PERSONAL types)
 	const clientNotifications = notifications.filter(n => n.type === 'PROMO' || n.type === 'PROMO_PERSONAL')
@@ -213,7 +209,7 @@ export default function PaginaPanelCliente() {
 
 			<div className="grid gap-4 lg:grid-cols-2">
 				<SectionCard title="Promociones activas">
-
+					<EmptyState text="No hay promociones activas en este momento." />
 				</SectionCard>
 
 				<SectionCard title="Mensajes" actionLabel="Ir a mensajes" onAction={() => navigate('/cliente/mensajes')}>
