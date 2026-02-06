@@ -5,6 +5,7 @@ import { BRAND_COLORS } from '../../shared/types'
 import { CreditResponse, CreditTotals, CreditPayment } from '../../services/api/CreditService'
 import { UserClient } from '../../services/api/UserClientService'
 import { OrderDetail } from '../../services/api/OrderService'
+import { formatNameOrId, formatOrderLabel, formatShortId } from '../../utils/formatters'
 
 const currencyFormatter = new Intl.NumberFormat('es-EC', {
   style: 'currency',
@@ -22,11 +23,6 @@ const formatDate = (value?: string) => {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
   return date.toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric' })
-}
-
-const shortenId = (value?: string) => {
-  if (!value) return '-'
-  return `${value.slice(0, 8)}...`
 }
 
 type Props = {
@@ -64,7 +60,7 @@ export function CreditDetailTemplate({
         <View className="flex-row items-center justify-between">
           <View>
             <Text className="text-xs text-neutral-500">Credito</Text>
-            <Text className="text-base font-bold text-neutral-900">#{shortenId(credit.id)}</Text>
+            <Text className="text-base font-bold text-neutral-900">#{formatShortId(credit.id)}...</Text>
           </View>
           <View className="px-3 py-1 rounded-full" style={{ backgroundColor: `${estadoColor}22` }}>
             <Text className="text-xs font-semibold" style={{ color: estadoColor }}>
@@ -91,10 +87,10 @@ export function CreditDetailTemplate({
       </View>
 
       <View className="bg-white rounded-2xl border border-neutral-100 p-4 shadow-sm">
-        <Text className="text-xs text-neutral-500">Cliente</Text>
-        <Text className="text-base font-semibold text-neutral-900" numberOfLines={1}>
-          {client?.nombre_comercial || client?.ruc || credit.cliente_id}
-        </Text>
+          <Text className="text-xs text-neutral-500">Cliente</Text>
+          <Text className="text-base font-semibold text-neutral-900" numberOfLines={1}>
+          {formatNameOrId(client?.nombre_comercial || client?.ruc, credit.cliente_id)}
+          </Text>
         {client?.ruc && <Text className="text-xs text-neutral-500 mt-1">RUC: {client.ruc}</Text>}
         {client?.telefono && <Text className="text-xs text-neutral-500 mt-1">Tel: {client.telefono}</Text>}
       </View>
@@ -102,7 +98,7 @@ export function CreditDetailTemplate({
       <View className="bg-white rounded-2xl border border-neutral-100 p-4 shadow-sm">
         <Text className="text-xs text-neutral-500">Pedido</Text>
         <Text className="text-base font-semibold text-neutral-900">
-          {pedido?.numero_pedido ? `#${pedido.numero_pedido}` : `#${shortenId(credit.pedido_id)}`}
+          {formatOrderLabel(pedido?.numero_pedido, credit.pedido_id)}
         </Text>
         <View className="mt-2 flex-row justify-between">
           <View>

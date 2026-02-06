@@ -3,6 +3,7 @@ import { Pressable, Text, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { BRAND_COLORS } from '../../shared/types'
 import { OrderListItem } from '../../services/api/OrderService'
+import { formatNameOrId, formatOrderLabel } from '../../utils/formatters'
 
 const formatMoney = (value?: number | string | null) => {
   const amount = Number(value)
@@ -86,7 +87,7 @@ export function OrderListCard({ order, clientLabel, onPress, showClient = true }
         <View>
           <Text className="text-xs text-neutral-500">Pedido</Text>
           <Text className="text-base font-bold text-neutral-900">
-            #{order.numero_pedido || order.id.slice(0, 8)}
+            {formatOrderLabel(order.numero_pedido, order.id)}
           </Text>
         </View>
         <View className="px-3 py-1 rounded-full" style={{ backgroundColor: `${estadoColor}22` }}>
@@ -101,7 +102,7 @@ export function OrderListCard({ order, clientLabel, onPress, showClient = true }
           <View>
             <Text className="text-xs text-neutral-500">Cliente</Text>
             <Text className="text-sm font-semibold text-neutral-900" numberOfLines={1}>
-              {clientLabel || order.cliente_id || 'Cliente'}
+              {formatNameOrId(clientLabel, order.cliente_id)}
             </Text>
           </View>
         ) : (

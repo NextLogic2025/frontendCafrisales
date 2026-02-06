@@ -70,7 +70,7 @@ export function SellerHomeScreen() {
     }, [orders])
 
     const recentOrders = React.useMemo(() => {
-        return orders.slice(0, 5)
+        return orders.slice(0, 3)
     }, [orders])
 
     const getOrderStatusStyle = (estado?: string) => {
@@ -250,7 +250,7 @@ export function SellerHomeScreen() {
                             return (
                                 <Pressable
                                     key={order.id}
-                                    onPress={() => navigation.navigate('SellerPedidoDetalle', { pedidoId: order.id })}
+                                    onPress={() => navigation.navigate('SellerPedidoDetalle', { orderId: order.id })}
                                     className="bg-white rounded-2xl border border-neutral-200 p-4 mb-3"
                                     style={styles.card}
                                 >

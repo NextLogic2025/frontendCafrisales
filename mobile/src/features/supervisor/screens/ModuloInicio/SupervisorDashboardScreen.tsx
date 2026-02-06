@@ -1,5 +1,6 @@
 import React from 'react'
-import { View, Text, ScrollView, RefreshControl, ActivityIndicator } from 'react-native'
+import { View, Text, ScrollView, RefreshControl, ActivityIndicator, Pressable } from 'react-native'
+import { useNavigation } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
 import { BRAND_COLORS } from '../../../../shared/types'
 
@@ -10,7 +11,7 @@ import { UserService } from '../../../../services/api/UserService'
 import { DashboardCard } from '../../../../components/ui/DashboardCard'
 import { QuickActionsGrid } from '../../../../components/ui/QuickActionsGrid'
 import { UserClientService } from '../../../../services/api/UserClientService'
-import { OrderService } from '../../../../services/api/OrderService'
+import { OrderService, OrderListItem } from '../../../../services/api/OrderService'
 import { DeliveryService } from '../../../../services/api/DeliveryService'
 
 type KPI = {
@@ -34,8 +35,10 @@ const DEFAULT_KPIS: KPI[] = [
 ]
 
 export function SupervisorDashboardScreen() {
+    const navigation = useNavigation<any>()
     const [kpis, setKpis] = React.useState<KPI[]>(DEFAULT_KPIS)
     const [alerts, setAlerts] = React.useState<AlertItem[]>([])
+    const [recentOrders, setRecentOrders] = React.useState<OrderListItem[]>([])
     const [isLoading, setIsLoading] = React.useState(false)
     const [userName, setUserName] = React.useState('Supervisor')
 
@@ -56,6 +59,8 @@ export function SupervisorDashboardScreen() {
                 OrderService.getOrders(),
                 DeliveryService.getDeliveries({ page: 1, limit: 100 })
             ])
+
+            setRecentOrders(orders.slice(0, 3))
 
             const incidentsByDelivery = await Promise.all(
                 deliveriesForScan.map(async (delivery) => {
@@ -96,6 +101,31 @@ export function SupervisorDashboardScreen() {
         }
     }, [])
 
+    const getOrderStatusStyle = (estado?: string) => {
+        switch (estado) {
+            case 'pendiente_validacion':
+                return { bg: '#FEF3C7', color: '#92400E', label: 'Pendiente validacion' }
+            case 'validado':
+                return { bg: '#DCFCE7', color: '#166534', label: 'Validado' }
+            case 'ajustado_bodega':
+                return { bg: '#FFEDD5', color: '#9A3412', label: 'Ajustado bodega' }
+            case 'aceptado_cliente':
+                return { bg: '#DCFCE7', color: '#166534', label: 'Aceptado' }
+            case 'rechazado_cliente':
+                return { bg: '#FEE2E2', color: '#991B1B', label: 'Rechazado' }
+            case 'asignado_ruta':
+                return { bg: '#E0F2FE', color: '#0369A1', label: 'Asignado ruta' }
+            case 'en_ruta':
+                return { bg: '#DBEAFE', color: '#1D4ED8', label: 'En ruta' }
+            case 'entregado':
+                return { bg: '#DCFCE7', color: '#166534', label: 'Entregado' }
+            case 'cancelado':
+                return { bg: '#E5E7EB', color: '#4B5563', label: 'Cancelado' }
+            default:
+                return { bg: '#E5E7EB', color: '#4B5563', label: estado || 'Pendiente' }
+        }
+    }
+
     React.useEffect(() => {
         loadData()
     }, [loadData])
@@ -130,6 +160,59 @@ export function SupervisorDashboardScreen() {
                 </View>
 
                 <QuickActionsGrid />
+
+                <View className="mt-6 mb-6">
+                    <View className="flex-row items-center justify-between mb-3 px-1">
+                        <Text className="text-base font-bold text-neutral-800">Pedidos Recientes</Text>
+                        <Pressable onPress={() => navigation.navigate('SupervisorPedidos')}>
+                            <Text className="text-sm font-semibold" style={{ color: BRAND_COLORS.red }}>Ver todos</Text>
+                        </Pressable>
+                    </View>
+
+                    {recentOrders.length === 0 ? (
+                        <View className="bg-white rounded-2xl p-6 items-center border border-neutral-200">
+                            <Ionicons name="receipt-outline" size={40} color="#9CA3AF" />
+                            <Text className="text-neutral-500 mt-2 text-center">
+                                Aun no hay pedidos recientes
+                            </Text>
+                        </View>
+                    ) : (
+                        recentOrders.map((order) => {
+                            const status = getOrderStatusStyle(order.estado)
+                            return (
+                                <Pressable
+                                    key={order.id}
+                                    onPress={() => navigation.navigate('SupervisorPedidoDetalle', { orderId: order.id })}
+                                    className="bg-white rounded-2xl border border-neutral-200 p-4 mb-3"
+                                >
+                                    <View className="flex-row items-center justify-between">
+                                        <View className="flex-1">
+                                            <Text className="text-sm font-bold text-neutral-900">
+                                                Pedido #{order.numero_pedido || order.id.slice(0, 8)}
+                                            </Text>
+                                            <Text className="text-xs text-neutral-500 mt-1">
+                                                {order.items?.length || 0} productos
+                                            </Text>
+                                        </View>
+                                        <View className="px-2.5 py-1 rounded-full" style={{ backgroundColor: status.bg }}>
+                                            <Text className="text-[10px] font-bold" style={{ color: status.color }}>
+                                                {status.label.toUpperCase()}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                    <View className="flex-row items-center mt-3 pt-3 border-t border-neutral-100">
+                                        <Text className="text-xs text-neutral-500 flex-1">
+                                            {order.estado?.replace(/_/g, ' ') || 'pendiente'}
+                                        </Text>
+                                        <Text className="text-sm font-bold text-neutral-900">
+                                            ${Number(order.total ?? 0).toFixed(2)}
+                                        </Text>
+                                    </View>
+                                </Pressable>
+                            )
+                        })
+                    )}
+                </View>
 
                 <View className="mb-24">
                     <Text className="text-lg font-bold text-neutral-800 mb-3 px-1">Alertas e Incidencias</Text>

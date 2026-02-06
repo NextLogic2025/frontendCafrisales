@@ -2,11 +2,11 @@ import React from 'react'
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native'
+import { MiniMapPreview } from '../../../../components/ui/MiniMapPreview'
 
 import { Header } from '../../../../components/ui/Header'
 import { PrimaryButton } from '../../../../components/ui/PrimaryButton'
 import { TextField } from '../../../../components/ui/TextField'
-import { MiniMapPreview } from '../../../../components/ui/MiniMapPreview'
 import { EvidenceGalleryModal } from '../../../../components/delivery/EvidenceGalleryModal'
 import { IncidentListModal } from '../../../../components/delivery/IncidentListModal'
 import { FeedbackModal } from '../../../../components/ui/FeedbackModal'
@@ -14,6 +14,7 @@ import { BRAND_COLORS } from '../../../../shared/types'
 import { DeliveryDetail, DeliveryService } from '../../../../services/api/DeliveryService'
 import { OrderService } from '../../../../services/api/OrderService'
 import { UserClientService } from '../../../../services/api/UserClientService'
+import { UserService } from '../../../../services/api/UserService'
 import { showGlobalToast } from '../../../../utils/toastService'
 
 const getStatusBadge = (estado: string) => {
@@ -45,6 +46,8 @@ export function SupervisorDeliveryDetailScreen() {
     const [clientPoint, setClientPoint] = React.useState<{ latitude: number; longitude: number } | null>(null)
     const [clientName, setClientName] = React.useState<string | null>(null)
     const [clientAddress, setClientAddress] = React.useState<string | null>(null)
+    const [orderNumber, setOrderNumber] = React.useState<string | null>(null)
+    const [driverName, setDriverName] = React.useState<string | null>(null)
     const [updating, setUpdating] = React.useState(false)
     const [motivoCancelacion, setMotivoCancelacion] = React.useState('')
 
@@ -59,8 +62,13 @@ export function SupervisorDeliveryDetailScreen() {
         try {
             const data = await DeliveryService.getDeliveryDetail(entregaId)
             setDelivery(data)
+            if (data?.transportista_id) {
+                const driver = await UserService.getUserDetail(data.transportista_id)
+                setDriverName(driver?.name || data.transportista_id.slice(0, 8))
+            }
             if (data?.pedido_id) {
                 const order = await OrderService.getOrderDetail(data.pedido_id)
+                setOrderNumber(order?.pedido?.numero_pedido || data.pedido_id.slice(0, 8))
                 const clienteId = order?.pedido?.cliente_id
                 if (clienteId) {
                     const client = await UserClientService.getClient(clienteId)
@@ -105,7 +113,6 @@ export function SupervisorDeliveryDetailScreen() {
     const evidencias = delivery?.evidencias || []
     const incidencias = delivery?.incidencias || []
     const canCancel = estado === 'pendiente' || estado === 'en_ruta'
-
     return (
         <View className="flex-1 bg-neutral-50">
             <Header title="Detalle Entrega" variant="standard" onBackPress={() => navigation.goBack()} />
@@ -131,20 +138,20 @@ export function SupervisorDeliveryDetailScreen() {
                                 </Text>
                             </View>
                         </View>
-                        <View className="mt-4 flex-row">
-                            <View className="flex-1">
-                                <Text className="text-xs text-slate-100">Pedido</Text>
-                                <Text className="text-sm font-semibold text-white">
-                                    #{delivery?.pedido_id?.slice(0, 8) || '---'}
-                                </Text>
+                            <View className="mt-4 flex-row">
+                                <View className="flex-1">
+                                    <Text className="text-xs text-slate-100">Pedido</Text>
+                                    <Text className="text-sm font-semibold text-white">
+                                        {orderNumber || delivery?.pedido_id?.slice(0, 8) || '---'}
+                                    </Text>
+                                </View>
+                                <View className="flex-1">
+                                    <Text className="text-xs text-slate-100">Transportista</Text>
+                                    <Text className="text-sm font-semibold text-white">
+                                        {driverName || delivery?.transportista_id?.slice(0, 8) || '---'}
+                                    </Text>
+                                </View>
                             </View>
-                            <View className="flex-1">
-                                <Text className="text-xs text-slate-100">Transportista</Text>
-                                <Text className="text-sm font-semibold text-white">
-                                    #{delivery?.transportista_id?.slice(0, 8) || '---'}
-                                </Text>
-                            </View>
-                        </View>
                     </View>
 
                     {/* Cliente Info */}

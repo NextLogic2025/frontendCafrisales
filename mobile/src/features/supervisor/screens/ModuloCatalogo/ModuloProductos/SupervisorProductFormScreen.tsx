@@ -1,5 +1,7 @@
 import React from 'react'
-import { View, Text, Image } from 'react-native'
+import { View, Text, Image, Pressable } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
+import * as ImagePicker from 'expo-image-picker'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { Header } from '../../../../../components/ui/Header'
 import { SupervisorHeaderMenu } from '../../../../../components/ui/SupervisorHeaderMenu'
@@ -26,6 +28,7 @@ export function SupervisorProductFormScreen() {
   const [slug, setSlug] = React.useState(productParam?.slug || '')
   const [descripcion, setDescripcion] = React.useState(productParam?.descripcion || '')
   const [imgUrl, setImgUrl] = React.useState(productParam?.img_url || '')
+  const [localImageUri, setLocalImageUri] = React.useState<string | null>(null)
   const [saving, setSaving] = React.useState(false)
   const [loading, setLoading] = React.useState(false)
 
@@ -47,6 +50,7 @@ export function SupervisorProductFormScreen() {
         setSlug(data.slug)
         setDescripcion(data.descripcion ?? '')
         setImgUrl(data.img_url ?? '')
+        setLocalImageUri(null)
         setCategoriaId(data.categoria?.id || data.categoria_id || '')
       }
     } finally {
@@ -58,6 +62,45 @@ export function SupervisorProductFormScreen() {
     loadCategories()
     loadProduct()
   }, [loadCategories, loadProduct])
+
+  const pickImage = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync()
+    if (!permissionResult.granted) {
+      showGlobalToast('Se necesitan permisos para acceder a la galeria', 'warning')
+      return
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    })
+
+    if (!result.canceled && result.assets?.[0]?.uri) {
+      setLocalImageUri(result.assets[0].uri)
+      setImgUrl('')
+    }
+  }
+
+  const takePhoto = async () => {
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync()
+    if (!permissionResult.granted) {
+      showGlobalToast('Se necesitan permisos para usar la camara', 'warning')
+      return
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    })
+
+    if (!result.canceled && result.assets?.[0]?.uri) {
+      setLocalImageUri(result.assets[0].uri)
+      setImgUrl('')
+    }
+  }
 
   const categoryOptions: ComboBoxOption<string>[] = categories.map((category) => ({
     value: category.id,
@@ -161,16 +204,47 @@ export function SupervisorProductFormScreen() {
                 placeholder="https://..."
                 value={imgUrl}
                 onChangeText={setImgUrl}
+                editable={!localImageUri}
               />
-              {imgUrl.trim() ? (
-                <View className="rounded-2xl overflow-hidden border border-neutral-200">
-                  <Image
-                    source={{ uri: imgUrl.trim() }}
-                    style={{ width: '100%', height: 160 }}
-                    resizeMode="cover"
-                  />
-                </View>
-              ) : null}
+              <View>
+                <Text className="text-xs font-semibold text-neutral-500 mb-2">Imagen</Text>
+                {localImageUri ? (
+                  <View className="rounded-2xl overflow-hidden border border-neutral-200">
+                    <Image source={{ uri: localImageUri }} style={{ width: '100%', height: 160 }} resizeMode="cover" />
+                    <Pressable
+                      onPress={() => setLocalImageUri(null)}
+                      className="absolute top-2 right-2 bg-black/50 p-2 rounded-full"
+                    >
+                      <Ionicons name="close" size={16} color="white" />
+                    </Pressable>
+                  </View>
+                ) : imgUrl.trim() ? (
+                  <View className="rounded-2xl overflow-hidden border border-neutral-200">
+                    <Image
+                      source={{ uri: imgUrl.trim() }}
+                      style={{ width: '100%', height: 160 }}
+                      resizeMode="cover"
+                    />
+                  </View>
+                ) : (
+                  <View className="flex-row gap-3">
+                    <Pressable
+                      onPress={takePhoto}
+                      className="flex-1 border border-dashed border-neutral-300 rounded-2xl py-6 items-center justify-center bg-neutral-50"
+                    >
+                      <Ionicons name="camera-outline" size={28} color="#EF4444" />
+                      <Text className="text-xs text-neutral-600 mt-2 font-semibold">Tomar foto</Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={pickImage}
+                      className="flex-1 border border-dashed border-neutral-300 rounded-2xl py-6 items-center justify-center bg-neutral-50"
+                    >
+                      <Ionicons name="images-outline" size={28} color="#EF4444" />
+                      <Text className="text-xs text-neutral-600 mt-2 font-semibold">Galeria</Text>
+                    </Pressable>
+                  </View>
+                )}
+              </View>
 
               <PrimaryButton title={isEditing ? 'Guardar cambios' : 'Crear producto'} onPress={handleSave} loading={saving || loading} />
           </View>

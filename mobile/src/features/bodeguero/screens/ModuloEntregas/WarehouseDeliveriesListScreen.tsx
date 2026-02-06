@@ -9,7 +9,10 @@ import { DashboardCard } from '../../../../components/ui/DashboardCard'
 import { BRAND_COLORS } from '../../../../shared/types'
 import { OrderResponse, OrderService } from '../../../../services/api/OrderService'
 import { RouteService } from '../../../../services/api/RouteService'
+import { UserClientService } from '../../../../services/api/UserClientService'
 import { showGlobalToast } from '../../../../utils/toastService'
+import { formatNameOrId, formatOrderLabel } from '../../../../utils/formatters'
+import { lookupCache } from '../../../../utils/lookupCache'
 
 type StatusFilter = 'todos' | 'pendientes' | 'preparados'
 
@@ -34,6 +37,11 @@ export function WarehouseDeliveriesListScreen() {
   const [loading, setLoading] = React.useState(false)
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>('todos')
   const [orderMap, setOrderMap] = React.useState<Record<string, OrderResponse>>({})
+  const [clientMap, setClientMap] = React.useState<Record<string, string>>({})
+
+  React.useEffect(() => {
+    lookupCache.preload()
+  }, [])
 
   const fetchStops = React.useCallback(async () => {
     setLoading(true)
@@ -67,14 +75,38 @@ export function WarehouseDeliveriesListScreen() {
           }),
         )
         const nextMap: Record<string, OrderResponse> = {}
+        const nextClients: Record<string, string> = {}
         details.forEach((entry) => {
           if (!entry) return
           const [pedidoId, detail] = entry
           nextMap[pedidoId] = detail
+          if (detail?.numero_pedido) {
+            lookupCache.setOrderLabel(pedidoId, detail.numero_pedido)
+          }
+          if (detail?.cliente_id) {
+            nextClients[pedidoId] = detail.cliente_id
+          }
         })
         setOrderMap(nextMap)
+        if (Object.keys(nextClients).length > 0) {
+          const clientDetails = await Promise.all(
+            Object.entries(nextClients).map(async ([pedidoId, clienteId]) => {
+              const client = await UserClientService.getClient(clienteId)
+              return client ? [pedidoId, client.nombre_comercial || client.ruc || clienteId] as const : [pedidoId, clienteId] as const
+            }),
+          )
+          const clientNames: Record<string, string> = {}
+          clientDetails.forEach(([pedidoId, name]) => {
+            clientNames[pedidoId] = name
+            lookupCache.setClientName(pedidoId, name)
+          })
+          setClientMap(clientNames)
+        } else {
+          setClientMap({})
+        }
       } else {
         setOrderMap({})
+        setClientMap({})
       }
     } finally {
       setLoading(false)
@@ -144,6 +176,10 @@ export function WarehouseDeliveriesListScreen() {
               const badge = getStatusBadge(isPrepared)
               const key = `${stop.routeId}:${stop.pedidoId}`
               const orderDetail = orderMap[stop.pedidoId]
+              const clientLabel =
+                clientMap[stop.pedidoId] ||
+                lookupCache.getClientName(stop.pedidoId) ||
+                formatNameOrId(undefined, orderDetail?.cliente_id)
               return (
                 <Pressable
                   key={key}
@@ -157,10 +193,10 @@ export function WarehouseDeliveriesListScreen() {
                     </View>
                     <View style={styles.cardContent}>
                       <Text style={styles.title}>
-                        Pedido {orderDetail?.numero_pedido || `#${stop.pedidoId.slice(0, 8)}`}
+                        Pedido {formatOrderLabel(orderDetail?.numero_pedido, stop.pedidoId)}
                       </Text>
                       <Text style={styles.subtitle}>
-                        Cliente: {orderDetail?.cliente_id?.slice(0, 8) || '---'}
+                        Cliente: {clientLabel}
                       </Text>
                       <Text style={styles.date}>Orden #{stop.orden}</Text>
                     </View>

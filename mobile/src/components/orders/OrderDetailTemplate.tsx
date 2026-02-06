@@ -2,6 +2,7 @@ import React from 'react'
 import { Pressable, Text, View } from 'react-native'
 import { BRAND_COLORS } from '../../shared/types'
 import { OrderDetail, OrderHistoryItem, OrderItemDetail, OrderResponse } from '../../services/api/OrderService'
+import { formatNameOrId, formatOrderLabel } from '../../utils/formatters'
 
 const formatMoney = (value?: number | string | null) => {
   const amount = Number(value)
@@ -161,7 +162,7 @@ export function OrderDetailTemplate({
           <View>
             <Text className="text-xs text-neutral-500">Pedido</Text>
             <Text className="text-base font-bold text-neutral-900">
-              #{pedido?.numero_pedido || pedido?.id?.slice(0, 8) || '-'}
+              {formatOrderLabel(pedido?.numero_pedido, pedido?.id || null)}
             </Text>
           </View>
           <View className="px-3 py-1 rounded-full" style={{ backgroundColor: `${estadoColor}22` }}>
@@ -233,7 +234,7 @@ export function OrderDetailTemplate({
         <View className="bg-white rounded-2xl border border-neutral-100 p-4 shadow-sm">
           <Text className="text-xs text-neutral-500">Cliente</Text>
           <Text className="text-base font-semibold text-neutral-900" numberOfLines={1}>
-            {clientLabel || pedido?.cliente_id || 'Cliente'}
+            {formatNameOrId(clientLabel, pedido?.cliente_id)}
           </Text>
         </View>
       ) : null}

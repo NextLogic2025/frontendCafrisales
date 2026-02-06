@@ -13,6 +13,7 @@ import { CreditListItem, CreditService } from '../../../../services/api/CreditSe
 import { OrderListItem, OrderService } from '../../../../services/api/OrderService'
 import { UserClient, UserClientService } from '../../../../services/api/UserClientService'
 import { getValidToken } from '../../../../services/auth/authClient'
+import { formatNameOrId, formatOrderLabel } from '../../../../utils/formatters'
 
 const currencyFormatter = new Intl.NumberFormat('es-EC', {
   style: 'currency',
@@ -31,11 +32,6 @@ const formatDate = (value?: string) => {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
   return date.toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric' })
-}
-
-const shortenId = (value?: string) => {
-  if (!value) return '-'
-  return `${value.slice(0, 8)}...`
 }
 
 export function SellerCreditsScreen() {
@@ -104,8 +100,8 @@ export function SellerCreditsScreen() {
     const estadoColor =
       estado === 'pagado' ? '#059669' : estado === 'vencido' ? BRAND_COLORS.red : '#2563EB'
     const saldo = item.saldo ?? (item.monto_aprobado || 0)
-    const clienteLabel = clientNameMap[item.cliente_id] || item.cliente_id
-    const pedidoLabel = item.pedido_id ? `#${shortenId(item.pedido_id)}` : '-'
+    const clienteLabel = formatNameOrId(clientNameMap[item.cliente_id], item.cliente_id)
+    const pedidoLabel = formatOrderLabel(item.numero_pedido, item.pedido_id)
 
     return (
       <Pressable
@@ -172,7 +168,7 @@ export function SellerCreditsScreen() {
   }
 
   const renderPendingItem = ({ item }: { item: OrderListItem }) => {
-    const clienteLabel = item.cliente_id ? clientNameMap[item.cliente_id] || item.cliente_id : 'Cliente'
+    const clienteLabel = formatNameOrId(clientNameMap[item.cliente_id], item.cliente_id) || 'Cliente'
     const total = getOrderTotal(item)
     return (
       <Pressable
@@ -188,7 +184,9 @@ export function SellerCreditsScreen() {
         <View className="flex-row items-center justify-between">
           <View>
             <Text className="text-xs text-neutral-500">Pedido</Text>
-            <Text className="text-base font-bold text-neutral-900">#{item.numero_pedido || item.id.slice(0, 8)}</Text>
+            <Text className="text-base font-bold text-neutral-900">
+              {formatOrderLabel(item.numero_pedido, item.id)}
+            </Text>
           </View>
           <View className="px-3 py-1 rounded-full bg-amber-50">
             <Text className="text-xs font-semibold text-amber-700">PENDIENTE</Text>

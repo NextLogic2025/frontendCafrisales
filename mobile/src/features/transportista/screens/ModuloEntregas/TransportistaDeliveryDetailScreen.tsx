@@ -52,6 +52,7 @@ export function TransportistaDeliveryDetailScreen() {
   const [clientPoint, setClientPoint] = React.useState<{ latitude: number; longitude: number } | null>(null)
   const [clientName, setClientName] = React.useState<string | null>(null)
   const [clientAddress, setClientAddress] = React.useState<string | null>(null)
+  const [orderNumber, setOrderNumber] = React.useState<string | null>(null)
   const [updating, setUpdating] = React.useState(false)
 
   // Modal states
@@ -68,6 +69,7 @@ export function TransportistaDeliveryDetailScreen() {
       setDelivery(data)
       if (data?.pedido_id) {
         const order = await OrderService.getOrderDetail(data.pedido_id)
+        setOrderNumber(order?.pedido?.numero_pedido || data.pedido_id.slice(0, 8))
         const clienteId = order?.pedido?.cliente_id
         if (clienteId) {
           const client = await UserClientService.getClient(clienteId)
@@ -176,7 +178,6 @@ export function TransportistaDeliveryDetailScreen() {
   const evidencias = delivery?.evidencias || []
   const incidencias = delivery?.incidencias || []
   const canUpdate = estado === 'pendiente' || estado === 'en_ruta'
-
   return (
     <View className="flex-1 bg-neutral-50">
       <Header title="Detalle entrega" variant="standard" onBackPress={() => navigation.goBack()} />
@@ -205,7 +206,7 @@ export function TransportistaDeliveryDetailScreen() {
             <View className="mt-4">
               <Text className="text-xs text-slate-100">Pedido</Text>
               <Text className="text-sm font-semibold text-white">
-                #{delivery?.pedido_id?.slice(0, 8) || '---'}
+                {orderNumber || delivery?.pedido_id?.slice(0, 8) || '---'}
               </Text>
             </View>
           </View>

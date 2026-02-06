@@ -11,6 +11,7 @@ import { BRAND_COLORS } from '../../../../shared/types'
 import { CreditService, CreditListItem } from '../../../../services/api/CreditService'
 import { UserClientService } from '../../../../services/api/UserClientService'
 import { UserService, UserProfile } from '../../../../services/api/UserService'
+import { formatNameOrId, formatOrderLabel } from '../../../../utils/formatters'
 
 const formatMoney = (value: number) => {
   const fixed = Number.isFinite(value) ? value.toFixed(2) : '0.00'
@@ -102,7 +103,7 @@ export function SupervisorCreditsScreen() {
     const estadoColor =
       estado === 'pagado' ? '#059669' : estado === 'vencido' ? BRAND_COLORS.red : '#2563EB'
     const saldo = item.saldo ?? (item.monto_aprobado || 0)
-    const clientLabel = clientNameMap[item.cliente_id] || item.cliente_id
+    const clientLabel = formatNameOrId(clientNameMap[item.cliente_id], item.cliente_id)
 
     return (
       <Pressable
@@ -112,7 +113,9 @@ export function SupervisorCreditsScreen() {
         <View className="flex-row items-center justify-between">
           <View>
             <Text className="text-xs text-neutral-500">Pedido</Text>
-            <Text className="text-base font-bold text-neutral-900">{item.pedido_id?.slice(0, 8)}...</Text>
+            <Text className="text-base font-bold text-neutral-900">
+              {formatOrderLabel(item.numero_pedido, item.pedido_id || null)}
+            </Text>
           </View>
           <View className="px-3 py-1 rounded-full" style={{ backgroundColor: `${estadoColor}22` }}>
             <Text className="text-xs font-semibold" style={{ color: estadoColor }}>

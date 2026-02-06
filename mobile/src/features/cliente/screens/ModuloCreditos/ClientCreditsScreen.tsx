@@ -10,6 +10,7 @@ import { CategoryFilter } from '../../../../components/ui/CategoryFilter'
 import { BRAND_COLORS } from '../../../../shared/types'
 import { CreditListItem, CreditService } from '../../../../services/api/CreditService'
 import { getValidToken } from '../../../../services/auth/authClient'
+import { formatOrderLabel, formatShortId } from '../../../../utils/formatters'
 
 const currencyFormatter = new Intl.NumberFormat('es-EC', {
   style: 'currency',
@@ -27,11 +28,6 @@ const formatDate = (value?: string) => {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
   return date.toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric' })
-}
-
-const shortenId = (value?: string) => {
-  if (!value) return '-'
-  return `${value.slice(0, 8)}...`
 }
 
 type DecodedToken = { sub?: string; userId?: string }
@@ -98,7 +94,9 @@ export function ClientCreditsScreen() {
         <View className="flex-row items-center justify-between">
           <View>
             <Text className="text-xs text-neutral-500">Pedido</Text>
-            <Text className="text-base font-bold text-neutral-900">#{shortenId(item.pedido_id)}</Text>
+            <Text className="text-base font-bold text-neutral-900">
+              {formatOrderLabel(item.numero_pedido, item.pedido_id)}
+            </Text>
           </View>
           <View className="px-3 py-1 rounded-full" style={{ backgroundColor: `${estadoColor}22` }}>
             <Text className="text-xs font-semibold" style={{ color: estadoColor }}>

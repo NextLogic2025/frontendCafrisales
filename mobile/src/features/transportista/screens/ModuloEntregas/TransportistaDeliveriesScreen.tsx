@@ -12,6 +12,8 @@ import { Delivery, DeliveryService } from '../../../../services/api/DeliveryServ
 import { OrderService } from '../../../../services/api/OrderService'
 import { UserClientService } from '../../../../services/api/UserClientService'
 import { getValidToken } from '../../../../services/auth/authClient'
+import { formatOrderLabel } from '../../../../utils/formatters'
+import { lookupCache } from '../../../../utils/lookupCache'
 
 type StatusFilter = 'todos' | 'pendiente' | 'en_ruta' | 'entregado_completo' | 'no_entregado'
 
@@ -42,7 +44,12 @@ export function TransportistaDeliveriesScreen() {
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>('todos')
   const [transportistaId, setTransportistaId] = React.useState<string | null>(null)
   const [clientMap, setClientMap] = React.useState<Record<string, { name: string; address?: string }>>({})
+  const [orderNumbers, setOrderNumbers] = React.useState<Record<string, string>>({})
   const clientCache = React.useRef<Record<string, { name: string; address?: string }>>({})
+
+  React.useEffect(() => {
+    lookupCache.preload()
+  }, [])
 
   // useDeferredValue para búsqueda sin bloquear UI
   const deferredSearch = useDeferredValue(searchQuery.trim().toLowerCase())
@@ -89,6 +96,10 @@ export function TransportistaDeliveriesScreen() {
         missing.map(async (pedidoId) => {
           try {
             const order = await OrderService.getOrderDetail(pedidoId)
+            if (order?.pedido?.numero_pedido) {
+              setOrderNumbers((prev) => ({ ...prev, [pedidoId]: order.pedido?.numero_pedido as string }))
+              lookupCache.setOrderLabel(pedidoId, order.pedido?.numero_pedido as string)
+            }
             const clienteId = order?.pedido?.cliente_id
             if (!clienteId) return null
             const client = await UserClientService.getClient(clienteId)
@@ -180,6 +191,11 @@ export function TransportistaDeliveriesScreen() {
           renderItem={(delivery) => {
             const badge = statusBadge(delivery.estado)
             const clientInfo = clientMap[delivery.pedido_id]
+            const cachedOrder = lookupCache.getOrderLabel(delivery.pedido_id)
+            const orderLabel =
+              orderNumbers[delivery.pedido_id] ||
+              cachedOrder ||
+              formatOrderLabel(undefined, delivery.pedido_id)
             return (
               <Pressable
                 onPress={() => navigation.navigate('TransportistaEntregaDetalle', { entregaId: delivery.id })}
@@ -197,7 +213,7 @@ export function TransportistaDeliveriesScreen() {
                     <Ionicons name="car-sport-outline" size={20} color={BRAND_COLORS.red} />
                   </View>
                   <View style={styles.cardContent}>
-                    <Text style={styles.title}>Pedido {delivery.pedido_id.slice(0, 8)}</Text>
+                    <Text style={styles.title}>Pedido {orderLabel}</Text>
                     <Text style={styles.subtitle}>
                       {clientInfo?.name ? `${clientInfo.name}` : `Rutero ${delivery.rutero_logistico_id.slice(0, 8)}`}
                     </Text>

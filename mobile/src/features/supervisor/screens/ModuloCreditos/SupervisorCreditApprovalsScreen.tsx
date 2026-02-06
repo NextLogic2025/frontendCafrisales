@@ -7,6 +7,7 @@ import { SupervisorHeaderMenu } from '../../../../components/ui/SupervisorHeader
 import { BRAND_COLORS } from '../../../../shared/types'
 import { OrderService, OrderListItem } from '../../../../services/api/OrderService'
 import { UserClientService } from '../../../../services/api/UserClientService'
+import { formatNameOrId, formatOrderLabel } from '../../../../utils/formatters'
 
 const formatMoney = (value?: number) => {
   const amount = Number.isFinite(value as number) ? (value as number) : 0
@@ -58,7 +59,7 @@ export function SupervisorCreditApprovalsScreen() {
   )
 
   const renderItem = ({ item }: { item: OrderListItem }) => {
-    const clientLabel = item.cliente_id ? clientNameMap[item.cliente_id] || item.cliente_id : 'Cliente'
+    const clientLabel = formatNameOrId(clientNameMap[item.cliente_id], item.cliente_id) || 'Cliente'
     return (
       <Pressable
         onPress={() => navigation.navigate('SupervisorSolicitudCreditoDetalle', { orderId: item.id })}
@@ -67,7 +68,9 @@ export function SupervisorCreditApprovalsScreen() {
         <View className="flex-row items-center justify-between">
           <View>
             <Text className="text-xs text-neutral-500">Pedido</Text>
-            <Text className="text-base font-bold text-neutral-900">#{item.numero_pedido || item.id.slice(0, 8)}</Text>
+            <Text className="text-base font-bold text-neutral-900">
+              {formatOrderLabel(item.numero_pedido, item.id)}
+            </Text>
           </View>
           <View className="px-3 py-1 rounded-full bg-amber-50">
             <Text className="text-xs font-semibold text-amber-700">CREDITO</Text>
