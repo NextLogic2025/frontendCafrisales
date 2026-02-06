@@ -232,35 +232,35 @@ export default function ZonasPage() {
         subtitle="Define las zonas de cobertura y asigna vendedores"
       />
 
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <p className="text-sm text-gray-600">Agrupa pedidos y clientes por zonas para planificar mejor la distribución.</p>
-          <p className="text-xs text-gray-500">Total zonas: {zonas.length}</p>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm text-neutral-600">Agrupa pedidos y clientes por zonas para planificar mejor la distribución.</p>
+          <p className="text-xs text-neutral-500 font-medium mt-0.5">Total zonas: {zonas.length}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 sm:grid sm:grid-cols-3 lg:flex lg:flex-nowrap">
           <button
             type="button"
             onClick={handleOpenMapaGeneral}
-            className="inline-flex items-center justify-center rounded-xl px-4 py-3 font-extrabold transition bg-indigo-600 text-white hover:bg-indigo-700"
+            className="flex-1 inline-flex items-center justify-center rounded-xl bg-indigo-600 px-3 py-2.5 text-xs font-bold text-white transition hover:bg-indigo-700 sm:px-4 sm:py-3 sm:text-sm lg:text-sm"
           >
-            <Map className="mr-2 h-4 w-4" />
-            Ver mapa general
+            <Map className="mr-2 h-4 w-4 shrink-0" />
+            <span>Ver mapa general</span>
           </button>
           <button
             type="button"
             onClick={loadZonas}
-            className="inline-flex items-center justify-center rounded-xl px-4 py-3 font-extrabold transition bg-white text-brand-red border border-brand-red hover:bg-brand-red/5"
+            className="flex-1 inline-flex items-center justify-center rounded-xl border border-brand-red bg-white px-3 py-2.5 text-xs font-bold text-brand-red transition hover:bg-brand-red/5 sm:px-4 sm:py-3 sm:text-sm lg:text-sm"
           >
-            <RefreshCcw className="mr-2 h-4 w-4" />
-            Actualizar
+            <RefreshCcw className="mr-2 h-4 w-4 shrink-0" />
+            <span>Actualizar</span>
           </button>
           <button
             type="button"
             onClick={handleOpenModalCrear}
-            className="inline-flex items-center justify-center rounded-xl px-4 py-3 font-extrabold transition bg-brand-red text-white hover:bg-brand-red/90"
+            className="flex-1 inline-flex items-center justify-center rounded-xl bg-brand-red px-3 py-2.5 text-xs font-bold text-white transition hover:bg-brand-red/90 sm:px-4 sm:py-3 sm:text-sm lg:text-sm"
           >
-            <PlusCircle className="h-4 w-4 mr-2" />
-            Nueva zona
+            <PlusCircle className="mr-2 h-4 w-4 shrink-0" />
+            <span>Nueva zona</span>
           </button>
         </div>
       </div>

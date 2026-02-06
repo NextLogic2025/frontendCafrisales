@@ -9,6 +9,7 @@ import {
   type Product,
   type CreateProductDto,
   getProductById,
+  uploadProductImage,
 } from '../../services/productosApi'
 import { useProductoCrud } from '../../services/useProductoCrud'
 import { ProductosList } from './productos/ProductosList'
@@ -33,11 +34,19 @@ export function ProductosView() {
   const handleSubmit = async (data: CreateProductDto) => {
     setIsSubmitting(true)
     try {
+      // Separar el archivo de imagen de los datos JSON
+      const imgFile = (data as any).img_url instanceof File ? (data as any).img_url : null
+      const jsonData = { ...data }
+      if (imgFile) delete (jsonData as any).img_url
+
+      let product: Product
       if (modal.editingItem) {
-        await update(modal.editingItem.id, data)
+        product = await update(modal.editingItem.id, jsonData)
+        if (imgFile) await uploadProductImage(product.id, imgFile)
         success('Producto actualizado exitosamente')
       } else {
-        await create(data)
+        product = await create(jsonData)
+        if (imgFile) await uploadProductImage(product.id, imgFile)
         success('Producto creado exitosamente')
       }
       modal.close()

@@ -19,7 +19,6 @@ export function ProductosForm({
   editingItem,
   isEditing,
   categories,
-  isSubmitting,
 }: ProductosFormProps) {
   const fields: Field[] = [
     {
@@ -33,7 +32,7 @@ export function ProductosForm({
     { name: 'nombre', label: 'Nombre', required: true, placeholder: 'Ej. Cola Zero' },
     { name: 'slug', label: 'Slug', required: true, placeholder: 'cola-zero' },
     { name: 'descripcion', label: 'Descripcion', type: 'textarea', placeholder: 'Describe el producto' },
-    { name: 'img_url', label: 'Imagen (URL)', type: 'url', placeholder: 'https://...' },
+    { name: 'img_url', label: 'Imagen', type: 'file' },
   ]
 
   const handleSubmit = async (data: any) => {

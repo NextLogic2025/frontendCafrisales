@@ -13,7 +13,7 @@ const fields: Field[] = [
   { name: 'nombre', label: 'Nombre', required: true, placeholder: 'Ej. Bebidas' },
   { name: 'slug', label: 'Slug', required: true, placeholder: 'bebidas' },
   { name: 'descripcion', label: 'Descripcion', type: 'textarea', placeholder: 'Describe la categoria' },
-  { name: 'img_url', label: 'Imagen (URL)', type: 'url', placeholder: 'https://...' },
+  { name: 'img_url', label: 'Imagen', type: 'file' },
 ]
 
 export function CategoriaFormModal({ isOpen, onClose, initialData, onSubmit, isEditing }: CategoriaFormModalProps) {

@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Modal } from 'components/ui/Modal'
-import { Image, FileText } from 'components/ui/Icons'
-import { agregarEvidencia } from 'features/shared/services/deliveryApi'
+import { Camera, FileText } from 'components/ui/Icons'
+import { uploadDeliveryEvidence } from 'features/shared/services/deliveryApi'
 import type { TipoEvidencia } from 'features/shared/types/deliveryTypes'
 
 interface AgregarEvidenciaModalProps {
@@ -21,25 +21,45 @@ export function AgregarEvidenciaModal({
 }: AgregarEvidenciaModalProps) {
     const [loading, setLoading] = useState(false)
     const [tipo, setTipo] = useState<TipoEvidencia>('foto')
-    const [url, setUrl] = useState('')
+    const [archivo, setArchivo] = useState<File | null>(null)
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null)
     const [descripcion, setDescripcion] = useState('')
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (file) {
+            setArchivo(file)
+            if (file.type.startsWith('image/')) {
+                setPreviewUrl(URL.createObjectURL(file))
+            } else {
+                setPreviewUrl(null)
+            }
+        } else {
+            setArchivo(null)
+            setPreviewUrl(null)
+        }
+    }
+
     const handleSubmit = async () => {
-        if (!url.trim()) {
-            alert('La URL de la evidencia es requerida')
+        if (!archivo) {
+            alert('El archivo de evidencia es requerido')
             return
         }
 
         setLoading(true)
         try {
-            await agregarEvidencia(entregaId, {
-                tipo,
-                url: url.trim(),
-                descripcion: descripcion.trim() || undefined,
-            })
+            const formData = new FormData()
+            formData.append('file', archivo)
+            formData.append('tipo', tipo)
+            if (descripcion.trim()) {
+                formData.append('descripcion', descripcion.trim())
+            }
+
+            await uploadDeliveryEvidence(entregaId, formData)
             onSuccess()
             onClose()
-            setUrl('')
+            setArchivo(null)
+            setPreviewUrl(null)
             setDescripcion('')
             setTipo('foto')
         } catch (error: any) {
@@ -63,7 +83,7 @@ export function AgregarEvidenciaModal({
                         <strong>Pedido:</strong> {pedidoNumero}
                     </p>
                     <p className="text-xs text-blue-600 mt-1">
-                        Agrega evidencia de la entrega mediante una URL (foto, firma, documento, etc.).
+                        Sube una foto, firma o documento como evidencia de la entrega.
                     </p>
                 </div>
 
@@ -85,21 +105,43 @@ export function AgregarEvidenciaModal({
                     </select>
                 </div>
 
-                {/* URL */}
+                {/* Archivo */}
                 <div>
                     <label className="block text-sm font-medium text-neutral-700 mb-2">
-                        <Image className="h-4 w-4 inline mr-2" />
-                        URL de la Evidencia <span className="text-red-500">*</span>
+                        <Camera className="h-4 w-4 inline mr-2" />
+                        Archivo de Evidencia <span className="text-red-500">*</span>
                     </label>
-                    <input
-                        type="url"
-                        value={url}
-                        onChange={(e) => setUrl(e.target.value)}
-                        placeholder="https://ejemplo.com/evidencia.jpg"
-                        className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                    />
-                    <p className="text-xs text-neutral-500 mt-1">
-                        Por ahora, ingresa la URL pública de la evidencia. La carga de archivos se implementará próximamente.
+
+                    <div className="flex flex-col gap-3">
+                        {previewUrl && (
+                            <div className="relative h-48 w-full rounded-xl border border-neutral-200 bg-white p-1 overflow-hidden group">
+                                <img
+                                    src={previewUrl}
+                                    alt="Preview"
+                                    className="h-full w-full object-contain rounded-lg"
+                                />
+                            </div>
+                        )}
+
+                        <div className="relative">
+                            <input
+                                type="file"
+                                onChange={handleFileChange}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                disabled={loading}
+                            />
+                            <div className="flex items-center gap-2 rounded-xl border border-dashed border-neutral-300 bg-neutral-50 px-4 py-4 text-sm text-neutral-600 transition hover:border-blue-400 hover:bg-white">
+                                <div className="flex-1 truncate">
+                                    {archivo ? archivo.name : 'Seleccionar archivo o capturar foto...'}
+                                </div>
+                                <button type="button" className="text-blue-600 font-bold text-xs uppercase">
+                                    Examinar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <p className="text-xs text-neutral-500 mt-2">
+                        Puedes subir imágenes, documentos PDF, audios o videos como evidencia.
                     </p>
                 </div>
 

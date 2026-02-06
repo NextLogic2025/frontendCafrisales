@@ -125,6 +125,30 @@ export async function restoreCategory(id: string | number): Promise<void> {
   }
 }
 
+export async function uploadCategoryImage(id: string | number, file: File): Promise<Category> {
+  const token = await getValidToken()
+  if (!token) throw new Error('No hay sesión activa')
+
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const res = await fetch(`${CATALOG_API_URL}/v1/categorias/${id}/imagen`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'X-Authorization': `Bearer ${token}`,
+    },
+    body: formData,
+  })
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => null)
+    throw new Error(errorData?.message || 'Error al subir la imagen de la categoría')
+  }
+
+  return await res.json()
+}
+
 export interface Canal {
   id: string | number
   nombre: string

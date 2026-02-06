@@ -202,6 +202,31 @@ export async function marcarNoEntregado(
 
 
 /**
+ * Add evidence to delivery (File-based)
+ */
+export async function uploadDeliveryEvidence(
+    deliveryId: string,
+    formData: FormData
+): Promise<void> {
+    const token = await getValidToken()
+    if (!token) throw new Error('No hay sesión activa')
+
+    const res = await fetch(`${BASE_URL}/api/v1/deliveries/${deliveryId}/evidence`, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'X-Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+    })
+
+    if (!res.ok) {
+        const err = await res.json().catch(() => null)
+        throw new Error(err?.message || 'Error al agregar evidencia')
+    }
+}
+
+/**
  * Add evidence to delivery (URL-based)
  */
 export async function agregarEvidencia(

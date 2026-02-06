@@ -6,7 +6,7 @@ import { Alert } from './Alert'
 export interface Field {
   name: string
   label: string
-  type?: 'text' | 'number' | 'textarea' | 'select' | 'checkbox' | 'url'
+  type?: 'text' | 'number' | 'textarea' | 'select' | 'checkbox' | 'url' | 'file'
   placeholder?: string
   options?: Array<{ value: string | number; label: string }>
   step?: string
@@ -24,9 +24,9 @@ interface EntityFormModalProps<T> {
   fields: Field[]
   initialData?: Partial<T>
   headerGradient?: 'red' | 'blue' | 'green'
+  subtitle?: string
   submitLabel?: string
   isEditing?: boolean
-  subtitle?: string
 }
 
 export function EntityFormModal<T extends Record<string, any>>({
@@ -164,6 +164,54 @@ export function EntityFormModal<T extends Record<string, any>>({
                     </option>
                   ))}
                 </select>
+                {errors[field.name] && <span className="text-xs text-red-700">{errors[field.name]}</span>}
+              </div>
+            )
+          }
+
+          if (field.type === 'file') {
+            const valAny = value as any
+            const hasExistingImg = typeof valAny === 'string' && valAny.startsWith('http')
+            const fileValue = valAny instanceof File ? URL.createObjectURL(valAny) : null
+            const previewUrl = fileValue || (hasExistingImg ? valAny : null)
+
+            return (
+              <div key={field.name} className="grid gap-2">
+                <label className="text-xs text-neutral-600 font-medium">{field.label}</label>
+                <div className="flex flex-col gap-3">
+                  {previewUrl && (
+                    <div className="relative h-32 w-32 rounded-xl border border-neutral-200 bg-white p-1 overflow-hidden group">
+                      <img
+                        src={previewUrl}
+                        alt="Preview"
+                        className="h-full w-full object-cover rounded-lg"
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span className="text-[10px] text-white font-bold">CAMBIAR</span>
+                      </div>
+                    </div>
+                  )}
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) handleChange(field.name, file)
+                      }}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                      disabled={isSubmitting}
+                    />
+                    <div className="flex items-center gap-2 rounded-xl border border-dashed border-neutral-300 bg-neutral-50 px-4 py-3 text-sm text-neutral-600 transition hover:border-brand-red/40 hover:bg-white">
+                      <div className="flex-1 truncate">
+                        {valAny instanceof File ? valAny.name : 'Seleccionar imagen...'}
+                      </div>
+                      <button type="button" className="text-brand-red font-bold text-xs">
+                        EXPLORAR
+                      </button>
+                    </div>
+                  </div>
+                </div>
                 {errors[field.name] && <span className="text-xs text-red-700">{errors[field.name]}</span>}
               </div>
             )

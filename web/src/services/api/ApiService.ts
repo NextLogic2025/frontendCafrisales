@@ -9,6 +9,7 @@ export type ApiServiceOptions = RequestInit & {
 
 function normalizeBody(body?: unknown) {
     if (body === undefined || body === null) return undefined
+    if (body instanceof FormData) return body
     return typeof body === 'string' ? body : JSON.stringify(body)
 }
 
@@ -23,7 +24,7 @@ async function apiRequest<T>(endpoint: string, options: ApiServiceOptions = {}):
     const token = options.auth === false ? null : await getValidToken()
 
     const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
+        ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
         ...headersToObject(options.headers),
         ...(token
             ? { Authorization: `Bearer ${token}`, 'X-Authorization': `Bearer ${token}` }

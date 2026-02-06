@@ -10,6 +10,7 @@ import { CategoriaList } from './categoria/CategoriaList'
 import { CategoriaDetailModal } from './categoria/CategoriaDetailModal'
 import { useCategoriaCrud } from '../../services/categoriaApi'
 import type { Category, CreateCategoryDto } from '../../services/catalogApi'
+import { uploadCategoryImage } from '../../services/catalogApi'
 
 export function CategoriasView() {
   const { data: activeCategories, isLoading, error, create, update, delete: deleteItem, getDeleted, restore, refresh } = useCategoriaCrud()
@@ -44,14 +45,23 @@ export function CategoriasView() {
 
   const handleSubmit = async (data: CreateCategoryDto) => {
     try {
+      // Separar el archivo de imagen de los datos JSON
+      const imgFile = (data as any).img_url instanceof File ? (data as any).img_url : null
+      const jsonData = { ...data }
+      if (imgFile) delete (jsonData as any).img_url
+
+      let category: Category
       if (modal.editingItem) {
-        await update(modal.editingItem.id.toString(), data)
+        category = await update(modal.editingItem.id.toString(), jsonData)
+        if (imgFile) await uploadCategoryImage(category.id, imgFile)
         success('Categoría actualizada exitosamente')
       } else {
-        await create(data)
+        category = await create(jsonData)
+        if (imgFile) await uploadCategoryImage(category.id, imgFile)
         success('Categoría creada exitosamente')
       }
       modal.close()
+      refresh() // Refrescar lista después de subir imagen
     } catch (err: any) {
       notifyError(err.message || 'Error al guardar la categoría')
     }
