@@ -8,6 +8,7 @@ import { GenericList } from '../../../../components/ui/GenericList'
 import { CategoryFilter } from '../../../../components/ui/CategoryFilter'
 import { BRAND_COLORS } from '../../../../shared/types'
 import { RouteService, LogisticRoute } from '../../../../services/api/RouteService'
+import { ZoneService, Zone } from '../../../../services/api/ZoneService'
 
 type StatusFilter = 'publicado' | 'en_curso' | 'todos'
 
@@ -28,6 +29,7 @@ export function TransportistaRoutesScreen() {
   const [loading, setLoading] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState('')
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>('todos')
+  const [zones, setZones] = React.useState<Zone[]>([])
 
   // useDeferredValue para búsqueda sin bloquear UI
   const deferredSearch = useDeferredValue(searchQuery.trim().toLowerCase())
@@ -35,6 +37,8 @@ export function TransportistaRoutesScreen() {
   const fetchRoutes = React.useCallback(async () => {
     setLoading(true)
     try {
+      const zonesData = await ZoneService.getZones()
+      setZones(zonesData)
       const data = await RouteService.getLogisticsRoutes('publicado,en_curso')
       setRoutes(data)
     } finally {
@@ -52,12 +56,14 @@ export function TransportistaRoutesScreen() {
     return routes.filter((route) => {
       if (statusFilter !== 'todos' && route.estado !== statusFilter) return false
       if (!deferredSearch) return true
+      const zoneName = zones.find((zone) => zone.id === route.zona_id)?.nombre || ''
       return (
         route.id.toLowerCase().includes(deferredSearch) ||
-        route.zona_id.toLowerCase().includes(deferredSearch)
+        route.zona_id.toLowerCase().includes(deferredSearch) ||
+        zoneName.toLowerCase().includes(deferredSearch)
       )
     })
-  }, [routes, deferredSearch, statusFilter])
+  }, [routes, deferredSearch, statusFilter, zones])
 
   const statusOptions = [
     { id: 'todos', name: 'Todos' },
@@ -128,7 +134,9 @@ export function TransportistaRoutesScreen() {
                   <View style={styles.cardContent}>
                     <Text style={styles.title}>Rutero {route.id.slice(0, 8)}</Text>
                     <Text style={styles.subtitle}>Fecha: {route.fecha_rutero?.slice(0, 10) || '-'}</Text>
-                    <Text style={styles.meta}>Zona: {route.zona_id.slice(0, 8)}</Text>
+                    <Text style={styles.meta}>
+                      Zona: {zones.find((zone) => zone.id === route.zona_id)?.nombre || route.zona_id.slice(0, 8)}
+                    </Text>
                   </View>
                   <View style={[styles.statusBadge, { backgroundColor: badge.bg }]}>
                     <Text style={[styles.statusText, { color: badge.text }]}>

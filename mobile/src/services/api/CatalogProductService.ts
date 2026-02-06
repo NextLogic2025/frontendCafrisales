@@ -2,6 +2,7 @@ import { env } from '../../config/env'
 import { ApiService } from './ApiService'
 import { createService } from './createService'
 import { logErrorForDebugging } from '../../utils/errorMessages'
+import { getValidToken } from '../auth/authClient'
 
 export type CatalogProductCategory = {
   id: string
@@ -104,6 +105,45 @@ const rawService = {
     } catch (error) {
       logErrorForDebugging(error, 'CatalogProductService.deleteProduct', { id })
       return false
+    }
+  },
+
+  async uploadProductImage(
+    id: string,
+    file: { uri: string; name: string; type: string },
+  ): Promise<CatalogProduct | null> {
+    try {
+      const token = await getValidToken()
+      const formData = new FormData()
+      formData.append('file', {
+        uri: file.uri,
+        name: file.name,
+        type: file.type,
+      } as any)
+
+      const response = await fetch(`${CATALOG_API_URL}/products/${id}/imagen`, {
+        method: 'POST',
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => '')
+        logErrorForDebugging(new Error(`API ${response.status}`), 'CatalogProductService.uploadProductImage', {
+          id,
+          status: response.status,
+          errorText,
+        })
+        return null
+      }
+
+      const data = await response.json().catch(() => null)
+      return data as CatalogProduct
+    } catch (error) {
+      logErrorForDebugging(error, 'CatalogProductService.uploadProductImage', { id })
+      return null
     }
   },
 }

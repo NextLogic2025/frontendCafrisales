@@ -102,7 +102,7 @@ export function EvidenceGalleryModal({ visible, onClose, evidencias }: Props) {
   }
 
   return (
-    <GenericModal visible={visible} onClose={handleClose} title="Evidencias" height="80%">
+    <GenericModal visible={visible} onClose={handleClose} title="Evidencias" height="80%" scrollable={false}>
       {evidencias.length === 0 ? (
         <View className="flex-1 items-center justify-center py-12">
           <View className="w-16 h-16 rounded-full bg-neutral-100 items-center justify-center mb-4">
@@ -119,7 +119,7 @@ export function EvidenceGalleryModal({ visible, onClose, evidencias }: Props) {
           numColumns={2}
           keyExtractor={(item) => item.id}
           columnWrapperStyle={{ gap: 12 }}
-          contentContainerStyle={{ gap: 12 }}
+          contentContainerStyle={{ gap: 12, paddingBottom: 8 }}
           renderItem={({ item, index }) => (
             <Pressable
               onPress={() => setSelectedIndex(index)}

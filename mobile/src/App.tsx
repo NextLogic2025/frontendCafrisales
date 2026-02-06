@@ -11,7 +11,6 @@ import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-c
 
 import '../global.css'
 
-import { ForgotPasswordScreen } from './features/auth/screens/ForgotPasswordScreen'
 import { LoginScreen } from './features/auth/screens/LoginScreen'
 import { SplashScreen } from './features/auth/screens/SplashScreen'
 import { ClientNavigator } from './navigation/ClientNavigator'
@@ -186,14 +185,7 @@ export default function App() {
                                         {({ navigation }) => (
                                             <LoginScreen
                                                 onSignedIn={(role) => navigation.replace(getRouteForRole(role))}
-                                                onForgotPassword={() => navigation.navigate('ForgotPassword')}
                                             />
-                                        )}
-                                    </Stack.Screen>
-
-                                    <Stack.Screen name="ForgotPassword">
-                                        {({ navigation }) => (
-                                            <ForgotPasswordScreen onBack={() => navigation.goBack()} />
                                         )}
                                     </Stack.Screen>
 

@@ -7,11 +7,12 @@ import { MiniMapPreview } from '../../../../components/ui/MiniMapPreview'
 import { Header } from '../../../../components/ui/Header'
 import { PrimaryButton } from '../../../../components/ui/PrimaryButton'
 import { TextField } from '../../../../components/ui/TextField'
+import { AddEvidenceModal } from '../../../../components/delivery/AddEvidenceModal'
 import { EvidenceGalleryModal } from '../../../../components/delivery/EvidenceGalleryModal'
 import { IncidentListModal } from '../../../../components/delivery/IncidentListModal'
 import { FeedbackModal } from '../../../../components/ui/FeedbackModal'
 import { BRAND_COLORS } from '../../../../shared/types'
-import { DeliveryDetail, DeliveryService } from '../../../../services/api/DeliveryService'
+import { DeliveryDetail, DeliveryEvidence, DeliveryService } from '../../../../services/api/DeliveryService'
 import { OrderService } from '../../../../services/api/OrderService'
 import { UserClientService } from '../../../../services/api/UserClientService'
 import { UserService } from '../../../../services/api/UserService'
@@ -55,6 +56,7 @@ export function SupervisorDeliveryDetailScreen() {
     const [showEvidenceGallery, setShowEvidenceGallery] = React.useState(false)
     const [showIncidentList, setShowIncidentList] = React.useState(false)
     const [showCancelModal, setShowCancelModal] = React.useState(false)
+    const [showAddEvidence, setShowAddEvidence] = React.useState(false)
 
     const loadDelivery = React.useCallback(async () => {
         if (!entregaId) return
@@ -106,6 +108,16 @@ export function SupervisorDeliveryDetailScreen() {
         } finally {
             setUpdating(false)
         }
+    }
+
+    const handleEvidenceAdded = (evidence: DeliveryEvidence) => {
+        setDelivery((prev) => {
+            if (!prev) return null
+            return {
+                ...prev,
+                evidencias: [...(prev.evidencias || []), evidence],
+            }
+        })
     }
 
     const estado = delivery?.estado || 'pendiente'
@@ -212,6 +224,21 @@ export function SupervisorDeliveryDetailScreen() {
                         </Pressable>
                     </View>
 
+                    {/* Add Evidence */}
+                    <View className="mt-4">
+                        <Pressable
+                            onPress={() => setShowAddEvidence(true)}
+                            className="rounded-2xl border border-emerald-200 bg-emerald-50 py-3 items-center"
+                        >
+                            <View className="flex-row items-center">
+                                <Ionicons name="camera-outline" size={18} color="#166534" />
+                                <Text className="ml-2 text-sm font-semibold text-emerald-700">
+                                    Agregar evidencia
+                                </Text>
+                            </View>
+                        </Pressable>
+                    </View>
+
                     {/* Timestamps */}
                     <View className="bg-white rounded-2xl border border-neutral-100 p-4 shadow-sm mt-4">
                         <Text className="text-sm font-semibold text-neutral-800 mb-3">Historial de tiempos</Text>
@@ -277,6 +304,14 @@ export function SupervisorDeliveryDetailScreen() {
             )}
 
             {/* Modals */}
+            {entregaId ? (
+                <AddEvidenceModal
+                    visible={showAddEvidence}
+                    onClose={() => setShowAddEvidence(false)}
+                    entregaId={entregaId}
+                    onEvidenceAdded={handleEvidenceAdded}
+                />
+            ) : null}
             <EvidenceGalleryModal
                 visible={showEvidenceGallery}
                 onClose={() => setShowEvidenceGallery(false)}

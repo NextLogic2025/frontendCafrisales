@@ -42,7 +42,20 @@ export default {
         extra: {
             eas: {
                 projectId: "19ed7eaa-a763-4e6e-a3bc-ccd138e5be86"
-            }
+            },
+            EXPO_PUBLIC_AUTH_API_URL: process.env.EXPO_PUBLIC_AUTH_API_URL,
+            EXPO_PUBLIC_AUTH_LOGIN_URL: process.env.EXPO_PUBLIC_AUTH_LOGIN_URL,
+            EXPO_PUBLIC_AUTH_FORGOT_PASSWORD_URL: process.env.EXPO_PUBLIC_AUTH_FORGOT_PASSWORD_URL,
+            EXPO_PUBLIC_API_BASE_URL: process.env.EXPO_PUBLIC_API_BASE_URL,
+            EXPO_PUBLIC_USERS_API_URL: process.env.EXPO_PUBLIC_USERS_API_URL,
+            EXPO_PUBLIC_CATALOG_API_URL: process.env.EXPO_PUBLIC_CATALOG_API_URL,
+            EXPO_PUBLIC_ORDER_API_URL: process.env.EXPO_PUBLIC_ORDER_API_URL,
+            EXPO_PUBLIC_CREDIT_API_URL: process.env.EXPO_PUBLIC_CREDIT_API_URL,
+            EXPO_PUBLIC_ZONE_API_URL: process.env.EXPO_PUBLIC_ZONE_API_URL,
+            EXPO_PUBLIC_ROUTE_API_URL: process.env.EXPO_PUBLIC_ROUTE_API_URL,
+            EXPO_PUBLIC_DELIVERY_API_URL: process.env.EXPO_PUBLIC_DELIVERY_API_URL,
+            EXPO_PUBLIC_NOTIFICATIONS_API_URL: process.env.EXPO_PUBLIC_NOTIFICATIONS_API_URL,
+            EXPO_PUBLIC_GOOGLE_MAPS_API_KEY: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
         }
     }
 }

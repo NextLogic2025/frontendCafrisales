@@ -104,7 +104,12 @@ export function TransportistaDeliveryDetailScreen() {
         showGlobalToast('No se pudo completar la entrega', 'error')
         return
       }
-      setDelivery((prev) => (prev ? { ...prev, ...updated } : null))
+      const refreshed = await DeliveryService.getDeliveryDetail(entregaId)
+      if (refreshed) {
+        setDelivery(refreshed)
+      } else {
+        setDelivery((prev) => (prev ? { ...prev, ...updated } : null))
+      }
       showGlobalToast('Entrega completada', 'success')
     } finally {
       setUpdating(false)

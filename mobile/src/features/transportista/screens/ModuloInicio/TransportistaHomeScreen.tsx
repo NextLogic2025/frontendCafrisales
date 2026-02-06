@@ -3,12 +3,14 @@ import { View, Text, ScrollView, Pressable, RefreshControl, StyleSheet, Activity
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
+import { jwtDecode } from 'jwt-decode'
 
 import { Header } from '../../../../components/ui/Header'
 import { DashboardCard } from '../../../../components/ui/DashboardCard'
 import { UserService } from '../../../../services/api/UserService'
 import { DeliveryService } from '../../../../services/api/DeliveryService'
 import { BRAND_COLORS } from '../../../../shared/types'
+import { getValidToken } from '../../../../services/auth/authClient'
 
 type QuickAction = {
     label: string
@@ -39,16 +41,28 @@ export function TransportistaHomeScreen() {
             // 1. Get User Profile to ID
             const profile = await UserService.getProfile()
             if (profile?.name) setUserName(profile.name)
+            let transportistaId = profile?.id
+            if (!transportistaId) {
+                const token = await getValidToken()
+                if (token) {
+                    const decoded = jwtDecode<{ sub?: string; userId?: string }>(token)
+                    transportistaId = decoded.sub || decoded.userId
+                }
+            }
 
-            if (profile?.id) {
-                // 2. Get Deliveries for today (or all active)
-                // For now, let's fetch all active deliveries to show relevant workload
-                // We could filter by date if we had a date picker, but "Today" is usually implied for Transporters
+            if (transportistaId) {
+                // 2. Get Deliveries for today
                 const today = new Date().toISOString().split('T')[0]
-                const deliveries = await DeliveryService.getDeliveries({
-                    transportista_id: profile.id,
+                let deliveries = await DeliveryService.getDeliveries({
+                    transportista_id: transportistaId,
                     fecha: today
                 })
+                if (deliveries.length === 0) {
+                    // Fallback: backend puede no filtrar por fecha, cargamos todas y mostramos conteo real
+                    deliveries = await DeliveryService.getDeliveries({
+                        transportista_id: transportistaId
+                    })
+                }
 
                 setEntregasHoy(deliveries.length)
                 setPendientes(deliveries.filter(d => d.estado === 'pendiente' || d.estado === 'en_ruta').length)
